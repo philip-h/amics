@@ -1,0 +1,13 @@
+{{ define "title" }}/login{{ end }}
+
+{{ define "main" }}
+  <h1>Login</h1>
+  <form method="POST" action="/login">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required>
+    <br>
+    <label for="current-password">Password:</label>
+    <input type="password" id="current-password" name="current-password" required>
+    <br>
+    <button type="submit">Login</button>
+{{ end }}

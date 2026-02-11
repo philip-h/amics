@@ -14,7 +14,13 @@ type Config struct {
 func (app *Application) Mount() *http.ServeMux {
 	mux := http.NewServeMux()
 
+	// Serve static files
+    fs := http.FileServer(http.Dir("./static"))
+    mux.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	mux.HandleFunc("/", app.handleIndex)
+	mux.HandleFunc("/login", app.handleLogin)
+	mux.HandleFunc("/register", app.handleRegister)
 	return mux
 }
 
