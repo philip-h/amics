@@ -1,6 +1,10 @@
 package store
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	Id int `json:"id" db:"id"`
@@ -14,8 +18,12 @@ type UserStore struct {
 }
 
 func (s *UserStore) Create(user *User) error {
-	// TODO: Hash the password before storing it
-	_, err := s.db.Exec("INSERT INTO users (student_number, username, password) VALUES ($1, $2, $3)", user.StudentNumber, user.Username, user.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	user.Password = string(hashedPassword)
+	_, err = s.db.Exec("INSERT INTO users (student_number, username, password) VALUES ($1, $2, $3)", user.StudentNumber, user.Username, user.Password)
 	return err
 }
 

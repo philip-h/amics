@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/philip-h/amics/internal/store"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // ============================================================================
@@ -81,11 +82,13 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
-	// TODO: Use bcrypt to compare the password instead of plain text
-	if dbUser.Password != user.Password {
+
+	err = bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
+	if err != nil {
 		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
 		return
 	}
+
 	// Create a session cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -134,7 +137,6 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 	}
 
 	// Create a user
-	// TODO: Use bcrypt to hash the password instead of storing it in plain text
 	user := &store.User{
 		StudentNumber: body.StudentNumber,
 		Username: body.Username,
