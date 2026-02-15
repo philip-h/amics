@@ -1,14 +1,20 @@
 package server
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/philip-h/amics/internal/db"
+	"github.com/philip-h/amics/internal/store"
+)
 
 type Application struct {
 	Config Config
+	Store store.Storage
 }
 
 type Config struct {
 	Port string
-	// TODO: DB Config
+	Db *db.DbConfig
 }
 
 func (app *Application) Mount() *http.ServeMux {
@@ -16,11 +22,21 @@ func (app *Application) Mount() *http.ServeMux {
 
 	// Serve static files
     fs := http.FileServer(http.Dir("./static"))
-    mux.Handle("/static/", http.StripPrefix("/static/", fs))
+    mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 
-	mux.HandleFunc("/", app.handleIndex)
-	mux.HandleFunc("/login", app.handleLogin)
-	mux.HandleFunc("/register", app.handleRegister)
+	// Homepage
+	mux.HandleFunc("GET /", app.handleIndex)
+
+	// Auth handlers
+	mux.HandleFunc("GET /login", app.handleLoginGet)
+	mux.HandleFunc("POST /login", app.handleLoginPost)
+	mux.HandleFunc("GET /register", app.handleRegisterGet)
+	mux.HandleFunc("POST /register", app.handleRegisterPost)
+	mux.HandleFunc("POST /logout", app.handleLogout)
+
+	// Dashboard
+	mux.HandleFunc("GET /app", app.handleDashboard)
+
 	return mux
 }
 
