@@ -1,4 +1,4 @@
-package server
+package errs
 
 import "net/http"
 
@@ -41,3 +41,20 @@ func NewServerError(status int, internal string) *ServerError {
 		Internal: internal,
 	}
 }	
+
+// ============================================================================
+// Invalid JWT Error
+// ============================================================================
+type InvalidJwtError struct {
+	Message string
+}
+
+func (e *InvalidJwtError) Error() string {
+	return e.Message
+}
+
+func NewInvalidJwtError(message string) *InvalidJwtError {
+	return &InvalidJwtError{
+		Message: message,
+	}
+}

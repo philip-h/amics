@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
 	"github.com/philip-h/amics/internal/server"
 	"github.com/philip-h/amics/internal/store"
@@ -25,9 +26,13 @@ func main() {
 
 	store := store.New(db)
 
+	// TODO: KEY should come from config/env variable
+	auth := auth.NewJwtAuthenticator("super-secret-key", "amics-server")
+
 	app := &server.Application{
 		Config: cfg,
 		Store:  store,
+		Auth:   auth,
 	}
 
 	mux := app.Mount()

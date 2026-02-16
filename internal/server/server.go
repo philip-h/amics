@@ -6,13 +6,16 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
+	"github.com/philip-h/amics/internal/errs"
 	"github.com/philip-h/amics/internal/store"
 )
 
 type Application struct {
 	Config Config
 	Store store.Storage
+	Auth  auth.Authenticator
 }
 
 type Config struct {
@@ -38,7 +41,8 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /logout", makeHTTPHandlerFunc(app.handleLogout))
 
 	// Dashboard
-	mux.HandleFunc("GET /app", makeHTTPHandlerFunc(app.handleDashboard))
+	// TODO: Protect with auth middleweare
+	mux.HandleFunc("GET /app", app.withAuth(makeHTTPHandlerFunc(app.handleDashboard)))
 
 	return mux
 }
@@ -62,14 +66,21 @@ func makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := f(w, r)
 		if err != nil {
-			je := &JsonError{}
-			se := &ServerError{}
+			je := &errs.JsonError{}
+			se := &errs.ServerError{}
+			jwte := &errs.InvalidJwtError{}
 			if errors.As(err, &je) {
 				log.Printf("%s: %s", r.URL.Path, je.Internal)
 				writeJSON(w, je.Status, je)
 			} else if errors.As(err, &se) {
 				log.Printf("%s: %s", r.URL.Path, se.Internal)
 				http.Error(w, se.Error(), se.Status)
+			}  else if errors.Is(err, http.ErrNoCookie) {
+				log.Printf("%s: No auth token provided", r.URL.Path)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			} else if errors.As(err, &jwte) {
+				log.Printf("%s: %s", r.URL.Path, jwte.Message)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else {
 				log.Printf("%s: %s", r.URL.Path, err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

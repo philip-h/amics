@@ -2,9 +2,10 @@ package server
 
 import (
 	"html/template"
-	"log"
 	"net/http"
+	"time"
 
+	"github.com/philip-h/amics/internal/errs"
 	"github.com/philip-h/amics/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,14 +40,10 @@ type LoginReq struct {
 
 func (app *Application) handleLoginGet(w http.ResponseWriter, r *http.Request) error {
 	// Check to see if the user is already logged in, if so redirect to home page
-	// TODO: Actually verify the token instead of just checking if it exists
-	cookie, err := r.Cookie("token")
+	_, err := r.Cookie("token")
 	if err == nil {
-		if cookie.Value == "dummy-token" {
-			log.Println("User already logged in, redirecting to home page")
-			http.Redirect(w, r, "/app", http.StatusSeeOther)
-			return nil
-		}
+		// This redirect will check the validity of the token
+		http.Redirect(w, r, "/app", http.StatusSeeOther)
 		return nil
 	}
 
@@ -69,7 +66,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	}
 	// If either username or password is empty, return an error
 	if body.Username == "" || body.Password == "" {
-		return &JsonError{
+		return &errs.JsonError{
 			Status: http.StatusBadRequest,
 			Message: "Please make sure to fill out both the username and password fields.",
 			Internal: "Missing username or password in login request",
@@ -79,7 +76,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	// Check user against db
 	user, err := app.Store.Users.GetByUsername(body.Username)
 	if err != nil {
-		return &JsonError{
+		return &errs.JsonError{
 			Status: http.StatusInternalServerError,
 			Message: "Sorry, something went seriously wrong on our end. Please try again in a sec.",
 			Internal: err.Error(),
@@ -87,7 +84,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	if user == nil {
-		return &JsonError{
+		return &errs.JsonError{
 			Status: http.StatusUnauthorized,
 			Message: "Hmm, I could not find your account.",
 			Internal: "No user found with username: " + body.Username,
@@ -96,17 +93,26 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	if err != nil {
-		return &JsonError{
+		return &errs.JsonError{
 			Status: http.StatusUnauthorized,
 			Message: "Hmm, I could not find your account.",
 			Internal: "Password mismatch for user: " + body.Username,
 		}
 	}
 
-	// Create a session cookie
+	// Create JWT token and set it as a cookie
+	token, err := app.Auth.CreateJwt(user.Username, "student", time.Now().Add(90*time.Minute).Unix())
+	if err != nil {
+		return &errs.JsonError{
+			Status: http.StatusInternalServerError,
+			Message: "Sorry, something went seriously wrong on our end. Please try again in a sec.",
+			Internal: err.Error(),
+		}
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
-		Value:	"dummy-token-"+user.Username, // TODO: Generate a real token
+		Value: token,	
 		HttpOnly: true,
 	})
 
@@ -144,7 +150,7 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 	}
 	// If either username or password is empty, return an error
 	if body.StudentNumber == "" || body.Username == "" || body.Password == "" {
-		return &JsonError{
+		return &errs.JsonError{
 			Status: http.StatusBadRequest,
 			Message: "Please make sure to fill out all required fields.",
 			Internal: "Missing student number, username, or password in registration request",
@@ -161,10 +167,18 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return err
 	}
-	// Create a session cookie
+	// Create jwt token and set it as a cookie
+	token, err := app.Auth.CreateJwt(user.Username, "student", time.Now().Add(90*time.Minute).Unix())
+	if err != nil {
+		return &errs.JsonError{
+			Status: http.StatusInternalServerError,
+			Message: "Sorry, something went seriously wrong on our end. Please try again in a sec.",
+			Internal: err.Error(),
+		}
+	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
-		Value:	"dummy-token-"+user.Username, // TODO: Generate a real token
+		Value:	token,
 		HttpOnly: true,
 	})
 
@@ -191,15 +205,7 @@ func (app *Application) handleLogout(w http.ResponseWriter, r *http.Request) err
 // Dashboard Handler
 // ============================================================================
 func (app *Application) handleDashboard(w http.ResponseWriter, r *http.Request) error {
-	// Check to see if the user is logged in, if not redirect to login page
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return nil
-	}
-
-	// Extract username from token
-	username := cookie.Value[len("dummy-token-"):]
+	username := r.Context().Value("username").(string)
 
 	t, err := template.ParseFiles("templates/base.gohtml", "templates/dashboard.gohtml")
 	if err != nil {
