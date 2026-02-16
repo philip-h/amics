@@ -31,6 +31,9 @@ func (s *UserStore) GetByUsername(username string) (*User, error) {
 	user := &User{}
 	err := s.db.QueryRow("SELECT id, student_number, username, password FROM users WHERE username = $1", username).Scan(&user.Id, &user.StudentNumber, &user.Username, &user.Password)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return user, nil
