@@ -1,0 +1,30 @@
+{{define "nav"}}
+<nav>
+  <a href="/" class="{{if eq .Active "home"}}active{{end}}">Home</a>
+  <a href="/login" class="{{if eq .Active "login"}}active{{end}}">Login</a>
+  <a href="/register" class="{{if eq .Active "register"}}active{{end}}">Register</a>
+</nav>
+{{end}}
+
+{{define "appNav"}}
+<nav>
+  <button id="logout-button">Logout</button>
+</nav>
+{{end}}
+
+
+{{ define "logoutScript" }}
+<script>
+    document.getElementById('logout-button').addEventListener('click', async () => {
+        const response = await fetch('/logout', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        if (response.ok) {
+            window.location.href = '/';
+        } else {
+            alert('Failed to log out');
+        }
+    });
+</script>
+{{ end }}

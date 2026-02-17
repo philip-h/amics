@@ -1,0 +1,22 @@
+{{define "dashboard"}}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/app</title>
+  <link rel='stylesheet' href='/static/css/style.css'>
+</head>
+
+<body>
+  {{template "appNav" .}}
+
+  <main>
+    <h1>Dashboard</h1>
+    <p>Welcome to your dashboard! {{.Username}}</p>
+  </main>
+  {{template "logoutScript" .}}
+</body>
+
+</html>
+{{end}}

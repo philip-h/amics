@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"html/template"
 	"log"
 	"net/http"
 
@@ -16,6 +17,7 @@ type Application struct {
 	Config Config
 	Store store.Storage
 	Auth  auth.Authenticator
+	Templates *template.Template
 }
 
 type Config struct {
@@ -41,7 +43,6 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /logout", makeHTTPHandlerFunc(app.handleLogout))
 
 	// Dashboard
-	// TODO: Protect with auth middleweare
 	mux.HandleFunc("GET /app", app.withAuth(makeHTTPHandlerFunc(app.handleDashboard)))
 
 	return mux
@@ -82,7 +83,7 @@ func makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.
 				log.Printf("%s: %s", r.URL.Path, jwte.Message)
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else {
-				log.Printf("%s: %s", r.URL.Path, err.Error())
+				log.Printf("[?] %s: %s!!", r.URL.Path, err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}

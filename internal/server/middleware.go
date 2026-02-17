@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -19,6 +20,18 @@ func (app *Application) withAuth(next http.HandlerFunc) http.HandlerFunc {
 		// Validate token
 		token, err := app.Auth.ValidateJwt(cookie.Value)
 		if err != nil {
+			if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+
+				http.SetCookie(w, &http.Cookie{
+					Name:     "token",
+					Value:    "",
+					HttpOnly: true,
+					MaxAge:   -1,
+				})
+				return &errs.InvalidJwtError{
+					Message: "JWT token is either expired or not active yet",
+				}
+			}
 			return err
 		}
 
@@ -42,3 +55,4 @@ func (app *Application) withAuth(next http.HandlerFunc) http.HandlerFunc {
 		return nil
 	})
 }
+
