@@ -1,0 +1,47 @@
+{{define "assignment_detail"}}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/app/assignment_detail</title>
+  <link rel='stylesheet' href='/static/css/style.css'>
+</head>
+
+<body>
+  {{template "appNav" .}}
+
+  <main>
+
+<p>{{ .Assignment.Assignment.Name }}</p>
+  <p>{{ .Assignment.Description }}</p>
+  <p>Due: {{ .Assignment.DueDate }}</p>
+  <p>Points: {{ .Assignment.Points }}</p>
+
+  {{ if .Assignment.Submission }}</p>
+    <p>Your Grade: {{ .Assignment.Submission.Grade }} / {{ .Assignment.Points }}</p>
+    <p>Comments: {{ .Assignment.Submission.Comments }}</p>
+    <p>{{ .Assignment.PyFile.Name}}</p>
+    <p>{{ .Assignment.PyFile.Content}}</p>
+  {{ else }}
+    <p>You have not submitted this assignment yet.</p>
+  {{ end }}
+
+
+  <div>
+    <form action="/app/assignment/{{ .Assignment.Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
+      {{ if .Assignment.Submission }}
+        <label for="file">Re-upload your assignment:</label>
+      {{ else }}
+        <label for="file">Upload your assignment:</label>
+      {{ end }}
+      <input type="file" name="file" id="file" accept=".py" required>
+      <button type="submit">Submit Assignment</button>
+    </form>
+  </div>
+  </main>
+  {{template "logoutScript" .}}
+</body>
+
+</html>
+{{end}}

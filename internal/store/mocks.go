@@ -2,28 +2,52 @@ package store
 
 func NewMockStore() Storage {
 	return Storage{
-		Users: &MockUserStore{},
+		Students:    &MockStudentStore{},
+		Assignments: &MockAssignmentStore{},
 	}
 }
 
-
 // ============================================================================
-// Mock User Store
+// Mock Student Store
 // ============================================================================
-type MockUserStore struct {
-	CreateInvoked bool
+type MockStudentStore struct {
+	CreateInvoked        bool
 	GetByUsernameInvoked bool
 }
 
-func (m *MockUserStore) Create(user *User) error {
+func (m *MockStudentStore) Create(student *Student) error {
 	m.CreateInvoked = true
 	return nil
 }
 
-func (m *MockUserStore) GetByUsername(username string) (*User, error) {
+func (m *MockStudentStore) GetByUsername(username string) (*Student, error) {
 	m.GetByUsernameInvoked = true
-	return &User{
+	return &Student{
 		Username: "testuser",
 		Password: "testpass",
 	}, nil
+}
+
+// ============================================================================
+// Mock Assignment Store
+// ============================================================================
+type MockAssignmentStore struct {
+	GetByIdInvoked       bool
+	GetByUsernameInvoked bool
+	SubmitInvoked        bool
+}
+
+func (m *MockAssignmentStore) GetById(id int, username string) (*AssignmentSubmission, error) {
+	m.GetByIdInvoked = true
+	return nil, nil
+}
+
+func (m *MockAssignmentStore) GetByUsername(username string) ([]*AssignmentWithGrade, error) {
+	m.GetByUsernameInvoked = true
+	return []*AssignmentWithGrade{}, nil
+}
+
+func (m *MockAssignmentStore) Submit(assignmentId int, username string, file *PyFile) error {
+	m.SubmitInvoked = true
+	return nil
 }

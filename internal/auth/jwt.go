@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -42,7 +41,6 @@ func (a *JwtAuthenticator) ValidateJwt(tokenString string) (*jwt.Token, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 
 			return nil, &errs.InvalidJwtError{
-				Message: fmt.Sprintf("Unexpected signing method: %v", t.Header["alg"]),
 			}
 		}
 

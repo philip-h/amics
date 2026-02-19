@@ -1,6 +1,6 @@
-CREATE TABLE IF NOT EXISTS users (
+CREATE TABLE teacher (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    student_number TEXT NOT NULL UNIQUE,
+    employee_number TEXT NOT NULL UNIQUE,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL
 );

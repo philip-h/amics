@@ -4,7 +4,91 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"github.com/philip-h/amics/internal/store"
 )
+
+func TestLoginHandler(t *testing.T) {
+	app := newTestApplication(t, Config{})
+	mux := app.Mount()
+	uri := "/login"
+
+	t.Run("should invoke Student.GetByUsername", func(t *testing.T) {
+		mockStore, ok := app.Store.Students.(*store.MockStudentStore)
+		if !ok {
+			t.Fatal("store.Students is not of type *MockStudentStore")
+		}
+
+		req, err := http.NewRequest(http.MethodPost, uri, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Form = map[string][]string{
+			"username": {"testuser"},
+			"password": {"testpass"},
+		}
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		if !mockStore.GetByUsernameInvoked {
+			t.Errorf("expected GetByUsername() to be invoked")
+		}
+	})
+}
+
+func TestDashboardHandler(t *testing.T) {
+	app := newTestApplication(t, Config{})
+	mux := app.Mount()
+	uri := "/app"
+
+	t.Run("should invoke Assignment.GetByUsername", func(t *testing.T) {
+		mockStore, ok := app.Store.Assignments.(*store.MockAssignmentStore)
+		if !ok {
+			t.Fatal("store.Assignments is not of type *MockAssignmentStore")
+		}
+
+		req, err := http.NewRequest(http.MethodGet, uri, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.AddCookie(createLegitStudentCookie(t, app, "testuser"))
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		if !mockStore.GetByUsernameInvoked {
+			t.Errorf("expected GetByUsername() to be invoked")
+		}
+	})
+}
+
+func TestAssignmentDetailHandler(t *testing.T) {
+	app := newTestApplication(t, Config{})
+	mux := app.Mount()
+	uri := "/app/assignment/1"
+
+	t.Run("should invoke Assignment.GetById", func(t *testing.T) {
+		mockStore, ok := app.Store.Assignments.(*store.MockAssignmentStore)
+		if !ok {
+			t.Fatal("store.Assignments is not of type *MockAssignmentStore")
+		}
+
+		req, err := http.NewRequest(http.MethodGet, uri, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req.AddCookie(createLegitStudentCookie(t, app, "testuser"))
+
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+
+		if !mockStore.GetByIdInvoked {
+			t.Errorf("expected GetById() to be invoked")
+		}
+	})
+}
 
 func TestGETHandlersReturn200(t *testing.T) {
 	app := newTestApplication(t, Config{})
@@ -14,11 +98,13 @@ func TestGETHandlersReturn200(t *testing.T) {
 		name           string
 		method         string
 		uri            string
-		expectedStatus int
+		cookie 	   *http.Cookie
 	}{
-		{"get index returns 200", "GET", "/", 200},
-		{"get login returns 200", "GET", "/login", 200},
-		{"get register returns 200", "GET", "/register", 200},
+		{"get index returns 200", "GET", "/", nil},
+		{"get login returns 200", "GET", "/login", nil},
+		{"get register returns 200", "GET", "/register", nil},
+		{"get dashboard returns 200 with valid cookie", "GET", "/app", createLegitStudentCookie(t, app, "test")},
+		{"get assignment detail returns 200 with valid cookie", "GET", "/app/assignment/1", createLegitStudentCookie(t, app, "test")},
 	}
 
 	for _, tc := range tt {
@@ -26,6 +112,9 @@ func TestGETHandlersReturn200(t *testing.T) {
 			req, err := http.NewRequest(tc.method, tc.uri, nil)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if tc.cookie != nil {
+				req.AddCookie(tc.cookie)
 			}
 
 			rr := httptest.NewRecorder()
@@ -37,7 +126,7 @@ func TestGETHandlersReturn200(t *testing.T) {
 	}
 }
 
-func TestAutRedirects(t *testing.T) {
+func TestAuthHandlers(t *testing.T) {
 	app := newTestApplication(t, Config{})
 	mux := app.Mount()
 
@@ -53,7 +142,6 @@ func TestAutRedirects(t *testing.T) {
 		{"get register redirects to /app with valid cookie", "GET", "/register", createLegitStudentCookie(t, app, "test"), 303, "/app"},
 		{"get login does not redirect to /app if cookie token is invalid", "GET", "/login", createSillyCookie(t), 200, ""},
 		{"get register does not redirect to /app if cookie token is invalid", "GET", "/login", createSillyCookie(t), 200, ""},
-		{"get dashboard returns 200 with valid cookie", "GET", "/app", createLegitStudentCookie(t, app, "test"), 200, ""},
 		{"get dashboard redirects to /login no cookie", "GET", "/app", nil, 303, "/login"},
 		{"get dashboard redirects to /login if cookie token is invalid", "GET", "/app", createSillyCookie(t), 303, "/login"},
 	}

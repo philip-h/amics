@@ -42,8 +42,10 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /register", makeHTTPHandlerFunc(app.handleRegisterPost))
 	mux.HandleFunc("POST /logout", makeHTTPHandlerFunc(app.handleLogout))
 
-	// Dashboard
+	// App Routes
 	mux.HandleFunc("GET /app", app.withAuth(makeHTTPHandlerFunc(app.handleDashboard)))
+	mux.HandleFunc("GET /app/assignment/{assignmentId}", app.withAuth(makeHTTPHandlerFunc(app.handleAssignmentDetail)))
+	mux.HandleFunc("POST /app/assignment/{assignmentId}/submit", app.withAuth(makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
 
 	return mux
 }

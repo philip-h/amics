@@ -21,7 +21,6 @@ func (app *Application) withAuth(next http.HandlerFunc) http.HandlerFunc {
 		token, err := app.Auth.ValidateJwt(cookie.Value)
 		if err != nil {
 			if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
-
 				http.SetCookie(w, &http.Cookie{
 					Name:     "token",
 					Value:    "",

@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS course (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    year INTEGER NOT NULL,
+    semester INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    teacher_id INTEGER NOT NULL,
+    FOREIGN KEY (teacher_id) REFERENCES teacher(id)
+);
