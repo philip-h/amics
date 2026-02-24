@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// Parse all the layouts
-	templates, err := template.ParseFS(templates.TemplateFS, "pages/*.gohtml", "partials/*.gohtml")
+	templates, err := template.ParseFS(templates.TemplateFS, "pages/*.gohtml", "partials/*.gohtml", "admin/*.gohtml")
 	if err != nil {
 		log.Fatal("Failed to load templates")
 	}

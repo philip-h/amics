@@ -6,8 +6,8 @@ import "net/http"
 // Json Error
 // ============================================================================
 type JsonError struct {
-	Status  int    `json:"status"`
-	Message string `json:"message"`
+	Status   int    `json:"status"`
+	Message  string `json:"message"`
 	Internal string `json:"-"`
 }
 
@@ -17,8 +17,8 @@ func (e *JsonError) Error() string {
 
 func NewJsonError(status int, message string, internal string) *JsonError {
 	return &JsonError{
-		Status:  status,
-		Message: message,
+		Status:   status,
+		Message:  message,
 		Internal: internal,
 	}
 }
@@ -27,7 +27,7 @@ func NewJsonError(status int, message string, internal string) *JsonError {
 // Http Error
 // ============================================================================
 type ServerError struct {
-	Status int
+	Status   int
 	Internal string
 }
 
@@ -37,24 +37,37 @@ func (e *ServerError) Error() string {
 
 func NewServerError(status int, internal string) *ServerError {
 	return &ServerError{
-		Status: status,
+		Status:   status,
 		Internal: internal,
 	}
-}	
+}
 
 // ============================================================================
 // Invalid JWT Error
 // ============================================================================
-type InvalidJwtError struct {
+type JwtError struct {
 	Message string
 }
 
-func (e *InvalidJwtError) Error() string {
+func (e *JwtError) Error() string {
 	return e.Message
 }
 
-func NewInvalidJwtError(message string) *InvalidJwtError {
-	return &InvalidJwtError{
+func NewInvalidJwtError(message string) *JwtError {
+	return &JwtError{
 		Message: message,
 	}
+}
+
+// ============================================================================
+// Unauthorized Error
+// ============================================================================
+type UnauthorizedError struct{}
+
+func (e *UnauthorizedError) Error() string {
+	return "Unauthorized"
+}
+
+func NewUnauthorizedError(message string) *UnauthorizedError {
+	return &UnauthorizedError{}
 }

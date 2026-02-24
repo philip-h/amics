@@ -15,7 +15,7 @@ func newTestApplication(t *testing.T, cfg Config) *Application {
 
 	mockStore := store.NewMockStore()
 	mockAuth := auth.NewMockAuthenticator()
-	templates, _ := template.ParseFS(templates.TemplateFS, "pages/*.gohtml", "partials/*.gohtml")
+	templates, _ := template.ParseFS(templates.TemplateFS, "pages/*.gohtml", "partials/*.gohtml", "admin/*.gohtml")
 
 	return &Application{
 		Config:    cfg,
@@ -32,8 +32,19 @@ func checkStatusCode(t *testing.T, got, want int) {
 	}
 }
 
-func createLegitStudentCookie(t *testing.T, app *Application, username string) *http.Cookie {
-	token, _ := app.Auth.CreateJwt(username, "student", -1)
+func createLegitStudentCookie(t *testing.T, app *Application) *http.Cookie {
+	t.Helper()
+	token, _ := app.Auth.CreateJwt("42", "student", -1)
+	return &http.Cookie{
+		Name:     "token",
+		Value:    token,
+		HttpOnly: true,
+	}
+}
+
+func createLegitTeacherCookie(t *testing.T, app *Application) *http.Cookie {
+	t.Helper()
+	token, _ := app.Auth.CreateJwt("72", "teacher", -1)
 	return &http.Cookie{
 		Name:     "token",
 		Value:    token,
@@ -42,6 +53,7 @@ func createLegitStudentCookie(t *testing.T, app *Application, username string) *
 }
 
 func createSillyCookie(t *testing.T) *http.Cookie {
+	t.Helper()
 	return &http.Cookie{
 		Name:     "dummy",
 		Value:    "dummy-value",

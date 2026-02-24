@@ -1,0 +1,26 @@
+{{ define "teacher_dashboard" }}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/teacher</title>
+  <link rel='stylesheet' href='/static/css/style.css'>
+</head>
+
+<body>
+  {{ template "appNav" . }}
+  <h1>Teacher Dashboard</h1>
+  <p>Welcome to the teacher dashboard!</p>
+
+  <ul>
+  {{ range .Courses }}
+    <li><a href="/teacher/courses/{{.Id}}/assignments">{{ .Name }} Hehe</a></li>
+  {{ end}}
+  </ul>
+
+  {{ template "logoutScript" . }}
+</body>
+
+</html>
+{{ end }}

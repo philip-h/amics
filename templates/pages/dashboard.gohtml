@@ -1,4 +1,4 @@
-{{define "dashboard"}}
+{{define "student_dashboard"}}
 <!doctype html>
 <html lang='en'>
 
@@ -13,14 +13,14 @@
 
   <main>
     <h1>Dashboard</h1>
-    <p>Welcome to your dashboard! {{.Username}}</p>
+    <p>Welcome to your dashboard!</p>
 
     {{ if .Assignments }}
       <h2>Your Assignments</h2>
       <ul>
         {{ range .Assignments }}
           {{ if .Visible }}
-          <li><a href="/app/assignment/{{ .Id }}">{{ .Name }} - Due: {{ .DueDate }} -- Grade: {{ if .Grade.Valid }}{{ .Grade.Int64 }}/ {{ .Points }}{{ else }}Not Submitted{{ end }}</a></li>
+          <li><a href="/app/assignments/{{ .Id }}">{{ .Name }} - Due: {{ .DueDate }} -- Grade: {{ if .Grade.Valid }}{{ .Grade.Int64 }}/ {{ .Points }}{{ else }}Not Submitted{{ end }}</a></li>
           {{ end}}
         {{ end }}
       </ul>

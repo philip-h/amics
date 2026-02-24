@@ -1,0 +1,19 @@
+{{ define "manage_assignment" }}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/teacher/manage_assignment</title>
+  <link rel='stylesheet' href='/static/css/style.css'>
+</head>
+
+<body>
+  {{ template "appNav" . }}
+  <h1>Hello world {{ .Assignment.Name }}</h1>
+
+  {{ template "logoutScript" . }}
+</body>
+
+</html>
+{{ end }}

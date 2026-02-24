@@ -17,6 +17,10 @@ func (app *Application) renderTemplate(w http.ResponseWriter, name string, data 
 // Homepage
 // ============================================================================
 func (app *Application) handleIndex(w http.ResponseWriter, r *http.Request) error {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return nil
+	}
 	return app.renderTemplate(w, "home", map[string]string{"Active": "home"})
 }
 
@@ -70,6 +74,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	type UserPass struct {
+		Id       int
 		Username string
 		Password string
 		Role     string
@@ -78,6 +83,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	var user *UserPass
 	if student != nil {
 		user = &UserPass{
+			Id:       student.Id,
 			Username: student.Username,
 			Password: student.Password,
 			Role:     "student",
@@ -101,6 +107,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		}
 		// For simplicity, we will treat teachers the same as students for authentication purposes. In a real implementation, you would likely want to have different handling for teachers and students after this point.
 		user = &UserPass{
+			Id:       teacher.Id,
 			Username: teacher.Username,
 			Password: teacher.Password,
 			Role:     "teacher",
@@ -119,7 +126,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create JWT token and set it as a cookie
-	token, err := app.Auth.CreateJwt(user.Username, user.Role, time.Now().Add(90*time.Minute).Unix())
+	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), user.Role, time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
 		return &errs.JsonError{
 			Status:   http.StatusInternalServerError,
@@ -236,25 +243,37 @@ func (app *Application) handleLogout(w http.ResponseWriter, r *http.Request) err
 // App Route Handlers
 // ============================================================================
 func (app *Application) handleDashboard(w http.ResponseWriter, r *http.Request) error {
-	username := r.Context().Value("username").(string)
+	userIdStr := r.Context().Value("userId").(string)
+	studentId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + userIdStr,
+		}
+	}
 
-	assignments, err := app.Store.Assignments.GetByUsername(username)
+	assignments, err := app.Store.Assignments.GetWithGradeByStudentId(studentId)
 	if err != nil {
 		return err
 	}
 
 	return app.renderTemplate(w,
-		"dashboard",
+		"student_dashboard",
 		map[string]any{
 			"Active":      "app",
-			"Username":    username,
 			"Assignments": assignments,
 		})
 }
 
 func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
-
-	username := r.Context().Value("username").(string)
+	userIdStr := r.Context().Value("userId").(string)
+	studentId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + userIdStr,
+		}
+	}
 	assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -263,7 +282,7 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	assignment, err := app.Store.Assignments.GetById(assignmentId, username)
+	aws, err := app.Store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(assignmentId, studentId)
 	if err != nil {
 		return err
 	}
@@ -272,12 +291,20 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 		"assignment_detail",
 		map[string]any{
 			"Active":     "app",
-			"Assignment": assignment,
+			"Assignment": aws,
 		})
 }
 
 func (app *Application) handleAssignmentSubmit(w http.ResponseWriter, r *http.Request) error {
-	username := r.Context().Value("username").(string)
+	userIdStr := r.Context().Value("userId").(string)
+	studentId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + userIdStr,
+		}
+	}
+
 	assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -318,7 +345,7 @@ func (app *Application) handleAssignmentSubmit(w http.ResponseWriter, r *http.Re
 		Name:    handler.Filename,
 		Content: string(fileContent),
 	}
-	err = app.Store.Assignments.Submit(assignmentId, username, pyFile)
+	err = app.Store.Assignments.Submit(assignmentId, studentId, pyFile)
 	if err != nil {
 		return &errs.ServerError{
 			Status:   http.StatusInternalServerError,
@@ -326,6 +353,58 @@ func (app *Application) handleAssignmentSubmit(w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	// Use python (called here) to grade and return an actual mark
+
 	http.Redirect(w, r, "/app/assignment/"+strconv.Itoa(assignmentId), http.StatusSeeOther)
 	return nil
+}
+
+// ============================================================================
+// Admin Handlers
+// ============================================================================
+
+func (app *Application) handleTeacherDashboard(w http.ResponseWriter, r *http.Request) error {
+	teacherIdStr := r.Context().Value("userId").(string)
+	teacherId, err := strconv.Atoi(teacherIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + teacherIdStr,
+		}
+	}
+	courses, err := app.Store.Courses.GetByTeacherId(teacherId)
+	if err != nil {
+		return err
+	}
+	return app.renderTemplate(w, "teacher_dashboard", map[string]any{"Courses": courses})
+}
+
+func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.Request) error {
+
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert assignment ID to int: " + r.PathValue("courseId"),
+		}
+	}
+	assignments, err := app.Store.Assignments.GetByCourseId(courseId)
+	if err != nil {
+		return err
+	}
+	return app.renderTemplate(w, "manage_assignments", map[string]any{"Assignments": assignments})
+}
+
+func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
+	assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert assignment ID to int: " + r.PathValue("assignmentId"),
+		}
+	}
+
+	assignment, err := app.Store.Assignments.GetById(assignmentId)
+
+	return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": assignment})
 }

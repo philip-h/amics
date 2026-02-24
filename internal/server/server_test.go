@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 	"github.com/philip-h/amics/internal/store"
 )
 
@@ -41,7 +42,7 @@ func TestDashboardHandler(t *testing.T) {
 	mux := app.Mount()
 	uri := "/app"
 
-	t.Run("should invoke Assignment.GetByUsername", func(t *testing.T) {
+	t.Run("should invoke Assignment.GetWithGradeByStudentId", func(t *testing.T) {
 		mockStore, ok := app.Store.Assignments.(*store.MockAssignmentStore)
 		if !ok {
 			t.Fatal("store.Assignments is not of type *MockAssignmentStore")
@@ -52,13 +53,13 @@ func TestDashboardHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		req.AddCookie(createLegitStudentCookie(t, app, "testuser"))
+		req.AddCookie(createLegitStudentCookie(t, app))
 
 		rr := httptest.NewRecorder()
 		mux.ServeHTTP(rr, req)
 
-		if !mockStore.GetByUsernameInvoked {
-			t.Errorf("expected GetByUsername() to be invoked")
+		if !mockStore.GetWithGradeByStudentIdInvoked {
+			t.Errorf("expected GetWithGradeByStudentId() to be invoked")
 		}
 	})
 }
@@ -66,9 +67,9 @@ func TestDashboardHandler(t *testing.T) {
 func TestAssignmentDetailHandler(t *testing.T) {
 	app := newTestApplication(t, Config{})
 	mux := app.Mount()
-	uri := "/app/assignment/1"
+	uri := "/app/assignments/1"
 
-	t.Run("should invoke Assignment.GetById", func(t *testing.T) {
+	t.Run("should invoke Assignment.GetWithSubmissionByAssignmentAndStudentIds", func(t *testing.T) {
 		mockStore, ok := app.Store.Assignments.(*store.MockAssignmentStore)
 		if !ok {
 			t.Fatal("store.Assignments is not of type *MockAssignmentStore")
@@ -79,13 +80,13 @@ func TestAssignmentDetailHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		req.AddCookie(createLegitStudentCookie(t, app, "testuser"))
+		req.AddCookie(createLegitStudentCookie(t, app))
 
 		rr := httptest.NewRecorder()
 		mux.ServeHTTP(rr, req)
 
-		if !mockStore.GetByIdInvoked {
-			t.Errorf("expected GetById() to be invoked")
+		if !mockStore.GetWithSubmissionByAssignmentAndStudentIdsInvoked {
+			t.Errorf("expected GetWithSubmissionByAssignmentAndStudentIds() to be invoked")
 		}
 	})
 }
@@ -95,16 +96,17 @@ func TestGETHandlersReturn200(t *testing.T) {
 	mux := app.Mount()
 
 	tt := []struct {
-		name           string
-		method         string
-		uri            string
-		cookie 	   *http.Cookie
+		name   string
+		method string
+		uri    string
+		cookie *http.Cookie
 	}{
 		{"get index returns 200", "GET", "/", nil},
 		{"get login returns 200", "GET", "/login", nil},
 		{"get register returns 200", "GET", "/register", nil},
-		{"get dashboard returns 200 with valid cookie", "GET", "/app", createLegitStudentCookie(t, app, "test")},
-		{"get assignment detail returns 200 with valid cookie", "GET", "/app/assignment/1", createLegitStudentCookie(t, app, "test")},
+		{"get dashboard returns 200 with valid cookie", "GET", "/app", createLegitStudentCookie(t, app)},
+		{"get assignment detail returns 200 with valid cookie", "GET", "/app/assignments/1", createLegitStudentCookie(t, app)},
+		{"get teacher dashboard returns 200 with valid cookie", "GET", "/teacher", createLegitTeacherCookie(t, app)},
 	}
 
 	for _, tc := range tt {
@@ -121,7 +123,6 @@ func TestGETHandlersReturn200(t *testing.T) {
 			mux.ServeHTTP(rr, req)
 
 			checkStatusCode(t, rr.Code, http.StatusOK)
-
 		})
 	}
 }
@@ -138,12 +139,15 @@ func TestAuthHandlers(t *testing.T) {
 		expectedCode     int
 		expectedLocation string
 	}{
-		{"get login redirects to /app with valid cookie", "GET", "/login", createLegitStudentCookie(t, app, "test"), 303, "/app"},
-		{"get register redirects to /app with valid cookie", "GET", "/register", createLegitStudentCookie(t, app, "test"), 303, "/app"},
+		{"get login redirects to /app with valid cookie", "GET", "/login", createLegitStudentCookie(t, app), 303, "/app"},
+		{"get register redirects to /app with valid cookie", "GET", "/register", createLegitStudentCookie(t, app), 303, "/app"},
 		{"get login does not redirect to /app if cookie token is invalid", "GET", "/login", createSillyCookie(t), 200, ""},
 		{"get register does not redirect to /app if cookie token is invalid", "GET", "/login", createSillyCookie(t), 200, ""},
 		{"get dashboard redirects to /login no cookie", "GET", "/app", nil, 303, "/login"},
 		{"get dashboard redirects to /login if cookie token is invalid", "GET", "/app", createSillyCookie(t), 303, "/login"},
+		{"get teacher dashboard returns 404 with no cookie", "GET", "/teacher", nil, 404, ""},
+		{"get teacher dashboard returns 404 with invalid cookie", "GET", "/teacher", createSillyCookie(t), 404, ""},
+		{"get teacher dashboard returns 404 with student cookie", "GET", "/teacher", createLegitStudentCookie(t, app), 404, ""},
 	}
 
 	for _, tc := range tt {
@@ -168,96 +172,3 @@ func TestAuthHandlers(t *testing.T) {
 		})
 	}
 }
-
-// func TestIndexGET(t *testing.T) {
-// 	app := newTestApplication(t, Config{})
-// 	route := "/"
-// 	mux := app.Mount()
-
-// 	t.Run("returns 200 OK", func(t *testing.T) {
-// 		req, err := http.NewRequest(http.MethodGet, route, nil)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		rr := httptest.NewRecorder()
-// 		mux.ServeHTTP(rr, req)
-
-// 		checkStatusCode(t, rr.Code, http.StatusOK)
-// 	})
-// }
-
-// func TestLoginGET(t *testing.T) {
-// 	app := newTestApplication(t, Config{})
-// 	route := "/login"
-
-// 	t.Run("returns 200 OK", func(t *testing.T) {
-// 		req, err := http.NewRequest(http.MethodGet, route, nil)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		rr := httptest.NewRecorder()
-// 		app.handleLoginGet(rr, req)
-
-// 		checkStatusCode(t, rr.Code, http.StatusOK)
-// 	})
-
-// 	t.Run("redirects to /app if user is already logged in", func(t *testing.T) {
-// 		req, err := http.NewRequest(http.MethodGet, route, nil)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		// Set a dummy token cookie to simulate a logged in user
-// 		req.AddCookie(&http.Cookie{Name: "token", Value: "dummy-token"})
-
-// 		rr := httptest.NewRecorder()
-// 		app.handleLoginGet(rr, req)
-
-// 		checkStatusCode(t, rr.Code, http.StatusSeeOther)
-// 		location := rr.Header().Get("Location")
-// 		if location != "/app" {
-// 			t.Errorf("got redirect location %s, want /app", location)
-// 		}
-// 	})
-// }
-
-// func TestRegisterGET(t *testing.T) {
-// 	app := newTestApplication(t, Config{})
-// 	route := "/register"
-
-// 	t.Run("returns 200 OK", func(t *testing.T) {
-// 		req, err := http.NewRequest(http.MethodGet, route, nil)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-
-// 		rr := httptest.NewRecorder()
-// 		app.handleRegisterGet(rr, req)
-
-// 		checkStatusCode(t, rr.Code, http.StatusOK)
-// 	})
-
-// 	t.Run("redirects to /app if user is already logged in", func(t *testing.T) {
-// 		req, err := http.NewRequest(http.MethodGet, route, nil)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		// Set a dummy token cookie to simulate a logged in user
-// 		// testToken, err := app.Auth.CreateJwt("1","",0)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		req.AddCookie(&http.Cookie{Name: "token", Value: "dummy value"})
-
-// 		rr := httptest.NewRecorder()
-// 		app.handleRegisterGet(rr, req)
-
-// 		checkStatusCode(t, rr.Code, http.StatusSeeOther)
-// 		location := rr.Header().Get("Location")
-// 		if location != "/app" {
-// 			t.Errorf("got redirect location %s, want /app", location)
-// 		}
-// 	})
-// }
-

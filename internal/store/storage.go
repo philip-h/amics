@@ -10,10 +10,18 @@ type Storage struct {
 		Create(*Student) error
 		GetByUsername(string) (*Student, error)
 	}
+
+	Courses interface {
+		GetByTeacherId(int) ([]*Course, error)
+	}
+
 	Assignments interface {
-		GetById(int, string) (*AssignmentSubmission, error)
-		GetByUsername(string) ([]*AssignmentWithGrade, error)
-		Submit(int, string, *PyFile) error
+		GetWithGradeByStudentId(int) ([]*AssignmentWithGrade, error)
+		GetWithSubmissionByAssignmentAndStudentIds(int, int) (*AssignmentSubmission, error)
+		Submit(int, int, *PyFile) error
+
+		GetById(int) (*Assignment, error)
+		GetByCourseId(int) ([]*Assignment, error)
 	}
 }
 
@@ -22,5 +30,6 @@ func New(db *sql.DB) Storage {
 		Teachers:    &TeacherStore{db},
 		Students:    &StudentStore{db},
 		Assignments: &AssignmentStore{db},
+		Courses:     &CourseStore{db},
 	}
 }

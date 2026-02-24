@@ -29,7 +29,7 @@
 
 
   <div>
-    <form action="/app/assignment/{{ .Assignment.Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
+    <form action="/app/assignments/{{ .Assignment.Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
       {{ if .Assignment.Submission }}
         <label for="file">Re-upload your assignment:</label>
       {{ else }}

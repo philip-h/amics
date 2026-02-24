@@ -14,23 +14,23 @@ import (
 )
 
 type Application struct {
-	Config Config
-	Store store.Storage
-	Auth  auth.Authenticator
+	Config    Config
+	Store     store.Storage
+	Auth      auth.Authenticator
 	Templates *template.Template
 }
 
 type Config struct {
 	Port string
-	Db *db.DbConfig
+	Db   *db.DbConfig
 }
 
 func (app *Application) Mount() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Serve static files
-    fs := http.FileServer(http.Dir("./static"))
-    mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
+	fs := http.FileServer(http.Dir("./static"))
+	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 
 	// Homepage
 	mux.HandleFunc("GET /", makeHTTPHandlerFunc(app.handleIndex))
@@ -43,9 +43,14 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /logout", makeHTTPHandlerFunc(app.handleLogout))
 
 	// App Routes
-	mux.HandleFunc("GET /app", app.withAuth(makeHTTPHandlerFunc(app.handleDashboard)))
-	mux.HandleFunc("GET /app/assignment/{assignmentId}", app.withAuth(makeHTTPHandlerFunc(app.handleAssignmentDetail)))
-	mux.HandleFunc("POST /app/assignment/{assignmentId}/submit", app.withAuth(makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
+	mux.HandleFunc("GET /app", app.withAuth("student", makeHTTPHandlerFunc(app.handleDashboard)))
+	mux.HandleFunc("GET /app/assignments/{assignmentId}", app.withAuth("student", makeHTTPHandlerFunc(app.handleAssignmentDetail)))
+	mux.HandleFunc("POST /app/assignments/{assignmentId}/submit", app.withAuth("student", makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
+
+	// Admin Routes
+	mux.HandleFunc("GET /teacher", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherDashboard)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignments)))
+	mux.HandleFunc("GET /teacher/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
 
 	return mux
 }
@@ -71,19 +76,22 @@ func makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.
 		if err != nil {
 			je := &errs.JsonError{}
 			se := &errs.ServerError{}
-			jwte := &errs.InvalidJwtError{}
+			jwte := &errs.JwtError{}
 			if errors.As(err, &je) {
 				log.Printf("%s: %s", r.URL.Path, je.Internal)
 				writeJSON(w, je.Status, je)
 			} else if errors.As(err, &se) {
 				log.Printf("%s: %s", r.URL.Path, se.Internal)
 				http.Error(w, se.Error(), se.Status)
-			}  else if errors.Is(err, http.ErrNoCookie) {
+			} else if errors.Is(err, http.ErrNoCookie) {
 				log.Printf("%s: No auth token provided", r.URL.Path)
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else if errors.As(err, &jwte) {
 				log.Printf("%s: %s", r.URL.Path, jwte.Message)
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			} else if errors.Is(err, &errs.UnauthorizedError{}) {
+				log.Printf("%s: Unauthorized access attempt", r.URL.Path)
+				http.NotFound(w, r)
 			} else {
 				log.Printf("[?] %s: %s!!", r.URL.Path, err.Error())
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

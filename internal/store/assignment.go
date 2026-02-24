@@ -42,8 +42,8 @@ type AssignmentSubmission struct {
 	PyFile     *PyFile
 }
 
-func (s *AssignmentStore) GetById(id int, username string) (*AssignmentSubmission, error) {
-	assignment := &AssignmentSubmission{}
+func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentId int, studentId int) (*AssignmentSubmission, error) {
+	aws := &AssignmentSubmission{}
 
 	// Dealing with the potential of nil values
 	var subId sql.NullInt64
@@ -77,20 +77,19 @@ func (s *AssignmentStore) GetById(id int, username string) (*AssignmentSubmissio
 		f.name,
 		f.content
 	FROM assignment a
-	JOIN student ON a.course_id = student.course_id
-	LEFT JOIN submission s ON s.assignment_id = a.id
+	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = $2
 	LEFT JOIN file f ON s.file_id = f.id
-	WHERE a.id = $1 AND student.username = $2`, id, username).Scan(
-		&assignment.Assignment.Id,
-		&assignment.UnitName,
-		&assignment.Assignment.Name,
-		&assignment.Description,
-		&assignment.RequiredFilename,
-		&assignment.Points,
-		&assignment.DueDate,
-		&assignment.Visible,
-		&assignment.PytestFileId,
-		&assignment.CourseId,
+	WHERE a.id = $1`, assignmentId, studentId).Scan(
+		&aws.Assignment.Id,
+		&aws.UnitName,
+		&aws.Assignment.Name,
+		&aws.Description,
+		&aws.RequiredFilename,
+		&aws.Points,
+		&aws.DueDate,
+		&aws.Visible,
+		&aws.PytestFileId,
+		&aws.CourseId,
 		&subId,
 		&subUserId,
 		&subAssignmentId,
@@ -107,10 +106,10 @@ func (s *AssignmentStore) GetById(id int, username string) (*AssignmentSubmissio
 		return nil, err
 	}
 	if !subId.Valid {
-		assignment.Submission = nil
-		assignment.PyFile = nil
+		aws.Submission = nil
+		aws.PyFile = nil
 	} else {
-		assignment.Submission = &Submission{
+		aws.Submission = &Submission{
 			Id:           int(subId.Int64),
 			StudentId:    int(subUserId.Int64),
 			AssignmentId: int(subAssignmentId.Int64),
@@ -118,13 +117,13 @@ func (s *AssignmentStore) GetById(id int, username string) (*AssignmentSubmissio
 			Grade:        int(subGrade.Int64),
 			Comments:     subComments.String,
 		}
-		assignment.PyFile = &PyFile{
+		aws.PyFile = &PyFile{
 			Id:      int(pyFileId.Int64),
 			Name:    pyFileName.String,
 			Content: pyFileContent.String,
 		}
 	}
-	return assignment, nil
+	return aws, nil
 }
 
 type AssignmentWithGrade struct {
@@ -132,7 +131,7 @@ type AssignmentWithGrade struct {
 	Grade sql.NullInt64 `json:"grade" db:"grade"`
 }
 
-func (s *AssignmentStore) GetByUsername(username string) ([]*AssignmentWithGrade, error) {
+func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentWithGrade, error) {
 	// Get all assignments for the course the user is enrolled in, along with
 	// the user's submission grade for each assignment (if it exists)
 	rows, err := s.db.Query(`SELECT 
@@ -150,7 +149,7 @@ func (s *AssignmentStore) GetByUsername(username string) ([]*AssignmentWithGrade
 	FROM assignment a
 	JOIN student ON a.course_id = student.course_id
 	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = student.id
-	WHERE student.username = $1`, username)
+	WHERE student.id = $1`, studentId)
 
 	if err != nil {
 		return nil, err
@@ -173,19 +172,13 @@ func (s *AssignmentStore) GetByUsername(username string) ([]*AssignmentWithGrade
 	return assignments, nil
 }
 
-func (s *AssignmentStore) Submit(assignmentId int, username string, pyFile *PyFile) error {
+func (s *AssignmentStore) Submit(assignmentId, studentId int, pyFile *PyFile) error {
 	// For now, just replace any existing submission with the new one... no grading
 	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-
-	var studentId int
-	err = tx.QueryRow("SELECT id FROM student WHERE username = $1", username).Scan(&studentId)
-	if err != nil {
-		return err
-	}
 
 	row, err := tx.Exec("INSERT INTO file (name, content) VALUES ($1, $2)", pyFile.Name, pyFile.Content)
 	if err != nil {
@@ -218,4 +211,77 @@ func (s *AssignmentStore) Submit(assignmentId int, username string, pyFile *PyFi
 
 	err = tx.Commit()
 	return err
+}
+
+func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
+	assignment := &Assignment{}
+
+	err := s.db.QueryRow(`SELECT 
+		id, 
+		unit_name, 
+		name, 
+		description, 
+		required_filename, 
+		points, 
+		due_date, 
+		visible, 
+		pytest_file_id, 
+		course_id
+	FROM assignment
+	WHERE id = $1`, assignmentId).Scan(
+		&assignment.Id,
+		&assignment.UnitName,
+		&assignment.Name,
+		&assignment.Description,
+		&assignment.RequiredFilename,
+		&assignment.Points,
+		&assignment.DueDate,
+		&assignment.Visible,
+		&assignment.PytestFileId,
+		&assignment.CourseId)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return assignment, nil
+}
+
+func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
+
+	rows, err := s.db.Query(`SELECT 
+		id, 
+		unit_name, 
+		name, 
+		description, 
+		required_filename, 
+		points, 
+		due_date, 
+		visible, 
+		pytest_file_id, 
+		course_id
+	FROM assignment
+	WHERE course_id = $1`, courseId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	assignments := []*Assignment{}
+	for rows.Next() {
+		assignment := &Assignment{}
+
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.PytestFileId, &assignment.CourseId)
+		if err != nil {
+			return nil, err
+		}
+		assignments = append(assignments, assignment)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return assignments, nil
 }

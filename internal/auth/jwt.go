@@ -9,20 +9,20 @@ import (
 
 type JwtAuthenticator struct {
 	SecretKey []byte
-	iss string
+	iss       string
 }
 
 func NewJwtAuthenticator(secretKey, iss string) *JwtAuthenticator {
 	return &JwtAuthenticator{
 		SecretKey: []byte(secretKey),
-		iss: iss,
+		iss:       iss,
 	}
 }
 
-func (a *JwtAuthenticator) CreateJwt(sub, aud string, exp int64) (string, error) {
+func (a *JwtAuthenticator) CreateJwt(userId, role string, exp int64) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": sub,
-		"aud": aud,
+		"sub": userId,
+		"aud": role,
 		"exp": exp,
 		"iss": a.iss,
 		"iat": jwt.NewNumericDate(time.Now()),
@@ -40,8 +40,7 @@ func (a *JwtAuthenticator) ValidateJwt(tokenString string) (*jwt.Token, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 
-			return nil, &errs.InvalidJwtError{
-			}
+			return nil, &errs.JwtError{}
 		}
 
 		return []byte(a.SecretKey), nil

@@ -1,0 +1,31 @@
+{{ define "manage_assignments" }}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/teacher/manage_assignments</title>
+  <link rel='stylesheet' href='/static/css/style.css'>
+</head>
+
+<body>
+  {{ template "appNav" . }}
+  <h1>Manage {{.Assignment.Name}}</h1>
+  <p>Welcome to the assignment management page!</p>
+
+  <div>
+    <button disabled>Add New Assignment</button>
+  </div>
+
+  <ul>
+  {{ range .Assignments }}
+    <li><a href="/teacher/assignments/{{.Id}}">{{ .Name }} -> {{ .Points }}</a>: <button disabled>Delete Assignment</button></li>
+
+  {{end}}
+  </ul>
+
+  {{ template "logoutScript" . }}
+</body>
+
+</html>
+{{ end }}
