@@ -5,13 +5,67 @@
 <head>
   <meta charset='utf-8'>
   <title>amics/teacher/manage_assignment</title>
-  <link rel='stylesheet' href='/static/css/style.css'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
 </head>
 
 <body>
-  {{ template "appNav" . }}
-  <h1>Hello world {{ .Assignment.Name }}</h1>
+  <main class="container">
+    <nav aria-label="breadcrumb" style="justify-content: space-between">
+      <ul>
+        <li><a href="/teacher">Teacher Dashboard</a></li>
+        <li><a href="/teacher/courses/{{.CourseId}}/assignments">Manage Assignments</a></li>
+        <li>{{if .Assignment}}{{.Assignment.Name}}{{else}}New Assignment{{end}}</li>
+      </ul>
+      <ul>
+        <li><button id="logout-button" class="secondary">Logout</button></li>
+      </ul>
+    </nav>
 
+    <form method="{{if .Assignment}}PUT{{else}}POST{{end}}" action="/teacher/courses{{.CourseId}}/assignments">
+      <div class="grid">
+        <fieldset>
+          <label for="id">Id</label>
+          <input type="number" id="id" name="id" value="{{if .Assignment}}{{.Assignment.Id}}{{end}}" disabled>
+        </fieldset>
+        <fieldset>
+          <label for="visible">Visible</label>
+          <input type="checkbox" id="visible" name="visible" {{if and .Assignment .Assignment.Visible}}checked{{end}} required>
+        </fieldset>
+        <fieldset>
+          <label for="unit-name">Unit Name</label>
+          <input type="text" id="unit-name" name="unit-name" value="{{if .Assignment}}{{.Assignment.UnitName}}{{end}}" required autofocus>
+        </fieldset>
+      </div>
+      <fieldset>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="{{if .Assignment}}{{.Assignment.Name}}{{end}}" required>
+      </fieldset>
+      <fieldset>
+        <label for="description">Description</label>
+        <input type="text" id="description" name="description" value="{{if .Assignment}}{{.Assignment.Description}}{{end}}" required>
+      </fieldset>
+      <fieldset>
+        <label for="required-filename">Required Filename</label>
+        <input type="text" id="required-filename" name="required-filename" value="{{if .Assignment}}{{.Assignment.RequiredFilename}}{{end}}"
+          required>
+      </fieldset>
+      <fieldset>
+        <label for="points">Points</label>
+        <input type="number" id="points" name="points" value="{{if .Assignment}}{{.Assignment.Points}}{{end}}" required>
+      </fieldset>
+      <fieldset>
+        <label for="due-date">Due Date</label>
+        <input type="date" id="due-date" name="due-date" value="{{if .Assignment}}{{.Assignment.DueDate}}{{end}}" required>
+      </fieldset>
+
+      <fieldset>
+        <label for="pytest-file">Pytest File</label>
+        <textarea id="pytest-file" name="pytest-file">{{if .Assignment}}{{.Assignment.PyFile.Content}}{{end}}</textarea>
+      </fieldset>
+      <button type="submit">{{if .Assignment}}Confirm Edits{{else}}Create Assignment{{end}}</button>
+    </form>
+
+  </main>
   {{ template "logoutScript" . }}
 </body>
 

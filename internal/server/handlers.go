@@ -355,7 +355,7 @@ func (app *Application) handleAssignmentSubmit(w http.ResponseWriter, r *http.Re
 
 	// Use python (called here) to grade and return an actual mark
 
-	http.Redirect(w, r, "/app/assignment/"+strconv.Itoa(assignmentId), http.StatusSeeOther)
+	http.Redirect(w, r, "/app/assignments/"+strconv.Itoa(assignmentId), http.StatusSeeOther)
 	return nil
 }
 
@@ -379,6 +379,28 @@ func (app *Application) handleTeacherDashboard(w http.ResponseWriter, r *http.Re
 	return app.renderTemplate(w, "teacher_dashboard", map[string]any{"Courses": courses})
 }
 
+func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Request) error {
+
+	courseIdStr := r.PathValue("courseId")
+
+	if courseIdStr == "new" {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil})
+	}
+
+	courseId, err := strconv.Atoi(courseIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert assignment ID to int: " + r.PathValue("courseId"),
+		}
+	}
+	course, err := app.Store.Courses.GetById(courseId)
+	if err != nil {
+		return err
+	}
+	return app.renderTemplate(w, "manage_course", map[string]any{"Course": course})
+}
+
 func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.Request) error {
 
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
@@ -392,11 +414,23 @@ func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.
 	if err != nil {
 		return err
 	}
-	return app.renderTemplate(w, "manage_assignments", map[string]any{"Assignments": assignments})
+	return app.renderTemplate(w, "manage_assignments", map[string]any{"Assignments": assignments, "CourseId": courseId})
 }
 
 func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
-	assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert courseId ID to int: " + r.PathValue("courseId"),
+		}
+	}
+	assignmentIdStr := r.PathValue("assignmentId")
+	if assignmentIdStr == "new" {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment":nil, "CourseId":courseId})
+	}
+
+	assignmentId, err := strconv.Atoi(assignmentIdStr)
 	if err != nil {
 		return &errs.ServerError{
 			Status:   http.StatusBadRequest,
@@ -406,5 +440,5 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 
 	assignment, err := app.Store.Assignments.GetById(assignmentId)
 
-	return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": assignment})
+	return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": assignment, "CourseId": courseId})
 }

@@ -39,9 +39,14 @@ func (m *MockStudentStore) GetByTeacherId(teacherId int) ([]*Assignment, error) 
 // Mock Course Store
 // ============================================================================
 type MockCourseStore struct {
+	GetByIdInvoked bool
 	GetByTeacherIdInvoked bool
 }
 
+func (m *MockCourseStore) GetById(id int) (*Course, error) {
+	m.GetByIdInvoked = true
+	return &Course{}, nil
+}
 func (m *MockCourseStore) GetByTeacherId(id int) ([]*Course, error) {
 	m.GetByTeacherIdInvoked = true
 	return []*Course{}, nil

@@ -13,6 +13,7 @@ type Storage struct {
 
 	Courses interface {
 		GetByTeacherId(int) ([]*Course, error)
+		GetById(int) (*Course, error)
 	}
 
 	Assignments interface {

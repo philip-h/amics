@@ -1,19 +1,16 @@
 /* basic css reset */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+
+fieldset {
+  position: relative !important;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
+#toggle-password {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
-a:hover {
-  font-weight: bold;
-}
-
-.active {
-  font-weight: bold;
+#toggle-password:hover {
+  cursor: pointer;
+  opacity: 80%;
 }

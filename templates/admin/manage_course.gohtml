@@ -1,0 +1,53 @@
+{{ define "manage_course" }}
+<!doctype html>
+<html lang='en'>
+
+<head>
+  <meta charset='utf-8'>
+  <title>amics/teacher/manage_course</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
+</head>
+
+<body>
+  <main class="container">
+    <nav aria-label="breadcrumb" style="justify-content: space-between">
+      <ul>
+        <li><a href="/teacher">Teacher Dashboard</a></li>
+        <li>{{if .Course}}{{.Course.Name}}{{else}}New Course{{end}}</li>
+      </ul>
+      <ul>
+        <li><button id="logout-button" class="secondary">Logout</button></li>
+      </ul>
+    </nav>
+
+    <form method="{{if .Course}}PUT{{else}}POST{{end}}" action="/teacher/courses">
+      <div class="grid">
+        <fieldset>
+          <label for="id">Id</label>
+          <input type="text" id="id" name="id" value="{{if .Course}}{{.Course.Id}}{{end}}" disabled>
+        </fieldset>
+        <fieldset>
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" value="{{if .Course}}{{.Course.Name}}{{end}}" required>
+        </fieldset>
+      </div>
+      <div class="grid">
+        <fieldset>
+          <label for="description">Year</label>
+          <input type="text" id="description" name="description" value="{{if .Course}}{{.Course.Year}}{{end}}" required>
+        </fieldset>
+        <fieldset>
+          <label for="semester">Semester</label>
+          <input type="text" id="semester" name="semester" value="{{if .Course}}{{.Course.Semester}}{{end}}"
+            required>
+        </fieldset>
+      </div>
+      <button type="submit">{{if .Course}}Confirm Edits{{else}}Create Course{{end}}</button>
+    </form>
+
+  </main>
+  {{ template "logoutScript" . }}
+</body>
+
+</html>
+{{ end }}

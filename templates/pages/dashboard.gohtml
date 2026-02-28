@@ -5,25 +5,49 @@
 <head>
   <meta charset='utf-8'>
   <title>amics/app</title>
-  <link rel='stylesheet' href='/static/css/style.css'>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
 </head>
 
 <body>
-  {{template "appNav" .}}
-
-  <main>
-    <h1>Dashboard</h1>
-    <p>Welcome to your dashboard!</p>
-
-    {{ if .Assignments }}
-      <h2>Your Assignments</h2>
+  <main class="container">
+    <nav>
       <ul>
-        {{ range .Assignments }}
-          {{ if .Visible }}
-          <li><a href="/app/assignments/{{ .Id }}">{{ .Name }} - Due: {{ .DueDate }} -- Grade: {{ if .Grade.Valid }}{{ .Grade.Int64 }}/ {{ .Points }}{{ else }}Not Submitted{{ end }}</a></li>
-          {{ end}}
-        {{ end }}
+        <li>Dashboard</li>
       </ul>
+      <ul>
+        <li><button id="logout-button" class="secondary">Logout</button></li>
+      </ul>
+    </nav>
+    {{ if .Assignments }}
+      <h2>Assignments</h2>
+      <h3>Unit 0</h3>
+        <article>
+        <table class="striped">
+        <tbody>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Due</th>
+            <th scope="col">Score</th>
+          </tr>
+
+        </thead>
+        {{ range .Assignments }}
+        <tr>
+          <th scope="row"><a href="/app/assignments/{{.Id}}">{{.Name}}</a></th>
+          <td>{{.DueDate}}</td>
+          <td>
+            {{ if .Grade.Valid}}
+            {{ .Grade.Value}}/{{.Points}}
+            {{else}}
+            -/{{.Points}}
+            {{ end }}
+          </td>
+        </tr>
+        {{ end }}
+        </tbody>
+      </table>
+      </article>
     {{ else }}
       <p>You have no assignments yet.</p>
     {{ end }}

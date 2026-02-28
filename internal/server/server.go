@@ -49,8 +49,9 @@ func (app *Application) Mount() *http.ServeMux {
 
 	// Admin Routes
 	mux.HandleFunc("GET /teacher", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherDashboard)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherCourses)))
 	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignments)))
-	mux.HandleFunc("GET /teacher/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
+	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
 
 	return mux
 }

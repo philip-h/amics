@@ -4,6 +4,12 @@ import (
 	"database/sql"
 )
 
+type PyFile struct {
+	Id      int
+	Name    string
+	Content string
+}
+
 type Assignment struct {
 	Id               int
 	UnitName         string
@@ -13,8 +19,8 @@ type Assignment struct {
 	Points           int
 	DueDate          string
 	Visible          bool
-	PytestFileId     int
 	CourseId         int
+	PyFile
 }
 
 type Submission struct {
@@ -24,12 +30,6 @@ type Submission struct {
 	FileId       int
 	Grade        int
 	Comments     string
-}
-
-type PyFile struct {
-	Id      int
-	Name    string
-	Content string
 }
 
 type AssignmentStore struct {
@@ -65,7 +65,6 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		a.points, 
 		a.due_date, 
 		a.visible, 
-		a.pytest_file_id, 
 		a.course_id,
 		s.id,
 		s.student_id,
@@ -88,7 +87,6 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		&aws.Points,
 		&aws.DueDate,
 		&aws.Visible,
-		&aws.PytestFileId,
 		&aws.CourseId,
 		&subId,
 		&subUserId,
@@ -128,7 +126,7 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 
 type AssignmentWithGrade struct {
 	Assignment
-	Grade sql.NullInt64 `json:"grade" db:"grade"`
+	Grade sql.NullInt64
 }
 
 func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentWithGrade, error) {
@@ -143,7 +141,6 @@ func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentW
 		a.points, 
 		a.due_date, 
 		a.visible, 
-		a.pytest_file_id, 
 		a.course_id ,
 		s.grade
 	FROM assignment a
@@ -159,7 +156,7 @@ func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentW
 	assignments := []*AssignmentWithGrade{}
 	for rows.Next() {
 		assignment := &AssignmentWithGrade{}
-		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.PytestFileId, &assignment.CourseId, &assignment.Grade)
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId, &assignment.Grade)
 		if err != nil {
 			return nil, err
 		}
@@ -217,18 +214,20 @@ func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
 	assignment := &Assignment{}
 
 	err := s.db.QueryRow(`SELECT 
-		id, 
-		unit_name, 
-		name, 
-		description, 
-		required_filename, 
-		points, 
-		due_date, 
-		visible, 
-		pytest_file_id, 
-		course_id
-	FROM assignment
-	WHERE id = $1`, assignmentId).Scan(
+		a.id, 
+		a.unit_name, 
+		a.name, 
+		a.description, 
+		a.required_filename, 
+		a.points, 
+		a.due_date, 
+		a.visible, 
+		a.course_id,
+		f.id,
+		f.content
+	FROM assignment a
+	JOIN file f ON a.pytest_file_id = f.id
+	WHERE a.id = $1`, assignmentId).Scan(
 		&assignment.Id,
 		&assignment.UnitName,
 		&assignment.Name,
@@ -237,8 +236,9 @@ func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
 		&assignment.Points,
 		&assignment.DueDate,
 		&assignment.Visible,
-		&assignment.PytestFileId,
-		&assignment.CourseId)
+		&assignment.CourseId,
+		&assignment.PyFile.Id,
+		&assignment.PyFile.Content)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -259,7 +259,6 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 		points, 
 		due_date, 
 		visible, 
-		pytest_file_id, 
 		course_id
 	FROM assignment
 	WHERE course_id = $1`, courseId)
@@ -273,7 +272,7 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 	for rows.Next() {
 		assignment := &Assignment{}
 
-		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.PytestFileId, &assignment.CourseId)
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId)
 		if err != nil {
 			return nil, err
 		}
