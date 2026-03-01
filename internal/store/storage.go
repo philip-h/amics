@@ -12,17 +12,21 @@ type Storage struct {
 	}
 
 	Courses interface {
+		Create(*Course) error
 		GetByTeacherId(int) ([]*Course, error)
 		GetById(int) (*Course, error)
+    Update(*Course) error
 	}
 
 	Assignments interface {
+    Create(*Assignment) error
 		GetWithGradeByStudentId(int) ([]*AssignmentWithGrade, error)
 		GetWithSubmissionByAssignmentAndStudentIds(int, int) (*AssignmentSubmission, error)
 		Submit(int, int, *PyFile) error
 
 		GetById(int) (*Assignment, error)
 		GetByCourseId(int) ([]*Assignment, error)
+    Update(*Assignment) error
 	}
 }
 

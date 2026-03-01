@@ -4,6 +4,7 @@
 
 <head>
   <meta charset='utf-8'>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>amics/register</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
   <link rel='stylesheet' href='/static/css/style.css'>
@@ -15,6 +16,9 @@
       <h1>Register</h1>
       <form method="POST" action="/register">
         <fieldset>
+          {{ if .Error}}
+          <p style="color: rgb(136, 56.5, 53);">{{.Error}}</p>
+          {{end}}
           <label for="student-number">Student Number:</label>
           <input type="text" id="student-number" name="student-number" aria-describedby="student-number-constraints" inputmode="numeric" required autofocus>
           <small id="student-number-constraints">Must be 5-7 numbers</small>

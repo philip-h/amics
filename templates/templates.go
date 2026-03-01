@@ -2,5 +2,5 @@ package templates
 
 import "embed"
 
-//go:embed pages/*.gohtml partials/*.gohtml admin/*.gohtml
+//go:embed pages/*.html partials/*.html admin/*.html
 var TemplateFS embed.FS

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,7 +47,7 @@ func (app *Application) handleLoginGet(w http.ResponseWriter, r *http.Request) e
 		return nil
 	}
 
-	return app.renderTemplate(w, "login", map[string]string{"Active": "login"})
+	return app.renderTemplate(w, "login", nil)
 }
 
 func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) error {
@@ -55,23 +56,16 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
 	}
-	// If either username or password is empty, return an error
+
 	if body.Username == "" || body.Password == "" {
-		return &errs.JsonError{
-			Status:   http.StatusBadRequest,
-			Message:  "Please make sure to fill out both the username and password fields.",
-			Internal: "Missing username or password in login request",
-		}
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Username or password field was blank"})
 	}
 
 	// Look for student in the database
 	student, err := app.Store.Students.GetByUsername(body.Username)
 	if err != nil {
-		return &errs.JsonError{
-			Status:   http.StatusInternalServerError,
-			Message:  "Sorry, something went seriously wrong on our end. Please try again in a sec.",
-			Internal: err.Error(),
-		}
+		log.Printf("%s: %s", "POST /login", err.Error())
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	type UserPass struct {
 		Id       int
@@ -92,18 +86,11 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		// Check if the user is a teacher
 		teacher, err := app.Store.Teachers.GetByUsername(body.Username)
 		if err != nil {
-			return &errs.JsonError{
-				Status:   http.StatusInternalServerError,
-				Message:  "Sorry, something went seriously wrong on our end. Please try again in a sec.",
-				Internal: err.Error(),
-			}
+			log.Printf("%s: %s", "POST /login", err.Error())
+			return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 		}
 		if teacher == nil {
-			return &errs.JsonError{
-				Status:   http.StatusUnauthorized,
-				Message:  "Hmm, I could not find your account.",
-				Internal: "No student or teacher found with username: " + body.Username,
-			}
+			return app.renderTemplate(w, "login", map[string]string{"Error": "Hmm, I could not find your account."})
 		}
 		// For simplicity, we will treat teachers the same as students for authentication purposes. In a real implementation, you would likely want to have different handling for teachers and students after this point.
 		user = &UserPass{
@@ -118,21 +105,14 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	// err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 	// if err != nil {
 	if user.Password != body.Password {
-		return &errs.JsonError{
-			Status:   http.StatusUnauthorized,
-			Message:  "Hmm, I could not find your account.",
-			Internal: "Password mismatch for user: " + body.Username,
-		}
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Hmm, I could not find your account."})
 	}
 
 	// Create JWT token and set it as a cookie
 	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), user.Role, time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
-		return &errs.JsonError{
-			Status:   http.StatusInternalServerError,
-			Message:  "Sorry, something went seriously wrong on our end. Please try again in a sec.",
-			Internal: err.Error(),
-		}
+		log.Printf("%s: %s", "POST /login", err.Error())
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -157,14 +137,14 @@ func (app *Application) handleRegisterGet(w http.ResponseWriter, r *http.Request
 		http.Redirect(w, r, "/app", http.StatusSeeOther)
 		return nil
 	}
-	return app.renderTemplate(w, "register", map[string]string{"Active": "register"})
+	return app.renderTemplate(w, "register", nil)
 }
 
 type RegisterReq struct {
-	StudentNumber string `json:"student_number"`
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	CourseId      string `json:"course_id"`
+	StudentNumber string
+	Username      string
+	Password      string
+	CourseId      string
 }
 
 func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Request) error {
@@ -177,21 +157,13 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 	}
 	// If either username or password is empty, return an error
 	if body.StudentNumber == "" || body.Username == "" || body.Password == "" || body.CourseId == "" {
-		return &errs.JsonError{
-			Status:   http.StatusBadRequest,
-			Message:  "Please make sure to fill out all required fields.",
-			Internal: "Missing student number, username, password, or course_id in registration request",
-		}
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Please make sure to fill out all required fields."})
 	}
 
 	// Create a user
 	courseId, err := strconv.Atoi(body.CourseId)
 	if err != nil {
-		return &errs.JsonError{
-			Status:   http.StatusBadRequest,
-			Message:  "Invalid course selection.",
-			Internal: "Failed to convert course_id to int: " + body.CourseId,
-		}
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Invalid course selection."})
 	}
 
 	user := &store.Student{
@@ -203,16 +175,14 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 
 	err = app.Store.Students.Create(user)
 	if err != nil {
-		return err
+		log.Printf("%s: %s", "POST /register", err.Error())
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	// Create jwt token and set it as a cookie
 	token, err := app.Auth.CreateJwt(user.Username, "student", time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
-		return &errs.JsonError{
-			Status:   http.StatusInternalServerError,
-			Message:  "Sorry, something went seriously wrong on our end. Please try again in a sec.",
-			Internal: err.Error(),
-		}
+		log.Printf("%s: %s", "POST /register", err.Error())
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -286,6 +256,8 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return err
 	}
+
+  log.Printf("AWS has a submission of %+v", aws.Submission)
 
 	return app.renderTemplate(w,
 		"assignment_detail",
@@ -379,12 +351,120 @@ func (app *Application) handleTeacherDashboard(w http.ResponseWriter, r *http.Re
 	return app.renderTemplate(w, "teacher_dashboard", map[string]any{"Courses": courses})
 }
 
+func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Request) error {
+	teacherIdStr := r.Context().Value("userId").(string)
+	teacherId, err := strconv.Atoi(teacherIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + teacherIdStr,
+		}
+	}
+
+	// Read the request body from form values
+	bodyYearStr := r.FormValue("year")
+	bodyYear, err := strconv.Atoi(bodyYearStr)
+	if err != nil {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Year was not an int"})
+	}
+
+	bodySemStr := r.FormValue("semester")
+	bodySem, err := strconv.Atoi(bodySemStr)
+	if err != nil {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Semester was not an int"})
+	}
+
+	body := &store.Course{
+		Name:      r.FormValue("name"),
+		Semester:  bodySem,
+		Year:      bodyYear,
+		TeacherId: teacherId,
+	}
+	// If either username or password is empty, return an error
+	if body.Name == "" || bodySemStr == "" || bodyYearStr == "" {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Please make sure to fill out all required fields."})
+	}
+
+	// Create a course
+	err = app.Store.Courses.Create(body)
+	if err != nil {
+		log.Printf("%s: %s", "POST /teacher/courses", err.Error())
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
+	}
+
+	http.Redirect(w, r, "/teacher", http.StatusSeeOther)
+	return nil
+}
+
+func (app *Application) handleCourseUpdate(w http.ResponseWriter, r *http.Request) error {
+	teacherIdStr := r.Context().Value("userId").(string)
+	teacherId, err := strconv.Atoi(teacherIdStr)
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert User ID to int: " + teacherIdStr,
+		}
+	}
+
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert courseId ID to int: " + r.PathValue("courseId"),
+		}
+	}
+
+	// Read the request body from form values
+	type CourseBody struct {
+		Id       string
+		Year     string
+		Semester string
+		Name     string
+	}
+
+	body := &CourseBody{
+		Id:       r.FormValue("cid"),
+		Year:     r.FormValue("year"),
+		Semester: r.FormValue("semester"),
+		Name:     r.FormValue("name"),
+	}
+
+	if body.Id == "" || body.Year == "" || body.Semester == "" || body.Name == "" {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": body, "Error": "Please make sure to fill out all required fields."})
+	}
+	yearInt, err := strconv.Atoi(body.Year)
+	if err != nil {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": body, "Error": "Year was not an int"})
+	}
+	semInt, err := strconv.Atoi(body.Semester)
+	if err != nil {
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": body, "Error": "Semester was not an int"})
+	}
+
+	course := &store.Course{
+		Id:        courseId,
+		Name:      body.Name,
+		Semester:  semInt,
+		Year:      yearInt,
+		TeacherId: teacherId,
+	}
+
+	err = app.Store.Courses.Update(course)
+	if err != nil {
+		log.Printf("%s: %s", "PUT /teacher/courses", err.Error())
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": course, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
+	}
+
+	http.Redirect(w, r, "/teacher", http.StatusSeeOther)
+	return nil
+}
+
 func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Request) error {
 
 	courseIdStr := r.PathValue("courseId")
 
 	if courseIdStr == "new" {
-		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil})
+		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": nil})
 	}
 
 	courseId, err := strconv.Atoi(courseIdStr)
@@ -398,6 +478,7 @@ func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Requ
 	if err != nil {
 		return err
 	}
+
 	return app.renderTemplate(w, "manage_course", map[string]any{"Course": course})
 }
 
@@ -418,6 +499,7 @@ func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.
 }
 
 func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
+	log.Println("Got herre")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -427,7 +509,7 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 	}
 	assignmentIdStr := r.PathValue("assignmentId")
 	if assignmentIdStr == "new" {
-		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment":nil, "CourseId":courseId})
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": nil, "CourseId": courseId})
 	}
 
 	assignmentId, err := strconv.Atoi(assignmentIdStr)
@@ -439,6 +521,155 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 	}
 
 	assignment, err := app.Store.Assignments.GetById(assignmentId)
+	if err != nil {
+		return err
+	}
 
 	return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": assignment, "CourseId": courseId})
+}
+
+func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *http.Request) error {
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert courseId ID to int: " + r.PathValue("courseId"),
+		}
+	}
+
+	// Read the request body from form values
+	type AssignmentBody struct {
+		UnitName         string
+		Name             string
+		Description      string
+		RequiredFilename string
+		Points           string
+		DueDate          string
+		Visible          string
+		PyFileContent    string
+	}
+
+	body := &AssignmentBody{
+		UnitName:         r.FormValue("unit-name"),
+		Name:             r.FormValue("name"),
+		Description:      r.FormValue("description"),
+		RequiredFilename: r.FormValue("required-filename"),
+		Points:           r.FormValue("points"),
+		DueDate:          r.FormValue("due-date"),
+		Visible:          r.FormValue("visible"),
+		PyFileContent:    r.FormValue("pyfile-content"),
+	}
+
+	if body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PyFileContent == "" {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Please make sure to fill out all required fields."})
+	}
+
+	pointsInt, err := strconv.Atoi(body.Points)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Points was not an int"})
+	}
+
+	assignment := &store.Assignment{
+		UnitName:         body.UnitName,
+		Name:             body.Name,
+		Description:      body.Description,
+		RequiredFilename: body.RequiredFilename,
+		Points:           pointsInt,
+		DueDate:          body.DueDate,
+		Visible:          body.Visible == "on",
+		CourseId:         courseId,
+		PyFile: store.PyFile{
+			Name:    body.RequiredFilename,
+			Content: body.PyFileContent,
+		},
+	}
+
+	err = app.Store.Assignments.Create(assignment)
+	if err != nil {
+		log.Printf("%s: %s", "POST /teacher/courses/"+strconv.Itoa(courseId)+"/assignments/new", err.Error())
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
+	}
+
+	http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/assignments", http.StatusSeeOther)
+	return nil
+}
+
+func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *http.Request) error {
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert courseId ID to int: " + r.PathValue("courseId"),
+		}
+	}
+
+	// Read the request body from form values
+	type AssignmentBody struct {
+		Id               string
+		UnitName         string
+		Name             string
+		Description      string
+		RequiredFilename string
+		Points           string
+		DueDate          string
+		Visible          string
+		PyFileId         string
+		PyFileContent    string
+	}
+
+	body := &AssignmentBody{
+		Id:               r.FormValue("id"),
+		UnitName:         r.FormValue("unit-name"),
+		Name:             r.FormValue("name"),
+		Description:      r.FormValue("description"),
+		RequiredFilename: r.FormValue("required-filename"),
+		Points:           r.FormValue("points"),
+		DueDate:          r.FormValue("due-date"),
+		Visible:          r.FormValue("visible"),
+		PyFileId:         r.FormValue("pyfile-id"),
+		PyFileContent:    r.FormValue("pyfile-content"),
+	}
+
+	if body.Id == "" || body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PyFileId == "" || body.PyFileContent == "" {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Please make sure to fill out all required fields."})
+	}
+
+	idInt, err := strconv.Atoi(body.Id)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Id was not an int"})
+	}
+	pointsInt, err := strconv.Atoi(body.Points)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Points was not an int"})
+	}
+	pyFileIdInt, err := strconv.Atoi(body.PyFileId)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "PyFile id was not an int"})
+	}
+
+	assignment := &store.Assignment{
+		Id:               idInt,
+		UnitName:         body.UnitName,
+		Name:             body.Name,
+		Description:      body.Description,
+		RequiredFilename: body.RequiredFilename,
+		Points:           pointsInt,
+		DueDate:          body.DueDate,
+		Visible:          body.Visible == "on",
+		CourseId:         courseId,
+		PyFile: store.PyFile{
+			Id:      pyFileIdInt,
+			Name:    body.RequiredFilename,
+			Content: body.PyFileContent,
+		},
+	}
+
+	err = app.Store.Assignments.Update(assignment)
+	if err != nil {
+		log.Printf("%s: %s", "POST /teacher/courses/"+strconv.Itoa(courseId)+"/assignments/"+strconv.Itoa(assignment.Id), err.Error())
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
+	}
+
+	http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/assignments", http.StatusSeeOther)
+	return nil
 }

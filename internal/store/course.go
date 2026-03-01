@@ -5,13 +5,18 @@ import "database/sql"
 type Course struct {
 	Id        int
 	Year      int
-	Semester  string
+	Semester  int
 	Name      string
 	TeacherId int
 }
 
 type CourseStore struct {
 	db *sql.DB
+}
+
+func (s *CourseStore) Create(course *Course) error {
+	_, err := s.db.Exec("INSERT INTO course (year, semester, name, teacher_id) VALUES ($1, $2, $3, $4)", course.Year, course.Semester, course.Name, course.TeacherId)
+	return err
 }
 
 func (s *CourseStore) GetById(courseId int) (*Course, error) {
@@ -54,4 +59,13 @@ func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
 		courses = append(courses, course)
 	}
 	return courses, nil
+}
+
+func (s *CourseStore) Update(course *Course) error {
+	_, err := s.db.Exec(`UPDATE course
+  SET year=?, semester=?, name=?
+  WHERE id=?`,
+		course.Year, course.Semester, course.Name, course.Id)
+
+	return err
 }

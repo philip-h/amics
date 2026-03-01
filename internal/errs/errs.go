@@ -3,27 +3,6 @@ package errs
 import "net/http"
 
 // ============================================================================
-// Json Error
-// ============================================================================
-type JsonError struct {
-	Status   int    `json:"status"`
-	Message  string `json:"message"`
-	Internal string `json:"-"`
-}
-
-func (e *JsonError) Error() string {
-	return e.Message
-}
-
-func NewJsonError(status int, message string, internal string) *JsonError {
-	return &JsonError{
-		Status:   status,
-		Message:  message,
-		Internal: internal,
-	}
-}
-
-// ============================================================================
 // Http Error
 // ============================================================================
 type ServerError struct {

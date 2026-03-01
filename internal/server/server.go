@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"html/template"
 	"log"
@@ -49,9 +48,15 @@ func (app *Application) Mount() *http.ServeMux {
 
 	// Admin Routes
 	mux.HandleFunc("GET /teacher", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherDashboard)))
+	mux.HandleFunc("POST /teacher/courses/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseCreate)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseUpdate)))
+
 	mux.HandleFunc("GET /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherCourses)))
+
 	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignments)))
 	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentCreate)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentUpdate)))
 
 	return mux
 }
@@ -65,23 +70,13 @@ func (app *Application) Run(mux *http.ServeMux) error {
 	return server.ListenAndServe()
 }
 
-func writeJSON(w http.ResponseWriter, status int, resource any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(&resource)
-}
-
 func makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := f(w, r)
 		if err != nil {
-			je := &errs.JsonError{}
 			se := &errs.ServerError{}
 			jwte := &errs.JwtError{}
-			if errors.As(err, &je) {
-				log.Printf("%s: %s", r.URL.Path, je.Internal)
-				writeJSON(w, je.Status, je)
-			} else if errors.As(err, &se) {
+			if errors.As(err, &se) {
 				log.Printf("%s: %s", r.URL.Path, se.Internal)
 				http.Error(w, se.Error(), se.Status)
 			} else if errors.Is(err, http.ErrNoCookie) {

@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"log"
 )
 
 type PyFile struct {
@@ -42,6 +43,29 @@ type AssignmentSubmission struct {
 	PyFile     *PyFile
 }
 
+func (s *AssignmentStore) Create(assignment *Assignment) error {
+	row, err := s.db.Exec("INSERT INTO file (name, content) values ($1, $2)", assignment.PyFile.Name, assignment.PyFile.Content)
+	if err != nil {
+		return err
+	}
+	liid, err := row.LastInsertId()
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(`INSERT INTO assignment (unit_name, name, description, required_filename, points, due_date, visible, course_id, pytest_file_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		assignment.UnitName,
+		assignment.Name,
+		assignment.Description,
+		assignment.RequiredFilename,
+		assignment.Points,
+		assignment.DueDate,
+		assignment.Visible,
+		assignment.CourseId,
+		int(liid))
+
+	return err
+}
+
 func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentId int, studentId int) (*AssignmentSubmission, error) {
 	aws := &AssignmentSubmission{}
 
@@ -55,6 +79,8 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 	var pyFileId sql.NullInt64
 	var pyFileName sql.NullString
 	var pyFileContent sql.NullString
+
+	log.Printf("StudentId: %d, AssigId: %d", studentId, assignmentId)
 
 	err := s.db.QueryRow(`SELECT 
 		a.id, 
@@ -76,9 +102,9 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		f.name,
 		f.content
 	FROM assignment a
-	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = $2
+	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = $1
 	LEFT JOIN file f ON s.file_id = f.id
-	WHERE a.id = $1`, assignmentId, studentId).Scan(
+	WHERE a.id = $2`, studentId, assignmentId).Scan(
 		&aws.Assignment.Id,
 		&aws.UnitName,
 		&aws.Assignment.Name,
@@ -194,13 +220,13 @@ func (s *AssignmentStore) Submit(assignmentId, studentId int, pyFile *PyFile) er
 
 	if existingSubmissionId > 0 {
 		// Update existing submission
-		_, err = tx.Exec("UPDATE submission SET file_id = $1, grade = NULL, comments = NULL WHERE id = $2", fileId, existingSubmissionId)
+		_, err = tx.Exec("UPDATE submission SET file_id = $1, grade = 2, comments = 'test update' WHERE id = $2", fileId, existingSubmissionId)
 		if err != nil {
 			return err
 		}
 	} else {
 		// Insert new submission
-		_, err = tx.Exec("INSERT INTO submission (student_id, assignment_id, file_id) VALUES ($1, $2, $3)", studentId, assignmentId, fileId)
+		_, err = tx.Exec("INSERT INTO submission (student_id, assignment_id, file_id, grade, comments) VALUES ($1, $2, $3, 3, 'test insert')", studentId, assignmentId, fileId)
 		if err != nil {
 			return err
 		}
@@ -283,4 +309,26 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 		return nil, err
 	}
 	return assignments, nil
+}
+
+func (s *AssignmentStore) Update(assignment *Assignment) error {
+	_, err := s.db.Exec("UPDATE file SET name=?, content=? where id=?", assignment.PyFile.Name, assignment.PyFile.Content, assignment.Id)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(`UPDATE assignment 
+  SET unit_name=?, name=?, description=?, required_filename=?, points=?, due_date=?, visible=?, course_id=?, pytest_file_id=?
+  WHERE id=?`,
+		assignment.UnitName,
+		assignment.Name,
+		assignment.Description,
+		assignment.RequiredFilename,
+		assignment.Points,
+		assignment.DueDate,
+		assignment.Visible,
+		assignment.CourseId,
+		assignment.PyFile.Id,
+		assignment.Id)
+
+	return err
 }
