@@ -7,6 +7,7 @@ import (
 	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
 	"github.com/philip-h/amics/internal/server"
+	"github.com/philip-h/amics/internal/services"
 	"github.com/philip-h/amics/internal/store"
 	"github.com/philip-h/amics/templates"
 )
@@ -23,7 +24,7 @@ func main() {
 	// Parse all the layouts
 	templates, err := template.ParseFS(templates.TemplateFS, "pages/*.html", "partials/*.html", "admin/*.html")
 	if err != nil {
-    log.Fatal("Failed to load templates: " + err.Error())
+		log.Fatal("Failed to load templates: " + err.Error())
 	}
 
 	db, err := db.New(dbConfig)
@@ -44,10 +45,17 @@ func main() {
 		Templates: templates,
 	}
 
+	worker, err := services.NewWorker(db)
+	if err != nil {
+		log.Fatalf("Failed to start worker. %v", err)
+	}
+
+  go worker.Start()
+  defer worker.Stop()
+
 	mux := app.Mount()
 	log.Printf("Starting server on port %s", cfg.Port)
 	if err := app.Run(mux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
-

@@ -2,14 +2,7 @@ package store
 
 import (
 	"database/sql"
-	"log"
 )
-
-type PyFile struct {
-	Id      int
-	Name    string
-	Content string
-}
 
 type Assignment struct {
 	Id               int
@@ -17,20 +10,11 @@ type Assignment struct {
 	Name             string
 	Description      string
 	RequiredFilename string
+	PytestCode       string
 	Points           int
 	DueDate          string
 	Visible          bool
 	CourseId         int
-	PyFile
-}
-
-type Submission struct {
-	Id           int
-	StudentId    int
-	AssignmentId int
-	FileId       int
-	Grade        int
-	Comments     string
 }
 
 type AssignmentStore struct {
@@ -40,28 +24,21 @@ type AssignmentStore struct {
 type AssignmentSubmission struct {
 	Assignment
 	Submission *Submission
-	PyFile     *PyFile
 }
 
 func (s *AssignmentStore) Create(assignment *Assignment) error {
-	row, err := s.db.Exec("INSERT INTO file (name, content) values ($1, $2)", assignment.PyFile.Name, assignment.PyFile.Content)
-	if err != nil {
-		return err
-	}
-	liid, err := row.LastInsertId()
-	if err != nil {
-		return err
-	}
-	_, err = s.db.Exec(`INSERT INTO assignment (unit_name, name, description, required_filename, points, due_date, visible, course_id, pytest_file_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+	_, err := s.db.Exec(
+		`INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		assignment.UnitName,
 		assignment.Name,
 		assignment.Description,
 		assignment.RequiredFilename,
+		assignment.PytestCode,
 		assignment.Points,
 		assignment.DueDate,
 		assignment.Visible,
-		assignment.CourseId,
-		int(liid))
+		assignment.CourseId)
 
 	return err
 }
@@ -73,14 +50,10 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 	var subId sql.NullInt64
 	var subUserId sql.NullInt64
 	var subAssignmentId sql.NullInt64
-	var subFileId sql.NullInt64
+	var subCode sql.NullString
 	var subGrade sql.NullInt64
 	var subComments sql.NullString
-	var pyFileId sql.NullInt64
-	var pyFileName sql.NullString
-	var pyFileContent sql.NullString
-
-	log.Printf("StudentId: %d, AssigId: %d", studentId, assignmentId)
+	var subStatus sql.NullString
 
 	err := s.db.QueryRow(`SELECT 
 		a.id, 
@@ -88,6 +61,7 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		a.name, 
 		a.description, 
 		a.required_filename, 
+    a.pytest_code,
 		a.points, 
 		a.due_date, 
 		a.visible, 
@@ -95,21 +69,19 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		s.id,
 		s.student_id,
 		s.assignment_id,
-		s.file_id,
+		s.code,
 		s.grade,
 		s.comments,
-		f.id,
-		f.name,
-		f.content
+    s.status
 	FROM assignment a
 	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = $1
-	LEFT JOIN file f ON s.file_id = f.id
 	WHERE a.id = $2`, studentId, assignmentId).Scan(
 		&aws.Assignment.Id,
 		&aws.UnitName,
 		&aws.Assignment.Name,
 		&aws.Description,
 		&aws.RequiredFilename,
+		&aws.PytestCode,
 		&aws.Points,
 		&aws.DueDate,
 		&aws.Visible,
@@ -117,34 +89,28 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		&subId,
 		&subUserId,
 		&subAssignmentId,
-		&subFileId,
+		&subCode,
 		&subGrade,
 		&subComments,
-		&pyFileId,
-		&pyFileName,
-		&pyFileContent)
+		&subStatus)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
 		return nil, err
 	}
+
 	if !subId.Valid {
 		aws.Submission = nil
-		aws.PyFile = nil
 	} else {
 		aws.Submission = &Submission{
 			Id:           int(subId.Int64),
 			StudentId:    int(subUserId.Int64),
 			AssignmentId: int(subAssignmentId.Int64),
-			FileId:       int(subFileId.Int64),
+			Code:         subCode.String,
 			Grade:        int(subGrade.Int64),
-			Comments:     subComments.String,
-		}
-		aws.PyFile = &PyFile{
-			Id:      int(pyFileId.Int64),
-			Name:    pyFileName.String,
-			Content: pyFileContent.String,
+			Comments:     subComments,
+			Status:       subStatus,
 		}
 	}
 	return aws, nil
@@ -195,76 +161,32 @@ func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentW
 	return assignments, nil
 }
 
-func (s *AssignmentStore) Submit(assignmentId, studentId int, pyFile *PyFile) error {
-	// For now, just replace any existing submission with the new one... no grading
-	tx, err := s.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	row, err := tx.Exec("INSERT INTO file (name, content) VALUES ($1, $2)", pyFile.Name, pyFile.Content)
-	if err != nil {
-		return err
-	}
-
-	id, err := row.LastInsertId()
-	fileId := int(id)
-
-	// Check if a submission already exists for this student and assignment
-	var existingSubmissionId int
-	err = tx.QueryRow("SELECT id FROM submission WHERE student_id = $1 AND assignment_id = $2", studentId, assignmentId).Scan(&existingSubmissionId)
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-
-	if existingSubmissionId > 0 {
-		// Update existing submission
-		_, err = tx.Exec("UPDATE submission SET file_id = $1, grade = 2, comments = 'test update' WHERE id = $2", fileId, existingSubmissionId)
-		if err != nil {
-			return err
-		}
-	} else {
-		// Insert new submission
-		_, err = tx.Exec("INSERT INTO submission (student_id, assignment_id, file_id, grade, comments) VALUES ($1, $2, $3, 3, 'test insert')", studentId, assignmentId, fileId)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = tx.Commit()
-	return err
-}
-
 func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
 	assignment := &Assignment{}
 
 	err := s.db.QueryRow(`SELECT 
-		a.id, 
-		a.unit_name, 
-		a.name, 
-		a.description, 
-		a.required_filename, 
-		a.points, 
-		a.due_date, 
-		a.visible, 
-		a.course_id,
-		f.id,
-		f.content
-	FROM assignment a
-	JOIN file f ON a.pytest_file_id = f.id
-	WHERE a.id = $1`, assignmentId).Scan(
+		id, 
+		unit_name, 
+		name, 
+		description, 
+		required_filename, 
+    pytest_code,
+		points, 
+		due_date, 
+		visible, 
+		course_id
+	FROM assignment
+	WHERE id = $1`, assignmentId).Scan(
 		&assignment.Id,
 		&assignment.UnitName,
 		&assignment.Name,
 		&assignment.Description,
 		&assignment.RequiredFilename,
+		&assignment.PytestCode,
 		&assignment.Points,
 		&assignment.DueDate,
 		&assignment.Visible,
-		&assignment.CourseId,
-		&assignment.PyFile.Id,
-		&assignment.PyFile.Content)
+		&assignment.CourseId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -282,6 +204,7 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 		name, 
 		description, 
 		required_filename, 
+    pytest_code,
 		points, 
 		due_date, 
 		visible, 
@@ -298,7 +221,7 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 	for rows.Next() {
 		assignment := &Assignment{}
 
-		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId)
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.PytestCode, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId)
 		if err != nil {
 			return nil, err
 		}
@@ -312,23 +235,29 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 }
 
 func (s *AssignmentStore) Update(assignment *Assignment) error {
-	_, err := s.db.Exec("UPDATE file SET name=?, content=? where id=?", assignment.PyFile.Name, assignment.PyFile.Content, assignment.Id)
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
-	_, err = s.db.Exec(`UPDATE assignment 
-  SET unit_name=?, name=?, description=?, required_filename=?, points=?, due_date=?, visible=?, course_id=?, pytest_file_id=?
-  WHERE id=?`,
+	defer tx.Rollback()
+
+	_, err = tx.Exec(`UPDATE assignment 
+  SET unit_name=$1, name=$2, description=$3, required_filename=$4, points=$5, pytest_code=$6, due_date=$7, visible=$8, course_id=$9
+  WHERE id=$10`,
 		assignment.UnitName,
 		assignment.Name,
 		assignment.Description,
 		assignment.RequiredFilename,
 		assignment.Points,
+		assignment.PytestCode,
 		assignment.DueDate,
 		assignment.Visible,
 		assignment.CourseId,
-		assignment.PyFile.Id,
 		assignment.Id)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

@@ -1,6 +1,0 @@
-CREATE TABLE file (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    content TEXT NOT NULL
-
-);

@@ -1,61 +1,90 @@
 {{ define "manage_course" }}
 <!doctype html>
-<html lang='en'>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amics/teacher/manage_course</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
+    />
+  </head>
 
-<head>
-  <meta charset='utf-8'>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>amics/teacher/manage_course</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
-</head>
+  <body>
+    <main class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li><a href="/teacher">Teacher Dashboard</a></li>
+          <li>{{if .Course}}{{.Course.Name}}{{else}}New Course{{end}}</li>
+        </ul>
+        <ul>
+          <li><button id="logout-button" class="secondary">Logout</button></li>
+        </ul>
+      </nav>
 
-<body>
-  <main class="container">
-    <nav aria-label="breadcrumb" style="justify-content: space-between">
-      <ul>
-        <li><a href="/teacher">Teacher Dashboard</a></li>
-        <li>{{if .Course}}{{.Course.Name}}{{else}}New Course{{end}}</li>
-      </ul>
-      <ul>
-        <li><button id="logout-button" class="secondary">Logout</button></li>
-      </ul>
-    </nav>
-
-    <h2>{{if .Course}}Edit Course{{else}}New Course{{end}}</h2>
-    <article>
-      <form method="POST" action="{{if .Course}}/teacher/courses/{{.Course.Id}}{{else}}/teacher/courses/new{{end}}">
-        {{ if .Error}}
-        <p style="color: rgb(136, 56.5, 53);">{{.Error}}</p>
-        {{end}}
-        <div class="grid">
-          <fieldset>
-            <label for="cid">Id</label>
-            <input type="text" id="cid" name="cid" value="{{if .Course}}{{.Course.Id}}{{end}}" readonly>
-          </fieldset>
-          <fieldset>
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" value="{{if .Course}}{{.Course.Name}}{{end}}" required>
-          </fieldset>
-        </div>
-        <div class="grid">
-          <fieldset>
-            <label for="year">Year</label>
-            <input type="text" id="year" name="year" value="{{if .Course}}{{.Course.Year}}{{end}}" inputmode="numeric"
-              required>
-          </fieldset>
-          <fieldset>
-            <label for="semester">Semester</label>
-            <input type="text" id="semester" name="semester" value="{{if .Course}}{{.Course.Semester}}{{end}}"
-              inputmode="numeric" required>
-          </fieldset>
-        </div>
-        <button type="submit">{{if .Course}}Confirm Edits{{else}}Create Course{{end}}</button>
-      </form>
-    </article>
-
-  </main>
-  {{ template "logoutScript" . }}
-</body>
-
+      <h2>{{if .Course}}Edit Course{{else}}New Course{{end}}</h2>
+      <article>
+        <form
+          method="POST"
+          action="{{if .Course}}/teacher/courses/{{.Course.Id}}{{else}}/teacher/courses/new{{end}}"
+        >
+          {{ if .Error}}
+          <p style="color: rgb(136, 56.5, 53)">{{.Error}}</p>
+          {{end}}
+          <div class="grid">
+            <fieldset>
+              <label for="cid">Id</label>
+              <input
+                type="text"
+                id="cid"
+                name="cid"
+                value="{{if .Course}}{{.Course.Id}}{{end}}"
+                readonly
+              />
+            </fieldset>
+            <fieldset>
+              <label for="name">Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value="{{if .Course}}{{.Course.Name}}{{end}}"
+                required
+              />
+            </fieldset>
+          </div>
+          <div class="grid">
+            <fieldset>
+              <label for="year">Year</label>
+              <input
+                type="text"
+                id="year"
+                name="year"
+                value="{{if .Course}}{{.Course.Year}}{{end}}"
+                inputmode="numeric"
+                required
+              />
+            </fieldset>
+            <fieldset>
+              <label for="semester">Semester</label>
+              <input
+                type="text"
+                id="semester"
+                name="semester"
+                value="{{if .Course}}{{.Course.Semester}}{{end}}"
+                inputmode="numeric"
+                required
+              />
+            </fieldset>
+          </div>
+          <button type="submit">
+            {{if .Course}}Confirm Edits{{else}}Create Course{{end}}
+          </button>
+        </form>
+      </article>
+    </main>
+    {{ template "logoutScript" . }}
+  </body>
 </html>
 {{ end }}

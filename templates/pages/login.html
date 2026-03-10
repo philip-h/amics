@@ -1,89 +1,111 @@
 {{define "login"}}
 <!doctype html>
-<html lang='en'>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amics/login</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+  </head>
 
-<head>
-  <meta charset='utf-8'>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>amics/login</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
-  <link rel="stylesheet" href="/static/css/style.css">
-</head>
+  <body>
+    <main class="container">
+      <article>
+        <h1>Login to amics</h1>
+        <form method="POST" action="/login">
+          {{ if .Error}}
+          <p style="color: var(--pico-del-color)">{{.Error}}</p>
+          {{end}}
+          <fieldset>
+            <label for="username">Enter your username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              autocomplete="username"
+              required
+              autofocus
+            />
+          </fieldset>
+          <fieldset>
+            <label for="password">Enter your password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="current-password"
+              aria-describedby="password-constraints"
+              required
+            />
+            <small id="password-constraints"
+              >Password must be 10 or more characters</small
+            >
+            <div
+              aria-role="button"
+              id="toggle-password"
+              aria-label="Show password as plain text. Warning: this will display your password on the screen"
+            >
+              Show password
+            </div>
+          </fieldset>
+          <button type="submit">Login</button>
+          <p>New to amics? <a href="/register">Create an account</a></p>
+        </form>
+      </article>
+    </main>
+    <script>
+      const $form = document.querySelector("form");
+      const $username = document.getElementById("username");
+      const $pass = document.getElementById("password");
+      const $togglePassBtn = document.getElementById("toggle-password");
+      const $loginBtn = document.querySelector("button[type='submit']");
 
-<body>
-  <main class="container">
-    <article>
-      <h1>Login to amics</h1>
-      <form method="POST" action="/login">
-        {{ if .Error}}
-        <p style="color: rgb(136, 56.5, 53);">{{.Error}}</p>
-        {{end}}
-        <fieldset>
-          <label for="username">Enter your username</label>
-          <input type="text" id="username" name="username" autocomplete="username" required autofocus>
-        </fieldset>
-        <fieldset>
-          <label for="password">Enter your password</label>
-          <input type="password" id="password" name="password" autocomplete="current-password"
-            aria-describedby="password-constraints" required>
-          <small id="password-constraints">Password must be 10 or more characters</small>
-          <div aria-role="button" id="toggle-password"
-            aria-label="Show password as plain text. Warning: this will display your password on the screen">Show
-            password</div>
-        </fieldset>
-        <button type="submit">Login</button>
-        <p>New to amics? <a href="/register">Create an account</a></p>
-    </article>
-  </main>
-  <script>
-    const $form = document.querySelector("form");
-    const $username = document.getElementById("username");
-    const $pass = document.getElementById("password");
-    const $togglePassBtn = document.getElementById("toggle-password");
-    const $loginBtn = document.querySelector("button[type='submit']");
+      $username.addEventListener("change", () => {
+        if ($username.value.length !== 0) {
+          $username.setAttribute("aria-invalid", "false");
+        }
+        $username.reportValidity();
+      });
 
-    $username.addEventListener("change", () => {
-      if ($username.value.length !== 0) {
-        $username.setAttribute("aria-invalid", "false");
+      $togglePassBtn.addEventListener("click", clickedTogglePassword);
+
+      $pass.addEventListener("change", () => {
+        if ($pass.value.length < 10) {
+          $pass.setAttribute("aria-invalid", "true");
+        } else {
+          $pass.setAttribute("aria-invalid", "false");
+        }
+
+        $pass.reportValidity();
+      });
+      $form.addEventListener("submit", handleFormSubmit);
+
+      function clickedTogglePassword() {
+        if ($pass.type === "password") {
+          $pass.type = "text";
+          $togglePassBtn.textContent = "Hide password";
+          $togglePassBtn.setAttribute("aria-label", "Hide password");
+        } else {
+          $pass.type = "password";
+          $togglePassBtn.textContent = "Show password ";
+          $togglePassBtn.setAttribute(
+            "aria-label",
+            "Sow password as plain text. Warning: this will display your password on the screen",
+          );
+        }
       }
-      $username.reportValidity();
-    });
 
-    $togglePassBtn.addEventListener("click", clickedTogglePassword);
-
-    $pass.addEventListener("change", () => {
-      if ($pass.value.length < 10) {
-        $pass.setAttribute("aria-invalid", "true");
-      } else {
-        $pass.setAttribute("aria-invalid", "false");
+      function handleFormSubmit(e) {
+        if ($form.checkValidity()) {
+          $loginBtn.disabled = "true";
+          form.submit();
+        }
       }
-
-      $pass.reportValidity();
-    });
-    $form.addEventListener("submit", handleFormSubmit);
-
-
-    function clickedTogglePassword() {
-      if ($pass.type === "password") {
-        $pass.type = "text";
-        $togglePassBtn.textContent = "Hide password";
-        $togglePassBtn.setAttribute("aria-label", "Hide password");
-      } else {
-        $pass.type = "password";
-        $togglePassBtn.textContent = "Show password ";
-        $togglePassBtn.setAttribute("aria-label", "Sow password as plain text. Warning: this will display your password on the screen");
-      }
-    }
-
-    function handleFormSubmit(e) {
-      if (form.checkValidity()) {
-        $loginBtn.disabled = "true";
-        form.submit();
-      }
-    }
-
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
 {{end}}

@@ -85,6 +85,7 @@ func (app *Application) withAuth(role string, next http.HandlerFunc) http.Handle
 
 		// Set the user id in request context for later
 		ctx := context.WithValue(r.Context(), "userId", userId)
+    ctx = context.WithValue(ctx, "is-teacher", aud[0] == "teacher")
 		next(w, r.WithContext(ctx))
 		return nil
 	})

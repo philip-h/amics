@@ -1,9 +1,11 @@
 package server
 
 import (
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/philip-h/amics/internal/errs"
@@ -92,7 +94,6 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		if teacher == nil {
 			return app.renderTemplate(w, "login", map[string]string{"Error": "Hmm, I could not find your account."})
 		}
-		// For simplicity, we will treat teachers the same as students for authentication purposes. In a real implementation, you would likely want to have different handling for teachers and students after this point.
 		user = &UserPass{
 			Id:       teacher.Id,
 			Username: teacher.Username,
@@ -214,6 +215,11 @@ func (app *Application) handleLogout(w http.ResponseWriter, r *http.Request) err
 // ============================================================================
 func (app *Application) handleDashboard(w http.ResponseWriter, r *http.Request) error {
 	userIdStr := r.Context().Value("userId").(string)
+	is_teacher := r.Context().Value("is-teacher").(bool)
+	if is_teacher {
+		http.Redirect(w, r, "/teacher", http.StatusSeeOther)
+	}
+
 	studentId, err := strconv.Atoi(userIdStr)
 	if err != nil {
 		return &errs.ServerError{
@@ -227,11 +233,18 @@ func (app *Application) handleDashboard(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
+	// Organize assignment by units for nicer rendering
+	byUnit := make(map[string][]*store.AssignmentWithGrade)
+
+	for _, ass := range assignments {
+		byUnit[ass.UnitName] = append(byUnit[ass.UnitName], ass)
+	}
+
 	return app.renderTemplate(w,
 		"student_dashboard",
 		map[string]any{
 			"Active":      "app",
-			"Assignments": assignments,
+			"Assignments": byUnit,
 		})
 }
 
@@ -257,13 +270,27 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 		return err
 	}
 
-  log.Printf("AWS has a submission of %+v", aws.Submission)
+	var htmlComments strings.Builder
+	if aws.Submission != nil && aws.Submission.Comments.Valid {
+
+		lines := strings.SplitSeq(strings.ReplaceAll(aws.Submission.Comments.String, "\r\n", "\n"), "\n")
+
+		for line := range lines {
+			if strings.HasPrefix(line, "E") || strings.HasPrefix(line, ">") {
+				htmlComments.WriteString("<span style='color: rgb(136, 56.5, 53)'>" + line + "</span>")
+			} else {
+				htmlComments.WriteString(line)
+			}
+			htmlComments.WriteString("\n")
+		}
+	}
 
 	return app.renderTemplate(w,
 		"assignment_detail",
 		map[string]any{
-			"Active":     "app",
-			"Assignment": aws,
+			"Assignment": aws.Assignment,
+			"Submission": aws.Submission,
+			"Comments":   template.HTML(htmlComments.String()),
 		})
 }
 
@@ -313,20 +340,15 @@ func (app *Application) handleAssignmentSubmit(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	pyFile := &store.PyFile{
-		Name:    handler.Filename,
-		Content: string(fileContent),
-	}
-	err = app.Store.Assignments.Submit(assignmentId, studentId, pyFile)
+	// Status is set to pending by deault
+	// all pending statuses will be picked up by worker started in main function
+	err = app.Store.Submissions.Create(assignmentId, studentId, string(fileContent))
 	if err != nil {
 		return &errs.ServerError{
 			Status:   http.StatusInternalServerError,
 			Internal: err.Error(),
 		}
 	}
-
-	// Use python (called here) to grade and return an actual mark
-
 	http.Redirect(w, r, "/app/assignments/"+strconv.Itoa(assignmentId), http.StatusSeeOther)
 	return nil
 }
@@ -499,7 +521,6 @@ func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.
 }
 
 func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
-	log.Println("Got herre")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -543,10 +564,10 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 		Name             string
 		Description      string
 		RequiredFilename string
+		PytestCode       string
 		Points           string
 		DueDate          string
 		Visible          string
-		PyFileContent    string
 	}
 
 	body := &AssignmentBody{
@@ -554,13 +575,13 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 		Name:             r.FormValue("name"),
 		Description:      r.FormValue("description"),
 		RequiredFilename: r.FormValue("required-filename"),
+		PytestCode:       r.FormValue("pyfile-content"),
 		Points:           r.FormValue("points"),
 		DueDate:          r.FormValue("due-date"),
 		Visible:          r.FormValue("visible"),
-		PyFileContent:    r.FormValue("pyfile-content"),
 	}
 
-	if body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PyFileContent == "" {
+	if body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PytestCode == "" {
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Please make sure to fill out all required fields."})
 	}
 
@@ -574,14 +595,11 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 		Name:             body.Name,
 		Description:      body.Description,
 		RequiredFilename: body.RequiredFilename,
+		PytestCode:       body.PytestCode,
 		Points:           pointsInt,
 		DueDate:          body.DueDate,
 		Visible:          body.Visible == "on",
 		CourseId:         courseId,
-		PyFile: store.PyFile{
-			Name:    body.RequiredFilename,
-			Content: body.PyFileContent,
-		},
 	}
 
 	err = app.Store.Assignments.Create(assignment)
@@ -610,11 +628,10 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 		Name             string
 		Description      string
 		RequiredFilename string
+		PytestCode       string
 		Points           string
 		DueDate          string
 		Visible          string
-		PyFileId         string
-		PyFileContent    string
 	}
 
 	body := &AssignmentBody{
@@ -623,14 +640,13 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 		Name:             r.FormValue("name"),
 		Description:      r.FormValue("description"),
 		RequiredFilename: r.FormValue("required-filename"),
+		PytestCode:       r.FormValue("pyfile-content"),
 		Points:           r.FormValue("points"),
 		DueDate:          r.FormValue("due-date"),
 		Visible:          r.FormValue("visible"),
-		PyFileId:         r.FormValue("pyfile-id"),
-		PyFileContent:    r.FormValue("pyfile-content"),
 	}
 
-	if body.Id == "" || body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PyFileId == "" || body.PyFileContent == "" {
+	if body.Id == "" || body.UnitName == "" || body.Name == "" || body.Description == "" || body.RequiredFilename == "" || body.Points == "" || body.DueDate == "" || body.PytestCode == "" {
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Please make sure to fill out all required fields."})
 	}
 
@@ -642,10 +658,6 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 	if err != nil {
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Points was not an int"})
 	}
-	pyFileIdInt, err := strconv.Atoi(body.PyFileId)
-	if err != nil {
-		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "PyFile id was not an int"})
-	}
 
 	assignment := &store.Assignment{
 		Id:               idInt,
@@ -653,15 +665,11 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 		Name:             body.Name,
 		Description:      body.Description,
 		RequiredFilename: body.RequiredFilename,
+		PytestCode:       body.PytestCode,
 		Points:           pointsInt,
 		DueDate:          body.DueDate,
 		Visible:          body.Visible == "on",
 		CourseId:         courseId,
-		PyFile: store.PyFile{
-			Id:      pyFileIdInt,
-			Name:    body.RequiredFilename,
-			Content: body.PyFileContent,
-		},
 	}
 
 	err = app.Store.Assignments.Update(assignment)

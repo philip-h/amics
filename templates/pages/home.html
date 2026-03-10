@@ -1,22 +1,30 @@
 {{define "home"}}
 <!doctype html>
-<html lang='en'>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amics/</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
+    />
+  </head>
 
-<head>
-  <meta charset='utf-8'>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>amics/</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
-  <link rel='stylesheet' href='/static/css/style.css'>
-</head>
-
-<body>
-  <main class="container">
-    {{ template "nav" . }}
-    <h1>Welcome to AMICS</h1>
-    <p>This is the home page for the AMICS application.</p>
-  </main>
-</body>
-
+  <body>
+    <main class="container">
+      <nav>
+        <ul>
+          <li><strong>amics</strong></li>
+        </ul>
+        <ul>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/register">Register</a></li>
+        </ul>
+      </nav>
+      <h1>Welcome to AMICS</h1>
+      <p>This is the home page for the AMICS application.</p>
+    </main>
+  </body>
 </html>
 {{end}}

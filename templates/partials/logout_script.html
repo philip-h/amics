@@ -1,0 +1,18 @@
+{{ define "logoutScript" }}
+<script>
+  document
+    .getElementById("logout-button")
+    .addEventListener("click", async () => {
+      const response = await fetch("/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (response.ok) {
+        window.location.href = "/";
+      } else {
+        console.log("Hmm... Couldn't log out? Weird.");
+      }
+    });
+</script>
+{{ end }}
+

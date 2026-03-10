@@ -93,11 +93,6 @@ func (m *MockAssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(int, in
 
 }
 
-func (m *MockAssignmentStore) Submit(int, int, *PyFile) error {
-	m.SubmitInvoked = true
-	return nil
-
-}
 func (m *MockAssignmentStore) GetById(int) (*Assignment, error) {
 	m.GetByIdInvoked = true
 	return nil, nil

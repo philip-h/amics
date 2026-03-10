@@ -1,62 +1,70 @@
 {{define "student_dashboard"}}
 <!doctype html>
-<html lang='en'>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amics/app</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
+    />
+  </head>
 
-<head>
-  <meta charset='utf-8'>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>amics/app</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css">
-</head>
-
-<body>
-  <main class="container">
-    <nav aria-label="breadcrumb" style="justify-content: space-between"> 
-      <ul>
-        <li>Dashboard</li>
-      </ul>
-      <ul>
-        <li><button id="logout-button" class="secondary">Logout</button></li>
-      </ul>
-    </nav>
-    {{ if .Assignments }}
+  <body>
+    <main class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li>Dashboard</li>
+        </ul>
+        <ul>
+          <li><button id="logout-button" class="secondary">Logout</button></li>
+        </ul>
+      </nav>
+      {{ if .Assignments }}
       <h2>Assignments</h2>
-      <h3>Unit 0</h3>
-        <article>
+      {{ range $unit, $ass := .Assignments}}
+      <h3>{{$unit}}</h3>
+      <article>
         <table class="striped">
-        <tbody>
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Due</th>
-            <th scope="col">Score</th>
-          </tr>
-
-        </thead>
-        {{ range .Assignments }}
-        {{if .Visible}}
-        <tr>
-          <th scope="row"><a href="/app/assignments/{{.Id}}">{{.Name}}</a></th>
-          <td>{{.DueDate}}</td>
-          <td>
-            {{ if .Grade.Valid}}
-            {{ .Grade.Value}}/{{.Points}}
-            {{else}}
-            -/{{.Points}}
-            {{ end }}
-          </td>
-        </tr>
-        {{end}}
-        {{ end }}
-        </tbody>
-      </table>
+          <tbody>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Due</th>
+                <th scope="col">Score</th>
+              </tr>
+            </thead>
+            {{ range $ass }} {{if .Visible}}
+            <tr>
+              <th scope="row">
+                <a
+                  href="/app/assignments/{{.Id}}"
+                  style="{{if .Grade.Valid}}color: gray{{else}}color: var(--pico-primary){{end}}"
+                  >{{.Name}}</a
+                >
+              </th>
+              <td
+                style="{{if .Grade.Valid}}color: gray{{else}}color: var(--pico-primary){{end}}"
+              >
+                {{.DueDate}}
+              </td>
+              <td
+                style="{{if .Grade.Valid}}color: gray{{else}}color: var(--pico-primary){{end}}"
+              >
+                {{ if .Grade.Valid}} {{ .Grade.Value}}/{{.Points}} {{else}}
+                -/{{.Points}} {{ end }}
+              </td>
+            </tr>
+            {{end}} {{ end }}
+          </tbody>
+        </table>
       </article>
-    {{ else }}
+      {{end}} {{ else }}
       <p>You have no assignments yet.</p>
-    {{ end }}
-  </main>
-  {{template "logoutScript" .}}
-</body>
-
+      {{ end }}
+    </main>
+    {{template "logoutScript" .}}
+  </body>
 </html>
 {{end}}
