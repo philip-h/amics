@@ -12,17 +12,22 @@
   </head>
 
   <body>
+    <header style="box-shadow: var(--pico-box-shadow)">
+      <div class="container">
+        <nav aria-label="breadcrumb" style="justify-content: space-between">
+          <ul>
+            <li><a href="/app">Dashboard</a></li>
+            <li>{{.Assignment.Name}}</li>
+          </ul>
+          <ul>
+            <li>
+              <button id="logout-button" class="secondary">Logout</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main class="container">
-      <nav aria-label="breadcrumb" style="justify-content: space-between">
-        <ul>
-          <li><a href="/app">Dashboard</a></li>
-          <li>{{.Assignment.Name}}</li>
-        </ul>
-        <ul>
-          <li><button id="logout-button" class="secondary">Logout</button></li>
-        </ul>
-      </nav>
-
       <section>
         <div class="grid">
           <h2>{{ .Assignment.Name }}</h2>
@@ -33,7 +38,7 @@
           {{end}}
         </div>
         <div class="grid">
-          <p>Due: {{ .Assignment.DueDate }}</p>
+          <p>Due: {{ .Assignment.DueDate | unixToDate}}</p>
           <p>
             Grading Status: {{if and .Submission
             .Submission.Status.Valid}}{{.Submission.Status.String}}{{else}}Not

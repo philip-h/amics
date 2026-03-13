@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"log"
+	"time"
 
 	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
@@ -22,7 +23,12 @@ func main() {
 	}
 
 	// Parse all the layouts
-	templates, err := template.ParseFS(templates.TemplateFS, "pages/*.html", "partials/*.html", "admin/*.html")
+	templates, err := template.New("").Funcs(template.FuncMap{
+		"unixToDate": func(unix int64) string {
+			t := time.Unix(unix, 0)
+			return t.Format("Mon Jan 2 @ 15:04")
+		},
+	}).ParseFS(templates.TemplateFS, "pages/*.html", "partials/*.html", "admin/*.html")
 	if err != nil {
 		log.Fatal("Failed to load templates: " + err.Error())
 	}
@@ -50,8 +56,8 @@ func main() {
 		log.Fatalf("Failed to start worker. %v", err)
 	}
 
-  go worker.Start()
-  defer worker.Stop()
+	go worker.Start()
+	defer worker.Stop()
 
 	mux := app.Mount()
 	log.Printf("Starting server on port %s", cfg.Port)

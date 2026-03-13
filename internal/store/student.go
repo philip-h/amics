@@ -7,11 +7,11 @@ import (
 )
 
 type Student struct {
-	Id            int    `json:"id" db:"id"`
-	StudentNumber string `json:"student_number" db:"student_number"`
-	Username      string `json:"username" db:"username"`
-	Password      string `json:"password" db:"password"`
-	CourseId      int    `json:"course_id" db:"course_id"`
+	Id            int
+	StudentNumber string
+	Username      string
+	Password      string
+	CourseId      int
 }
 
 type StudentStore struct {
@@ -38,4 +38,53 @@ func (s *StudentStore) GetByUsername(username string) (*Student, error) {
 		return nil, err
 	}
 	return student, nil
+}
+
+func (s *StudentStore) GetByCourseId(courseId int) ([]*Student, error) {
+	rows, err := s.db.Query(`SELECT 
+		id,
+		student_number,
+		username,
+		password,
+		course_id
+	FROM student
+	WHERE course_id = $1`, courseId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	students := []*Student{}
+	for rows.Next() {
+		student := &Student{}
+
+		err := rows.Scan(&student.Id, &student.StudentNumber, &student.Username, &student.Password, &student.CourseId)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, student)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return students, nil
+}
+
+func (s *StudentStore) CompareHashAndPassword(hash, pass string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass))
+	return err == nil
+}
+
+func (s *StudentStore) ChangePassword(studentId int, newPassword string) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Exec(`UPDATE student
+  SET password=?
+  WHERE id=?`, string(hashedPassword), studentId)
+
+	return err
 }

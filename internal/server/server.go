@@ -48,15 +48,21 @@ func (app *Application) Mount() *http.ServeMux {
 
 	// Admin Routes
 	mux.HandleFunc("GET /teacher", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherDashboard)))
+
+	//   Course Routes
 	mux.HandleFunc("POST /teacher/courses/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseCreate)))
 	mux.HandleFunc("POST /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseUpdate)))
-
 	mux.HandleFunc("GET /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherCourses)))
 
+	//    Assignment Routes
 	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignments)))
 	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
 	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentCreate)))
 	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentUpdate)))
+
+	//    Student Routes
+	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleStudents)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", makeHTTPHandlerFunc(app.handlePasswordReset)))
 
 	return mux
 }

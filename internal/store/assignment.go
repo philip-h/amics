@@ -12,7 +12,7 @@ type Assignment struct {
 	RequiredFilename string
 	PytestCode       string
 	Points           int
-	DueDate          string
+	DueDate          int64
 	Visible          bool
 	CourseId         int
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,8 +13,14 @@ import (
 	"github.com/philip-h/amics/internal/store"
 )
 
+// Add a function for dealing with dates
+func unixToDate(unix int64) string {
+	t := time.Unix(unix, 0)
+	return t.Format("Mon Jan 2 @ 15:04")
+
+}
 func (app *Application) renderTemplate(w http.ResponseWriter, name string, data any) error {
-	return app.Templates.ExecuteTemplate(w, name, data)
+	return app.Templates.Funcs(template.FuncMap{"unixToDate": unixToDate}).ExecuteTemplate(w, name, data)
 }
 
 // ============================================================================
@@ -102,10 +109,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// Right now all of the dummy data in the database does not have hashed passwords, so we will skip the password check for now. In a real implementation, you would want to hash the password when creating the user and compare the hashed password here.
-	// err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
-	// if err != nil {
-	if user.Password != body.Password {
+	if ok := app.Store.Students.CompareHashAndPassword(user.Password, body.Password); !ok {
 		return app.renderTemplate(w, "login", map[string]string{"Error": "Hmm, I could not find your account."})
 	}
 
@@ -235,16 +239,26 @@ func (app *Application) handleDashboard(w http.ResponseWriter, r *http.Request) 
 
 	// Organize assignment by units for nicer rendering
 	byUnit := make(map[string][]*store.AssignmentWithGrade)
+	// And also calculate student average
+	var studentAvgNum float64
+	var studentAvgDenom float64
 
 	for _, ass := range assignments {
-		byUnit[ass.UnitName] = append(byUnit[ass.UnitName], ass)
+		if ass.Visible {
+			byUnit[ass.UnitName] = append(byUnit[ass.UnitName], ass)
+			if ass.Grade.Valid {
+				studentAvgNum += float64(ass.Grade.Int64)
+			}
+			studentAvgDenom += float64(ass.Points)
+		}
 	}
+	studentAverage := math.Round((studentAvgNum / studentAvgDenom) * 100)
 
 	return app.renderTemplate(w,
 		"student_dashboard",
 		map[string]any{
-			"Active":      "app",
-			"Assignments": byUnit,
+			"Assignments":    byUnit,
+			"StudentAverage": studentAverage,
 		})
 }
 
@@ -373,6 +387,9 @@ func (app *Application) handleTeacherDashboard(w http.ResponseWriter, r *http.Re
 	return app.renderTemplate(w, "teacher_dashboard", map[string]any{"Courses": courses})
 }
 
+// =====================================
+// Course Handlers
+// =====================================
 func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Request) error {
 	teacherIdStr := r.Context().Value("userId").(string)
 	teacherId, err := strconv.Atoi(teacherIdStr)
@@ -504,6 +521,10 @@ func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Requ
 	return app.renderTemplate(w, "manage_course", map[string]any{"Course": course})
 }
 
+// =====================================
+// Assignment Handlers
+// =====================================
+
 func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.Request) error {
 
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
@@ -590,6 +611,11 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Points was not an int"})
 	}
 
+	dueDateInt, err := strconv.ParseInt(body.DueDate, 10, 64)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Due date was not an int"})
+	}
+
 	assignment := &store.Assignment{
 		UnitName:         body.UnitName,
 		Name:             body.Name,
@@ -597,7 +623,7 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 		RequiredFilename: body.RequiredFilename,
 		PytestCode:       body.PytestCode,
 		Points:           pointsInt,
-		DueDate:          body.DueDate,
+		DueDate:          dueDateInt,
 		Visible:          body.Visible == "on",
 		CourseId:         courseId,
 	}
@@ -659,6 +685,11 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Points was not an int"})
 	}
 
+	dueDateInt, err := strconv.ParseInt(body.DueDate, 10, 64)
+	if err != nil {
+		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Due date was not an int"})
+	}
+
 	assignment := &store.Assignment{
 		Id:               idInt,
 		UnitName:         body.UnitName,
@@ -667,7 +698,7 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 		RequiredFilename: body.RequiredFilename,
 		PytestCode:       body.PytestCode,
 		Points:           pointsInt,
-		DueDate:          body.DueDate,
+		DueDate:          dueDateInt,
 		Visible:          body.Visible == "on",
 		CourseId:         courseId,
 	}
@@ -680,4 +711,53 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 
 	http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/assignments", http.StatusSeeOther)
 	return nil
+}
+
+// =====================================
+// Student Handlers
+// =====================================
+func (app *Application) handleStudents(w http.ResponseWriter, r *http.Request) error {
+
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert course ID to int: " + r.PathValue("courseId"),
+		}
+	}
+	students, err := app.Store.Students.GetByCourseId(courseId)
+	if err != nil {
+		return err
+	}
+	return app.renderTemplate(w, "manage_students", map[string]any{"Students": students, "CourseId": courseId})
+}
+
+func (app *Application) handlePasswordReset(w http.ResponseWriter, r *http.Request) error {
+	courseId, err := strconv.Atoi(r.PathValue("courseId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert course ID to int: " + r.PathValue("courseId"),
+		}
+	}
+	// Read the request body from form values
+	newPassword := r.FormValue("password")
+	if newPassword == "" {
+		log.Println(r.URL.Path + ": Reset password - password was blank")
+		http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
+	}
+	studentIdStr := r.FormValue("student-id")
+	studentId, err := strconv.Atoi(studentIdStr)
+	if err != nil {
+		log.Println(r.URL.Path + ": Reset password - student id was not an int")
+		http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
+	}
+
+	err = app.Store.Students.ChangePassword(studentId, newPassword)
+	if err != nil {
+		return err
+	}
+	http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
+	return nil
+
 }

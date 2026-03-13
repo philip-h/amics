@@ -10,10 +10,10 @@ type Submission struct {
 	AssignmentId int
 	Code         string
 	Grade        int
-	SubmittedOn  string
+	SubmittedOn  int64
 	Comments     sql.NullString
 	Status       sql.NullString
-	GradedOn     sql.NullString
+	GradedOn     sql.NullInt64
 }
 
 type SubmissionStore struct {
@@ -42,7 +42,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 		// Update existing submission
 		_, err = tx.Exec(
 			`UPDATE submission
-      SET code=$1, submitted_on=Date('now'),status='pending', comments='Working on it...'
+      SET code=$1, submitted_on=unixepoch('now'),status='pending', comments='Working on it...'
       WHERE id = $2`, code, existingSubmissionId)
 		if err != nil {
 			return err
@@ -51,7 +51,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 		// Insert new submission
 		_, err = tx.Exec(
 			`INSERT INTO submission (student_id, assignment_id, code, grade, comments, status, submitted_on)
-      VALUES ($1, $2, $3, 0, 'Working on it...', 'pending', Date('now'))`,
+      VALUES ($1, $2, $3, 0, 'Working on it...', 'pending', unixepoch('now'))`,
 			studentId,
 			assignmentId,
 			code)
@@ -94,7 +94,7 @@ func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
 
 func (s *SubmissionStore) Update(submission *Submission) error {
 	_, err := s.db.Exec(`UPDATE submission
-  SET grade = ?, comments = ?, status = ?, graded_on = Date('now')
+  SET grade = ?, comments = ?, status = ?, graded_on = unixepoch('now')
   WHERE id=?`,
 		submission.Grade, submission.Comments, submission.Status, submission.Id)
 

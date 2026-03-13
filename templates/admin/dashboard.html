@@ -12,15 +12,21 @@
   </head>
 
   <body>
+    <header style="box-shadow: var(--pico-box-shadow)">
+      <div class="container">
+        <nav aria-label="breadcrumb" style="justify-content: space-between">
+          <ul>
+            <li>Teacher Dashboard</li>
+          </ul>
+          <ul>
+            <li>
+              <button id="logout-button" class="secondary">Logout</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main class="container">
-      <nav aria-label="breadcrumb" style="justify-content: space-between">
-        <ul>
-          <li>Teacher Dashboard</li>
-        </ul>
-        <ul>
-          <li><button id="logout-button" class="secondary">Logout</button></li>
-        </ul>
-      </nav>
       {{ if .Courses }}
       <h2>Courses you teach</h2>
       <section style="display: flex; justify-content: flex-end">
@@ -41,6 +47,9 @@
                 <a href="/teacher/courses/{{.Id}}/assignments"
                   >Manage Assignments</a
                 >
+              </td>
+              <td>
+                <a href="/teacher/courses/{{.Id}}/students">Manage Students</a>
               </td>
               <td><a href="/teacher/courses/{{.Id}}">Edit</a></td>
             </tr>

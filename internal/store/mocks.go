@@ -15,6 +15,10 @@ type MockStudentStore struct {
 	CreateInvoked         bool
 	GetByUsernameInvoked  bool
 	GetByTeacherIdInvoked bool
+	GetByCourseIdInvoked  bool
+	ChangePasswordInvoked bool
+
+	CompareHashAndPasswordInvoked bool
 }
 
 func (m *MockStudentStore) Create(student *Student) error {
@@ -33,6 +37,21 @@ func (m *MockStudentStore) GetByUsername(username string) (*Student, error) {
 func (m *MockStudentStore) GetByTeacherId(teacherId int) ([]*Assignment, error) {
 	m.GetByTeacherIdInvoked = true
 	return []*Assignment{}, nil
+}
+
+func (m *MockStudentStore) GetByCourseId(int) ([]*Student, error) {
+	m.GetByCourseIdInvoked = true
+	return nil, nil
+}
+
+func (m *MockStudentStore) ChangePassword(int, string) error {
+	m.ChangePasswordInvoked = true
+	return nil
+}
+
+func (m *MockStudentStore) CompareHashAndPassword(string, string) bool {
+	m.CompareHashAndPasswordInvoked = true
+	return true
 }
 
 // ============================================================================

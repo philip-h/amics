@@ -12,17 +12,26 @@
   </head>
 
   <body>
+    <header style="box-shadow: var(--pico-box-shadow)">
+      <div class="container">
+        <nav aria-label="breadcrumb" style="justify-content: space-between">
+          <ul>
+            <li>Dashboard</li>
+          </ul>
+          <ul>
+            <li>
+              <button id="logout-button" class="secondary">Logout</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main class="container">
-      <nav aria-label="breadcrumb" style="justify-content: space-between">
-        <ul>
-          <li>Dashboard</li>
-        </ul>
-        <ul>
-          <li><button id="logout-button" class="secondary">Logout</button></li>
-        </ul>
-      </nav>
       {{ if .Assignments }}
-      <h2>Assignments</h2>
+      <div class="grid">
+        <h2>Assignments</h2>
+        <h3 style="justify-self: flex-end">{{.StudentAverage}}%</h3>
+      </div>
       {{ range $unit, $ass := .Assignments}}
       <h3>{{$unit}}</h3>
       <article>
@@ -35,7 +44,7 @@
                 <th scope="col">Score</th>
               </tr>
             </thead>
-            {{ range $ass }} {{if .Visible}}
+            {{ range $ass }}
             <tr>
               <th scope="row">
                 <a
@@ -47,7 +56,7 @@
               <td
                 style="{{if .Grade.Valid}}color: gray{{else}}color: var(--pico-primary){{end}}"
               >
-                {{.DueDate}}
+                {{ unixToDate .DueDate}}
               </td>
               <td
                 style="{{if .Grade.Valid}}color: gray{{else}}color: var(--pico-primary){{end}}"
@@ -56,7 +65,7 @@
                 -/{{.Points}} {{ end }}
               </td>
             </tr>
-            {{end}} {{ end }}
+            {{end}}
           </tbody>
         </table>
       </article>

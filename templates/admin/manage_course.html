@@ -12,17 +12,22 @@
   </head>
 
   <body>
+    <header style="box-shadow: var(--pico-box-shadow)">
+      <div class="container">
+        <nav aria-label="breadcrumb" style="justify-content: space-between">
+          <ul>
+            <li><a href="/teacher">Teacher Dashboard</a></li>
+            <li>{{if .Course}}{{.Course.Name}}{{else}}New Course{{end}}</li>
+          </ul>
+          <ul>
+            <li>
+              <button id="logout-button" class="secondary">Logout</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main class="container">
-      <nav aria-label="breadcrumb" style="justify-content: space-between">
-        <ul>
-          <li><a href="/teacher">Teacher Dashboard</a></li>
-          <li>{{if .Course}}{{.Course.Name}}{{else}}New Course{{end}}</li>
-        </ul>
-        <ul>
-          <li><button id="logout-button" class="secondary">Logout</button></li>
-        </ul>
-      </nav>
-
       <h2>{{if .Course}}Edit Course{{else}}New Course{{end}}</h2>
       <article>
         <form

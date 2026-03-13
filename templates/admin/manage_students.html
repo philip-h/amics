@@ -1,10 +1,10 @@
-{{ define "manage_assignments" }}
+{{ define "manage_students" }}
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/teacher/manage_assignments</title>
+    <title>amics/teacher/manage_students</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
@@ -17,7 +17,7 @@
         <nav aria-label="breadcrumb" style="justify-content: space-between">
           <ul>
             <li><a href="/teacher">Teacher Dashboard</a></li>
-            <li>Manage Assignments</li>
+            <li>Manage students</li>
           </ul>
           <ul>
             <li>
@@ -28,30 +28,35 @@
       </div>
     </header>
     <main class="container">
-      {{ if .Assignments }}
-      <h2>Managing Assignments</h2>
-      <section style="display: flex; justify-content: flex-end">
-        <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new"
-          >Create New Assignment</a
-        >
-      </section>
+      {{ if .Students }}
+      <h2>Managing Students</h2>
       <article>
-        <table class="striped">
+        <table>
           <tbody>
             <thead>
               <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Due</th>
+                <th scope="col">Student Number</th>
+                <th scope="col">Username</th>
+                <th scope="col">New Password</th>
               </tr>
             </thead>
-            {{ range .Assignments }}
+            {{ range .Students }}
+
             <tr>
-              <th scope="row">
-                <a href="/teacher/courses/{{.CourseId}}/assignments/{{.Id}}"
-                  >{{.Name}}</a
+              <th scope="row">{{ .StudentNumber}}</th>
+              <td>{{.Username}}</td>
+              <td>
+                <form
+                  action="/teacher/courses/{{.CourseId}}/students/{{.Id}}/passwordreset"
+                  method="POST"
                 >
-              </th>
-              <td>{{.DueDate | unixToDate}}</td>
+                  <fieldset role="group">
+                    <input type="text" name="password" autocomplete="off" />
+                    <input type="hidden" name="student-id" value="{{.Id}}" />
+                    <button id="password-reset">Reset</button>
+                  </fieldset>
+                </form>
+              </td>
             </tr>
             {{ end }}
           </tbody>
@@ -59,10 +64,7 @@
       </article>
       {{ else }}
       <section>
-        <p>You have no assignments yet.</p>
-        <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new"
-          >Create New Assignment</a
-        >
+        <p>This course has no students. Ask them to register!</p>
       </section>
       {{ end }} {{ template "logoutScript" . }}
     </main>

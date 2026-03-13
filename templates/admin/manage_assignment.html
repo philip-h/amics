@@ -12,24 +12,30 @@
   </head>
 
   <body>
+    <header style="box-shadow: var(--pico-box-shadow)">
+      <div class="container">
+        <nav aria-label="breadcrumb" style="justify-content: space-between">
+          <ul>
+            <li><a href="/teacher">Teacher Dashboard</a></li>
+            <li>
+              <a href="/teacher/courses/{{.CourseId}}/assignments"
+                >Manage Assignments</a
+              >
+            </li>
+            <li>
+              {{if .Assignment}}{{.Assignment.Name}}{{else}}New
+              Assignment{{end}}
+            </li>
+          </ul>
+          <ul>
+            <li>
+              <button id="logout-button" class="secondary">Logout</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     <main class="container">
-      <nav aria-label="breadcrumb" style="justify-content: space-between">
-        <ul>
-          <li><a href="/teacher">Teacher Dashboard</a></li>
-          <li>
-            <a href="/teacher/courses/{{.CourseId}}/assignments"
-              >Manage Assignments</a
-            >
-          </li>
-          <li>
-            {{if .Assignment}}{{.Assignment.Name}}{{else}}New Assignment{{end}}
-          </li>
-        </ul>
-        <ul>
-          <li><button id="logout-button" class="secondary">Logout</button></li>
-        </ul>
-      </nav>
-
       <h2>{{if .Assignment}}Edit Assignment{{else}}New Assignment{{end}}</h2>
       <article>
         <form
@@ -113,22 +119,21 @@
               required
             />
           </fieldset>
+          <input
+            id="due-date-hidden"
+            type="hidden"
+            name="due-date"
+            value="{{if .Assignment}}{{.Assignment.DueDate}}{{end}}"
+          />
           <fieldset>
             <label for="due-date">Due Date</label>
-            <input
-              type="date"
-              id="due-date"
-              name="due-date"
-              value="{{if .Assignment}}{{.Assignment.DueDate}}{{end}}"
-              required
-            />
+            <input type="datetime-local" id="due-date" value="" required />
           </fieldset>
           <fieldset>
             <label for="pyfile-content">Pytest File</label>
             <textarea rows="15" name="pyfile-content" id="pyfile-content">
-{{if
-            .Assignment}}{{.Assignment.PytestCode}}{{end}}</textarea
-            >
+              {{if .Assignment}}{{.Assignment.PytestCode}}{{end}}
+            </textarea>
           </fieldset>
           <button type="submit">
             {{if .Assignment}}Confirm Edits{{else}}Create New Assignment{{end}}
@@ -136,6 +141,44 @@
         </form>
       </article>
     </main>
+    <script>
+      const $dateField = document.getElementById("due-date-hidden");
+      const $hrDateField = document.getElementById("due-date");
+
+      // On page load, populate visible datetime input
+      if ($dateField.value) {
+        const hrd = unixToLocaleDate(parseInt($dateField.value));
+        console.log(hrd);
+        $hrDateField.value = hrd;
+      }
+
+      // Everytime I change the human readable date field, update the hidden unix time
+      $hrDateField.addEventListener("change", function (e) {
+        const unixEpoch = Math.floor(
+          new Date($hrDateField.value).getTime() / 1000,
+        );
+        $dateField.value = unixEpoch;
+      });
+
+      function unixToLocaleDate(unixTime) {
+        const d = new Date(unixTime * 1000);
+
+        const pad = (n) => String(n).padStart(2, "0");
+
+        const local =
+          d.getFullYear() +
+          "-" +
+          pad(d.getMonth() + 1) +
+          "-" +
+          pad(d.getDate()) +
+          "T" +
+          pad(d.getHours()) +
+          ":" +
+          pad(d.getMinutes());
+
+        return local;
+      }
+    </script>
     {{ template "logoutScript" . }}
   </body>
 </html>
