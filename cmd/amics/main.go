@@ -3,6 +3,7 @@ package main
 import (
 	"html/template"
 	"log"
+	"os"
 	"time"
 
 	"github.com/philip-h/amics/internal/auth"
@@ -13,16 +14,27 @@ import (
 	"github.com/philip-h/amics/templates"
 )
 
+func getenv(key, preset string) string {
+	value, exists := os.LookupEnv(key)
+	if exists {
+		return value
+	} else {
+		return preset
+	}
+}
+
 func main() {
+	// Load Env
+
 	dbConfig := &db.DbConfig{
-    User: "postgres",
-    Password: "",
-    Host: "0.0.0.0",
-		DbName: "amics",
-    Params: "sslmode=disable",
+		User:     getenv("DATABASE_USER", "postgres"),
+		Password: getenv("DATABASE_PASSWORD", ""),
+		Host:     getenv("DATABASE_HOST", "0.0.0.0"),
+		DbName:   getenv("DATABASE_NAME", "amics"),
+		Params:   getenv("DATABASE_PARAMS", "sslmode=disable"),
 	}
 	cfg := server.Config{
-		Port: ":8080",
+		Port: getenv("SERVER_PORT", ":8080"),
 		Db:   dbConfig,
 	}
 
@@ -46,7 +58,9 @@ func main() {
 	store := store.New(db)
 
 	// TODO: KEY should come from config/env variable
-	auth := auth.NewJwtAuthenticator("super-secret-key", "amics-server")
+	jwtKey := getenv("JWT_SECRET", "super-secret-key")
+	jwtIss := getenv("JWT_ISS", "amics-server")
+	auth := auth.NewJwtAuthenticator(jwtKey, jwtIss)
 
 	app := &server.Application{
 		Config:    cfg,
