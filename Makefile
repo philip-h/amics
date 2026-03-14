@@ -10,8 +10,8 @@ test:
 
 .PHONY: migrateup
 migrateup:
-	migrate -path internal/db/migrations/ -database "sqlite3://amics.db" up
+	migrate -path internal/db/migrations/ -database "postgres://postgres:@localhost:5432/amics?sslmode=disable" up
 
 .PHONY: migratedown
 migratedown:
-	migrate -path internal/db/migrations/ -database "sqlite3://amics.db" down
+	migrate -path internal/db/migrations/ -database "postgres://postgres:@localhost:5432/amics?sslmode=disable" down

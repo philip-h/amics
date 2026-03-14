@@ -149,7 +149,7 @@ type RegisterReq struct {
 	StudentNumber string
 	Username      string
 	Password      string
-	CourseId      string
+	JoinCode      string
 }
 
 func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Request) error {
@@ -158,24 +158,28 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 		StudentNumber: r.FormValue("student-number"),
 		Username:      r.FormValue("username"),
 		Password:      r.FormValue("password"),
-		CourseId:      r.FormValue("course"),
+		JoinCode:      r.FormValue("join-code"),
 	}
 	// If either username or password is empty, return an error
-	if body.StudentNumber == "" || body.Username == "" || body.Password == "" || body.CourseId == "" {
+	if body.StudentNumber == "" || body.Username == "" || body.Password == "" || body.JoinCode == "" {
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Please make sure to fill out all required fields."})
 	}
 
-	// Create a user
-	courseId, err := strconv.Atoi(body.CourseId)
+	// Find course the user wants to join
+	course, err := app.Store.Courses.GetByJoinCode(body.JoinCode)
 	if err != nil {
-		return app.renderTemplate(w, "register", map[string]string{"Error": "Invalid course selection."})
+		log.Printf("%s: %s", "POST /register", err.Error())
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
-
+	if course == nil {
+		return app.renderTemplate(w, "register", map[string]string{"Error": "Hmm... I could not find a course with that code."})
+	}
+	// Create a user
 	user := &store.Student{
 		StudentNumber: body.StudentNumber,
 		Username:      body.Username,
 		Password:      body.Password,
-		CourseId:      courseId,
+		CourseId:      course.Id,
 	}
 
 	err = app.Store.Students.Create(user)
@@ -184,7 +188,7 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	// Create jwt token and set it as a cookie
-	token, err := app.Auth.CreateJwt(user.Username, "student", time.Now().Add(90*time.Minute).Unix())
+	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), "student", time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
 		log.Printf("%s: %s", "POST /register", err.Error())
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
@@ -417,10 +421,11 @@ func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Reques
 		Name:      r.FormValue("name"),
 		Semester:  bodySem,
 		Year:      bodyYear,
+		JoinCode:  r.FormValue("join-code"),
 		TeacherId: teacherId,
 	}
 	// If either username or password is empty, return an error
-	if body.Name == "" || bodySemStr == "" || bodyYearStr == "" {
+	if body.Name == "" || bodySemStr == "" || bodyYearStr == "" || body.JoinCode == "" {
 		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Please make sure to fill out all required fields."})
 	}
 

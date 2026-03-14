@@ -15,7 +15,11 @@ import (
 
 func main() {
 	dbConfig := &db.DbConfig{
+    User: "postgres",
+    Password: "",
+    Host: "0.0.0.0",
 		DbName: "amics",
+    Params: "sslmode=disable",
 	}
 	cfg := server.Config{
 		Port: ":8080",

@@ -1,12 +1,14 @@
 package store
 
-import "database/sql"
+import (
+	"database/sql"
+)
 
 type Teacher struct {
-	Id             int    `json:"id" db:"id"`
-	EmployeeNumber string `json:"employee_number" db:"employee_number"`
-	Username       string `json:"username" db:"username"`
-	Password       string `json:"password" db:"password"`
+	Id             int
+	EmployeeNumber string
+	Username       string
+	Password       string
 }
 
 type TeacherStore struct {
@@ -24,3 +26,4 @@ func (s *TeacherStore) GetByUsername(username string) (*Teacher, error) {
 	}
 	return teacher, nil
 }
+

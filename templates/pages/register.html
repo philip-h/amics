@@ -1,159 +1,143 @@
 {{define "register"}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/register</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-    <link rel="stylesheet" href="/static/css/style.css" />
-  </head>
 
-  <body>
-    <main class="container">
-      <article>
-        <h1>Register</h1>
-        <form method="POST" action="/register">
-          <fieldset>
-            {{ if .Error}}
-            <p style="color: var(--pico-del-color)">{{.Error}}</p>
-            {{end}}
-            <label for="student-number">Student Number:</label>
-            <input
-              type="text"
-              id="student-number"
-              name="student-number"
-              aria-describedby="student-number-constraints"
-              inputmode="numeric"
-              required
-              autofocus
-            />
-            <small id="student-number-constraints">Must be 5-7 numbers</small>
-          </fieldset>
-          <fieldset>
-            <label for="username">Enter a username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              autocomplete="username"
-              required
-            />
-          </fieldset>
-          <fieldset>
-            <label for="password">Enter a password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              autocomplete="current-password"
-              minlength="10"
-              aria-describedby="password-constraints"
-              required
-            />
-            <small id="password-constraints"
-              >Password must be 10 or more characters</small
-            >
-            <div
-              aria-role="button"
-              id="toggle-password"
-              aria-label="Sow password as plain text. Warning: this will display your password on the screen"
-            >
-              Show password
-            </div>
-          </fieldset>
-          <select id="course" name="course" required>
-            <option value="" disabled selected>Select your course</option>
-            <option value="1">ICS3U</option>
-            <option value="2">ICS3C</option>
-          </select>
-          <button type="submit">Create Account</button>
-          <p>Already have an account? <a href="/login">Login</a></p>
-        </form>
-      </article>
-    </main>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/register</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
 
-    <script>
-      const $form = document.querySelector("form");
-      const $studentNumber = document.getElementById("student-number");
-      const $username = document.getElementById("username");
-      const $pass = document.getElementById("password");
-      const $togglePassBtn = document.getElementById("toggle-password");
-      const $registerBtn = document.querySelector("button[type='submit']");
+<body>
+  <main class="container">
+    <article>
+      <h1>Register</h1>
+      <form method="POST" action="/register">
+        <fieldset>
+          {{ if .Error}}
+          <p style="color: var(--pico-del-color)">{{.Error}}</p>
+          {{end}}
+          <label for="student-number">Student Number:</label>
+          <input type="text" id="student-number" name="student-number" aria-describedby="student-number-constraints"
+            inputmode="numeric" required autofocus />
+          <small id="student-number-constraints">Must be 5-7 numbers</small>
+        </fieldset>
+        <fieldset>
+          <label for="username">Enter a username</label>
+          <input type="text" id="username" name="username" autocomplete="username" required />
+        </fieldset>
+        <fieldset>
+          <label for="password">Enter a password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" minlength="10"
+            aria-describedby="password-constraints" required />
+          <small id="password-constraints">Password must be 10 or more characters</small>
+          <div aria-role="button" id="toggle-password" class="field-button"
+            aria-label="Show password as plain text. Warning: this will display your password on the screen">
+            Show password
+          </div>
+        </fieldset>
+        <fieldset>
+          <label for="join-code">Join Code</label>
+          <input type="text" id="join-code" name="join-code" aria-describedby="join-code-constraints" />
+          <small id="join-code-constraints">
+            Ask your teacher for the join code
+          </small>
+        </fieldset>
+        <button type="submit">Create Account</button>
+        <p>Already have an account? <a href="/login">Login</a></p>
+      </form>
+    </article>
+  </main>
 
-      $togglePassBtn.addEventListener("click", clickedTogglePassword);
-      $studentNumber.addEventListener("change", validateStudentNumber);
+  <script>
+    const $form = document.querySelector("form");
+    const $studentNumber = document.getElementById("student-number");
+    const $username = document.getElementById("username");
+    const $pass = document.getElementById("password");
+    const $joinCode = document.getElementById("join-code");
+    const $togglePassBtn = document.getElementById("toggle-password");
+    const $registerBtn = document.querySelector("button[type='submit']");
 
-      $username.addEventListener("change", () => {
-        if ($username.value.length !== 0) {
-          $username.setAttribute("aria-invalid", "false");
-        }
-        $username.reportValidity();
-      });
+    $togglePassBtn.addEventListener("click", clickedTogglePassword);
+    $studentNumber.addEventListener("change", validateStudentNumber);
 
-      $pass.addEventListener("change", () => {
-        if ($pass.value.length < 10) {
-          $pass.setAttribute("aria-invalid", "true");
-        } else {
-          $pass.setAttribute("aria-invalid", "false");
-        }
+    $username.addEventListener("change", () => {
+      if ($username.value.length !== 0) {
+        $username.setAttribute("aria-invalid", "false");
+      }
+      $username.reportValidity();
+    });
 
-        $pass.reportValidity();
-      });
-
-      $form.addEventListener("submit", handleFormSubmit);
-
-      function clickedTogglePassword() {
-        if ($pass.type === "password") {
-          $pass.type = "text";
-          $togglePassBtn.textContent = "Hide password";
-        } else {
-          $pass.type = "password";
-          $togglePassBtn.textContent = "Show password ";
-          $togglePassBtn.setAttribute(
-            "aria-label",
-            "Sow password as plain text. Warning: this will display your password on the screen",
-          );
-        }
+    $pass.addEventListener("change", () => {
+      if ($pass.value.length < 10) {
+        $pass.setAttribute("aria-invalid", "true");
+      } else {
+        $pass.setAttribute("aria-invalid", "false");
       }
 
-      function validateStudentNumber() {
-        if (!/^[0-9]*$/.test($studentNumber.value)) {
-          console.log("Not all numbers");
-          $studentNumber.setCustomValidity(
-            "Student number must consist of only numbers",
-          );
-          $studentNumber.setAttribute("aria-invalid", "true");
-        } else if ($studentNumber.value.length < 5) {
-          console.log("too short");
-          $studentNumber.setCustomValidity(
-            "Student number must be at least 5 numbers.",
-          );
-          $studentNumber.setAttribute("aria-invalid", "true");
-        } else if ($studentNumber.value.length > 7) {
-          console.log("too long");
-          $studentNumber.setCustomValidity(
-            "Student number must be at most 7 numbers.",
-          );
-          $studentNumber.setAttribute("aria-invalid", "true");
-        } else {
-          console.log("just rright");
-          $studentNumber.setCustomValidity("");
-          $studentNumber.setAttribute("aria-invalid", "false");
-        }
-        $studentNumber.reportValidity();
-      }
+      $pass.reportValidity();
+    });
 
-      function handleFormSubmit(e) {
-        if (form.checkValidity()) {
-          $registerBtn.disabled = "true";
-          form.submit();
-        }
+    $joinCode.addEventListener("change", () => {
+      if ($joinCode.value.length !== 0) {
+        $joinCode.setAttribute("aria-invalid", "false");
       }
-    </script>
-  </body>
+      $joinCode.reportValidity();
+    });
+
+    $form.addEventListener("submit", handleFormSubmit);
+
+    function clickedTogglePassword() {
+      if ($pass.type === "password") {
+        $pass.type = "text";
+        $togglePassBtn.textContent = "Hide password";
+      } else {
+        $pass.type = "password";
+        $togglePassBtn.textContent = "Show password ";
+        $togglePassBtn.setAttribute(
+          "aria-label",
+          "Sow password as plain text. Warning: this will display your password on the screen",
+        );
+      }
+    }
+
+    function validateStudentNumber() {
+      if (!/^[0-9]*$/.test($studentNumber.value)) {
+        console.log("Not all numbers");
+        $studentNumber.setCustomValidity(
+          "Student number must consist of only numbers",
+        );
+        $studentNumber.setAttribute("aria-invalid", "true");
+      } else if ($studentNumber.value.length < 5) {
+        console.log("too short");
+        $studentNumber.setCustomValidity(
+          "Student number must be at least 5 numbers.",
+        );
+        $studentNumber.setAttribute("aria-invalid", "true");
+      } else if ($studentNumber.value.length > 7) {
+        console.log("too long");
+        $studentNumber.setCustomValidity(
+          "Student number must be at most 7 numbers.",
+        );
+        $studentNumber.setAttribute("aria-invalid", "true");
+      } else {
+        console.log("just rright");
+        $studentNumber.setCustomValidity("");
+        $studentNumber.setAttribute("aria-invalid", "false");
+      }
+      $studentNumber.reportValidity();
+    }
+
+    function handleFormSubmit(e) {
+      if (form.checkValidity()) {
+        $registerBtn.disabled = "true";
+        form.submit();
+      }
+    }
+  </script>
+</body>
+
 </html>
 {{end}}

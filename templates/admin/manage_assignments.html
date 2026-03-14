@@ -1,71 +1,64 @@
 {{ define "manage_assignments" }}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/teacher/manage_assignments</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-  </head>
 
-  <body>
-    <header style="box-shadow: var(--pico-box-shadow)">
-      <div class="container">
-        <nav aria-label="breadcrumb" style="justify-content: space-between">
-          <ul>
-            <li><a href="/teacher">Teacher Dashboard</a></li>
-            <li>Manage Assignments</li>
-          </ul>
-          <ul>
-            <li>
-              <button id="logout-button" class="secondary">Logout</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    <main class="container">
-      {{ if .Assignments }}
-      <h2>Managing Assignments</h2>
-      <section style="display: flex; justify-content: flex-end">
-        <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new"
-          >Create New Assignment</a
-        >
-      </section>
-      <article>
-        <table class="striped">
-          <tbody>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Due</th>
-              </tr>
-            </thead>
-            {{ range .Assignments }}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/teacher/manage_assignments</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+</head>
+
+<body>
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li><a href="/teacher">Teacher Dashboard</a></li>
+          <li>Manage Assignments</li>
+        </ul>
+        <ul>
+          <li>
+            <button id="logout-button" class="secondary">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    {{ if .Assignments }}
+    <h2>Managing Assignments</h2>
+    <section style="display: flex; justify-content: flex-end">
+      <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new">Create New Assignment</a>
+    </section>
+    <article>
+      <table class="striped">
+        <tbody>
+          <thead>
             <tr>
-              <th scope="row">
-                <a href="/teacher/courses/{{.CourseId}}/assignments/{{.Id}}"
-                  >{{.Name}}</a
-                >
-              </th>
-              <td>{{.DueDate | unixToDate}}</td>
+              <th scope="col">Name</th>
+              <th scope="col">Due</th>
             </tr>
-            {{ end }}
-          </tbody>
-        </table>
-      </article>
-      {{ else }}
-      <section>
-        <p>You have no assignments yet.</p>
-        <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new"
-          >Create New Assignment</a
-        >
-      </section>
-      {{ end }} {{ template "logoutScript" . }}
-    </main>
-  </body>
+          </thead>
+          {{ range .Assignments }}
+          <tr>
+            <th scope="row">
+              <a href="/teacher/courses/{{.CourseId}}/assignments/{{.Id}}">{{.Name}}</a>
+            </th>
+            <td>{{.DueDate | unixToDate}}</td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </article>
+    {{ else }}
+    <section style="display: flex; justify-content: flex-end">
+      <a role="button" href="/teacher/courses/{{.CourseId}}/assignments/new">Create New Assignment</a>
+    </section>
+    <p>You have no assignments yet.</p>
+    {{ end }} {{ template "logoutScript" . }}
+  </main>
+</body>
+
 </html>
 {{ end }}

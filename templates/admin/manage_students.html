@@ -1,73 +1,69 @@
 {{ define "manage_students" }}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/teacher/manage_students</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-  </head>
 
-  <body>
-    <header style="box-shadow: var(--pico-box-shadow)">
-      <div class="container">
-        <nav aria-label="breadcrumb" style="justify-content: space-between">
-          <ul>
-            <li><a href="/teacher">Teacher Dashboard</a></li>
-            <li>Manage students</li>
-          </ul>
-          <ul>
-            <li>
-              <button id="logout-button" class="secondary">Logout</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    <main class="container">
-      {{ if .Students }}
-      <h2>Managing Students</h2>
-      <article>
-        <table>
-          <tbody>
-            <thead>
-              <tr>
-                <th scope="col">Student Number</th>
-                <th scope="col">Username</th>
-                <th scope="col">New Password</th>
-              </tr>
-            </thead>
-            {{ range .Students }}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/teacher/manage_students</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+</head>
 
+<body>
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li><a href="/teacher">Teacher Dashboard</a></li>
+          <li>Manage students</li>
+        </ul>
+        <ul>
+          <li>
+            <button id="logout-button" class="secondary">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    {{ if .Students }}
+    <h2>Managing Students</h2>
+    <article>
+      <table>
+        <tbody>
+          <thead>
             <tr>
-              <th scope="row">{{ .StudentNumber}}</th>
-              <td>{{.Username}}</td>
-              <td>
-                <form
-                  action="/teacher/courses/{{.CourseId}}/students/{{.Id}}/passwordreset"
-                  method="POST"
-                >
-                  <fieldset role="group">
-                    <input type="text" name="password" autocomplete="off" />
-                    <input type="hidden" name="student-id" value="{{.Id}}" />
-                    <button id="password-reset">Reset</button>
-                  </fieldset>
-                </form>
-              </td>
+              <th scope="col">Student Number</th>
+              <th scope="col">Username</th>
+              <th scope="col">New Password</th>
             </tr>
-            {{ end }}
-          </tbody>
-        </table>
-      </article>
-      {{ else }}
-      <section>
-        <p>This course has no students. Ask them to register!</p>
-      </section>
-      {{ end }} {{ template "logoutScript" . }}
-    </main>
-  </body>
+          </thead>
+          {{ range .Students }}
+
+          <tr>
+            <th scope="row">{{ .StudentNumber}}</th>
+            <td>{{.Username}}</td>
+            <td>
+              <form action="/teacher/courses/{{.CourseId}}/students/{{.Id}}/passwordreset" method="POST">
+                <fieldset role="group">
+                  <input type="text" name="password" autocomplete="off" />
+                  <input type="hidden" name="student-id" value="{{.Id}}" />
+                  <button id="password-reset">Reset</button>
+                </fieldset>
+              </form>
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </article>
+    {{ else }}
+    <section>
+      <p>This course has no students. Ask them to register!</p>
+    </section>
+    {{ end }} {{ template "logoutScript" . }}
+  </main>
+</body>
+
 </html>
 {{ end }}

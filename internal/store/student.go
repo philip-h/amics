@@ -83,8 +83,8 @@ func (s *StudentStore) ChangePassword(studentId int, newPassword string) error {
 		return err
 	}
 	_, err = s.db.Exec(`UPDATE student
-  SET password=?
-  WHERE id=?`, string(hashedPassword), studentId)
+  SET password=$1
+  WHERE id=$2`, string(hashedPassword), studentId)
 
 	return err
 }

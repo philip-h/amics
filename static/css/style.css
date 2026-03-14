@@ -2,13 +2,13 @@ fieldset {
   position: relative !important;
 }
 
-#toggle-password {
+.field-button {
   position: absolute;
   top: 0;
   right: 0;
 }
 
-#toggle-password:hover {
+.field-button:hover {
   cursor: pointer;
   opacity: 80%;
 }

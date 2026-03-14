@@ -60,6 +60,7 @@ func (m *MockStudentStore) CompareHashAndPassword(string, string) bool {
 type MockCourseStore struct {
 	CreateInvoked         bool
 	GetByIdInvoked        bool
+	GetByJoinCodeInvoked  bool
 	GetByTeacherIdInvoked bool
 	UpdateInvoked         bool
 }
@@ -71,6 +72,10 @@ func (m *MockCourseStore) Create(*Course) error {
 
 func (m *MockCourseStore) GetById(id int) (*Course, error) {
 	m.GetByIdInvoked = true
+	return &Course{}, nil
+}
+func (m *MockCourseStore) GetByJoinCode(string) (*Course, error) {
+	m.GetByJoinCodeInvoked = true
 	return &Course{}, nil
 }
 func (m *MockCourseStore) GetByTeacherId(id int) ([]*Course, error) {

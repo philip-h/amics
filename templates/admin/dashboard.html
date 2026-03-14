@@ -1,70 +1,67 @@
 {{define "teacher_dashboard"}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/app</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-  </head>
 
-  <body>
-    <header style="box-shadow: var(--pico-box-shadow)">
-      <div class="container">
-        <nav aria-label="breadcrumb" style="justify-content: space-between">
-          <ul>
-            <li>Teacher Dashboard</li>
-          </ul>
-          <ul>
-            <li>
-              <button id="logout-button" class="secondary">Logout</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    <main class="container">
-      {{ if .Courses }}
-      <h2>Courses you teach</h2>
-      <section style="display: flex; justify-content: flex-end">
-        <a role="button" href="/teacher/courses/new">Create New Course</a>
-      </section>
-      <article>
-        <table class="striped">
-          <tbody>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-              </tr>
-            </thead>
-            {{ range .Courses }}
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/app</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+</head>
+
+<body>
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li>Teacher Dashboard</li>
+        </ul>
+        <ul>
+          <li>
+            <button id="logout-button" class="secondary">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    {{ if .Courses }}
+    <h2>Courses you teach</h2>
+    <section style="display: flex; justify-content: flex-end">
+      <a role="button" href="/teacher/courses/new">Create New Course</a>
+    </section>
+    <article>
+      <table class="striped">
+        <tbody>
+          <thead>
             <tr>
-              <th scope="row">{{.Name}}</th>
-              <td>
-                <a href="/teacher/courses/{{.Id}}/assignments"
-                  >Manage Assignments</a
-                >
-              </td>
-              <td>
-                <a href="/teacher/courses/{{.Id}}/students">Manage Students</a>
-              </td>
-              <td><a href="/teacher/courses/{{.Id}}">Edit</a></td>
+              <th scope="col">Name</th>
             </tr>
-            {{ end }}
-          </tbody>
-        </table>
-      </article>
-      {{ else }}
-      <section style="display: flex; justify-content: flex-end">
-        <p>You have no courses yet.</p>
-        <a role="button" href="/teacher/courses/new">Create New Course</a>
-      </section>
-      {{ end }}
-    </main>
-    {{template "logoutScript" .}}
-  </body>
+          </thead>
+          {{ range .Courses }}
+          <tr>
+            <th scope="row">{{.Name}}</th>
+            <td>
+              <a href="/teacher/courses/{{.Id}}/assignments">Manage Assignments</a>
+            </td>
+            <td>
+              <a href="/teacher/courses/{{.Id}}/students">Manage Students</a>
+            </td>
+            <td><a href="/teacher/courses/{{.Id}}">Edit</a></td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </article>
+    {{ else }}
+    <section style="display: flex; justify-content: flex-end">
+      <a role="button" href="/teacher/courses/new">Create New Course</a>
+    </section>
+    <p>You have no courses yet.</p>
+    {{ end }}
+  </main>
+  {{template "logoutScript" .}}
+</body>
+
 </html>
 {{end}}

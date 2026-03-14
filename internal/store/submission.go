@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"log"
 )
 
 type Submission struct {
@@ -42,7 +43,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 		// Update existing submission
 		_, err = tx.Exec(
 			`UPDATE submission
-      SET code=$1, submitted_on=unixepoch('now'),status='pending', comments='Working on it...'
+      SET code=$1, status='grading', comments='Working on it...', submitted_on = EXTRACT(EPOCH FROM now())
       WHERE id = $2`, code, existingSubmissionId)
 		if err != nil {
 			return err
@@ -50,8 +51,8 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 	} else {
 		// Insert new submission
 		_, err = tx.Exec(
-			`INSERT INTO submission (student_id, assignment_id, code, grade, comments, status, submitted_on)
-      VALUES ($1, $2, $3, 0, 'Working on it...', 'pending', unixepoch('now'))`,
+			`INSERT INTO submission (student_id, assignment_id, code, grade, comments, status)
+      VALUES ($1, $2, $3, 0, 'Working on it...', 'grading')`,
 			studentId,
 			assignmentId,
 			code)
@@ -68,7 +69,7 @@ func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
 	err := s.db.QueryRow(
 		`SELECT id, student_id, assignment_id, code, grade, comments, status, submitted_on, graded_on
     FROM submission
-    WHERE status='pending'
+    WHERE status='grading'
     ORDER BY submitted_on ASC
     LIMIT 1`).Scan(
 		&submission.Id,
@@ -93,10 +94,10 @@ func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
 }
 
 func (s *SubmissionStore) Update(submission *Submission) error {
+	log.Printf("Updating subission %d with status %v", submission.Id, submission.Status)
 	_, err := s.db.Exec(`UPDATE submission
-  SET grade = ?, comments = ?, status = ?, graded_on = unixepoch('now')
-  WHERE id=?`,
-		submission.Grade, submission.Comments, submission.Status, submission.Id)
+  SET grade = $1, comments = $2, status = $3, graded_on = EXTRACT(EPOCH FROM now())
+  WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
 	return err
 }

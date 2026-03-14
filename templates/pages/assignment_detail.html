@@ -1,140 +1,126 @@
 {{define "assignment_detail"}}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/app/assignment_detail</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-  </head>
 
-  <body>
-    <header style="box-shadow: var(--pico-box-shadow)">
-      <div class="container">
-        <nav aria-label="breadcrumb" style="justify-content: space-between">
-          <ul>
-            <li><a href="/app">Dashboard</a></li>
-            <li>{{.Assignment.Name}}</li>
-          </ul>
-          <ul>
-            <li>
-              <button id="logout-button" class="secondary">Logout</button>
-            </li>
-          </ul>
-        </nav>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/app/assignment_detail</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+</head>
+
+<body>
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li><a href="/app">Dashboard</a></li>
+          <li>{{.Assignment.Name}}</li>
+        </ul>
+        <ul>
+          <li>
+            <button id="logout-button" class="secondary">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <div class="grid">
+        <h2>{{ .Assignment.Name }}</h2>
+        {{ if .Submission }}
+        <p>{{.Submission.Grade}}/{{.Assignment.Points}}</p>
+        {{else}}
+        <p>-/{{.Assignment.Points}}</p>
+        {{end}}
       </div>
-    </header>
-    <main class="container">
-      <section>
-        <div class="grid">
-          <h2>{{ .Assignment.Name }}</h2>
-          {{ if .Submission }}
-          <p>{{.Submission.Grade}}/{{.Assignment.Points}}</p>
-          {{else}}
-          <p>-/{{.Assignment.Points}}</p>
-          {{end}}
-        </div>
-        <div class="grid">
-          <p>Due: {{ .Assignment.DueDate | unixToDate}}</p>
-          <p>
-            Grading Status: {{if and .Submission
-            .Submission.Status.Valid}}{{.Submission.Status.String}}{{else}}Not
-            submitted{{end}}
-          </p>
-        </div>
-      </section>
-      <hr />
-      <section>
-        <h2>Instructions</h2>
-        <p>{{ .Assignment.Description }}</p>
-      </section>
-      <hr />
+      <div class="grid">
+        <p>Due: {{ .Assignment.DueDate | unixToDate}}</p>
+        <p>
+          Grading Status: {{if and .Submission
+          .Submission.Status.Valid}}{{.Submission.Status.String}}{{else}}Not
+          submitted{{end}}
+        </p>
+      </div>
+    </section>
+    <hr />
+    <section>
+      <h2>Instructions</h2>
+      <p>{{ .Assignment.Description }}</p>
+    </section>
+    <hr />
 
-      {{if .Submission}} {{if .Comments}}
-      <details name="grader-output" open>
-        <summary>Grader Output:</summary>
-        <code style="width: 100%; padding: 1em">
+    {{if .Submission}} {{if .Comments}}
+    <details name="grader-output" open>
+      <summary>Grader Output:</summary>
+      <code style="width: 100%; padding: 1em">
           <pre>{{.Comments}}</pre>
         </code>
-      </details>
-      {{end}}
+    </details>
+    {{end}}
 
-      <details name="submission">
-        <summary>
-          Your current submission: [{{ .Assignment.RequiredFilename }}]
-        </summary>
-        <span role="textbox">
-          <pre style="padding: 1em">{{ .Submission.Code}}</pre>
-        </span>
-      </details>
-      {{ else }}
-      <p>You have not submitted this assignment yet.</p>
-      {{ end }}
+    <details name="submission">
+      <summary>
+        Your current submission: [{{ .Assignment.RequiredFilename }}]
+      </summary>
+      <span role="textbox">
+        <pre style="padding: 1em">{{ .Submission.Code}}</pre>
+      </span>
+    </details>
+    {{ else }}
+    <p>You have not submitted this assignment yet.</p>
+    {{ end }}
 
-      <article>
-        <form
-          action="/app/assignments/{{ .Assignment.Id }}/submit"
-          method="post"
-          enctype="multipart/form-data"
-        >
-          {{ if .Submission }}
-          <label for="file">Re-upload your assignment:</label>
-          {{ else }}
-          <label for="file">Upload your assignment:</label>
-          {{ end }}
-          <input
-            type="file"
-            name="file"
-            id="file"
-            accept=".py"
-            aria-describedby="file-constraints"
-            required
-          />
-          <small id="file-constraints"
-            >Please upload {{.Assignment.RequiredFilename}}</small
-          >
-          {{ if .Submission }}
-          <button type="submit">Re-grade Assignment</button>
-          {{ else }}
-          <button type="submit">Grade Assignment</button>
-          {{ end }}
-        </form>
-      </article>
-    </main>
+    <article>
+      <form action="/app/assignments/{{ .Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
+        {{ if .Submission }}
+        <label for="file">Re-upload your assignment:</label>
+        {{ else }}
+        <label for="file">Upload your assignment:</label>
+        {{ end }}
+        <input type="file" name="file" id="file" accept=".py" aria-describedby="file-constraints" required />
+        <small id="file-constraints">Please upload {{.Assignment.RequiredFilename}}</small>
+        {{ if .Submission }}
+        <button type="submit">Re-grade Assignment</button>
+        {{ else }}
+        <button type="submit">Grade Assignment</button>
+        {{ end }}
+      </form>
+    </article>
+  </main>
 
-    {{ template "logoutScript" .}}
+  {{ template "logoutScript" .}}
 
-    <script>
-      const $form = document.querySelector("form");
-      const $fileInput = document.querySelector("input[type='file']");
-      const $uploadBtn = document.querySelector("button[type='submit']");
+  <script>
+    const $form = document.querySelector("form");
+    const $fileInput = document.querySelector("input[type='file']");
+    const $uploadBtn = document.querySelector("button[type='submit']");
 
-      $fileInput.addEventListener("change", (e) => {
-        if (e.target.files[0].name !== "{{.Assignment.RequiredFilename}}") {
-          $fileInput.setCustomValidity(
-            "File should be {{.Assignment.RequiredFilename}}",
-          );
-          $fileInput.setAttribute("aria-invalid", "true");
-          $fileInput.value = "";
-        } else {
-          $fileInput.setAttribute("aria-invalid", "false");
-          $fileInput.setCustomValidity("");
-        }
-        $fileInput.reportValidity();
-      });
-
-      $form.addEventListener("submit", handleFormSubmit);
-
-      function handleFormSubmit(e) {
-        if (form.checkValidity()) {
-          $loginBtn.disabled = "true";
-          form.submit();
-        }
+    $fileInput.addEventListener("change", (e) => {
+      if (e.target.files[0].name !== "{{.Assignment.RequiredFilename}}") {
+        $fileInput.setCustomValidity(
+          "File should be {{.Assignment.RequiredFilename}}",
+        );
+        $fileInput.setAttribute("aria-invalid", "true");
+        $fileInput.value = "";
+      } else {
+        $fileInput.setAttribute("aria-invalid", "false");
+        $fileInput.setCustomValidity("");
       }
-    </script>
-  </body>
+      $fileInput.reportValidity();
+    });
+
+    $form.addEventListener("submit", handleFormSubmit);
+
+    function handleFormSubmit(e) {
+      if (form.checkValidity()) {
+        $loginBtn.disabled = "true";
+        form.submit();
+      }
+    }
+  </script>
+</body>
+
 </html>
 {{end}}

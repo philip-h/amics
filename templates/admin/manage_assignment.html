@@ -1,185 +1,152 @@
 {{ define "manage_assignment" }}
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>amics/teacher/manage_assignment</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css"
-    />
-  </head>
 
-  <body>
-    <header style="box-shadow: var(--pico-box-shadow)">
-      <div class="container">
-        <nav aria-label="breadcrumb" style="justify-content: space-between">
-          <ul>
-            <li><a href="/teacher">Teacher Dashboard</a></li>
-            <li>
-              <a href="/teacher/courses/{{.CourseId}}/assignments"
-                >Manage Assignments</a
-              >
-            </li>
-            <li>
-              {{if .Assignment}}{{.Assignment.Name}}{{else}}New
-              Assignment{{end}}
-            </li>
-          </ul>
-          <ul>
-            <li>
-              <button id="logout-button" class="secondary">Logout</button>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-    <main class="container">
-      <h2>{{if .Assignment}}Edit Assignment{{else}}New Assignment{{end}}</h2>
-      <article>
-        <form
-          method="POST"
-          action="{{if .Assignment}}/teacher/courses/{{.CourseId}}/assignments/{{.Assignment.Id}}{{else}}/teacher/courses/{{.CourseId}}/assignments/new{{end}}"
-        >
-          {{ if .Error}}
-          <p style="color: rgb(136, 56.5, 53)">{{.Error}}</p>
-          {{end}}
-          <div class="grid">
-            <fieldset>
-              <label for="id">Id</label>
-              <input
-                type="number"
-                id="id"
-                name="id"
-                value="{{if .Assignment}}{{.Assignment.Id}}{{end}}"
-                readonly
-              />
-            </fieldset>
-            <fieldset>
-              <label for="unit-name">Unit Name</label>
-              <input
-                type="text"
-                id="unit-name"
-                name="unit-name"
-                value="{{if .Assignment}}{{.Assignment.UnitName}}{{end}}"
-                required
-                autofocus
-              />
-            </fieldset>
-            <fieldset>
-              <label for="visible">Visible</label>
-              <input
-                type="checkbox"
-                id="visible"
-                name="visible"
-                {{if
-                .Assignment}}{{if
-                .Assignment.Visible}}checked{{end}}{{else}}checked{{end}}
-              />
-            </fieldset>
-          </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>amics/teacher/manage_assignment</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.purple.min.css" />
+</head>
+
+<body>
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      <nav aria-label="breadcrumb" style="justify-content: space-between">
+        <ul>
+          <li><a href="/teacher">Teacher Dashboard</a></li>
+          <li>
+            <a href="/teacher/courses/{{.CourseId}}/assignments">Manage Assignments</a>
+          </li>
+          <li>
+            {{if .Assignment}}{{.Assignment.Name}}{{else}}New
+            Assignment{{end}}
+          </li>
+        </ul>
+        <ul>
+          <li>
+            <button id="logout-button" class="secondary">Logout</button>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <h2>{{if .Assignment}}Edit Assignment{{else}}New Assignment{{end}}</h2>
+    <article>
+      <form method="POST"
+        action="{{if .Assignment}}/teacher/courses/{{.CourseId}}/assignments/{{.Assignment.Id}}{{else}}/teacher/courses/{{.CourseId}}/assignments/new{{end}}">
+        {{ if .Error}}
+        <p style="color: var(--pico-del-color)">{{.Error}}</p>
+        {{end}}
+        <div class="grid">
           <fieldset>
-            <label for="name">Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value="{{if .Assignment}}{{.Assignment.Name}}{{end}}"
-              required
-            />
+            <label for="id">Id</label>
+            <input type="number" id="id" name="id" value="{{if .Assignment}}{{.Assignment.Id}}{{end}}" readonly />
           </fieldset>
           <fieldset>
-            <label for="description">Description</label>
-            <input
-              type="text"
-              id="description"
-              name="description"
-              value="{{if .Assignment}}{{.Assignment.Description}}{{end}}"
-              required
-            />
+            <label for="unit-name">Unit Name</label>
+            <input type="text" id="unit-name" name="unit-name" value="{{if .Assignment}}{{.Assignment.UnitName}}{{end}}"
+              required autofocus />
           </fieldset>
           <fieldset>
-            <label for="required-filename">Required Filename</label>
-            <input
-              type="text"
-              id="required-filename"
-              name="required-filename"
-              value="{{if .Assignment}}{{.Assignment.RequiredFilename}}{{end}}"
-              required
-            />
+            <label for="visible">Visible</label>
+            <input type="checkbox" id="visible" name="visible" {{if .Assignment}}{{if
+              .Assignment.Visible}}checked{{end}}{{else}}checked{{end}} />
           </fieldset>
-          <fieldset>
-            <label for="points">Points</label>
-            <input
-              type="number"
-              id="points"
-              name="points"
-              value="{{if .Assignment}}{{.Assignment.Points}}{{else}}4{{end}}"
-              required
-            />
-          </fieldset>
-          <input
-            id="due-date-hidden"
-            type="hidden"
-            name="due-date"
-            value="{{if .Assignment}}{{.Assignment.DueDate}}{{end}}"
-          />
-          <fieldset>
-            <label for="due-date">Due Date</label>
-            <input type="datetime-local" id="due-date" value="" required />
-          </fieldset>
-          <fieldset>
-            <label for="pyfile-content">Pytest File</label>
-            <textarea rows="15" name="pyfile-content" id="pyfile-content">
-              {{if .Assignment}}{{.Assignment.PytestCode}}{{end}}
-            </textarea>
-          </fieldset>
-          <button type="submit">
-            {{if .Assignment}}Confirm Edits{{else}}Create New Assignment{{end}}
-          </button>
-        </form>
-      </article>
-    </main>
-    <script>
-      const $dateField = document.getElementById("due-date-hidden");
-      const $hrDateField = document.getElementById("due-date");
+        </div>
+        <fieldset>
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" value="{{if .Assignment}}{{.Assignment.Name}}{{end}}" required />
+        </fieldset>
+        <fieldset>
+          <label for="description">Description</label>
+          <input type="text" id="description" name="description"
+            value="{{if .Assignment}}{{.Assignment.Description}}{{end}}" required />
+        </fieldset>
+        <fieldset>
+          <label for="required-filename">Required Filename</label>
+          <input type="text" id="required-filename" name="required-filename"
+            value="{{if .Assignment}}{{.Assignment.RequiredFilename}}{{end}}" required />
+        </fieldset>
+        <fieldset>
+          <label for="points">Points</label>
+          <input type="number" id="points" name="points"
+            value="{{if .Assignment}}{{.Assignment.Points}}{{else}}4{{end}}" required />
+        </fieldset>
+        <input id="due-date-hidden" type="hidden" name="due-date"
+          value="{{if .Assignment}}{{.Assignment.DueDate}}{{end}}" />
+        <fieldset>
+          <label for="due-date">Due Date</label>
+          <input type="datetime-local" id="due-date" value="" required />
+        </fieldset>
+        <fieldset>
+          <label for="pyfile-content">Pytest Content</label>
+          <textarea rows="15" name="pyfile-content" id="pyfile-content">
+{{if .Assignment}}{{.Assignment.PytestCode}}{{end}}</textarea>
+          <label for="pyfile-file">Pytest File</label>
+          <input type="file" id="pyfile-file" accept=".py" />
+        </fieldset>
+        <button type="submit">
+          {{if .Assignment}}Confirm Edits{{else}}Create New Assignment{{end}}
+        </button>
+      </form>
+    </article>
+  </main>
+  <script>
+    const $dateField = document.getElementById("due-date-hidden");
+    const $hrDateField = document.getElementById("due-date");
+    const $pyfileContent = document.getElementById("pyfile-content");
+    const $pyfileFile = document.getElementById("pyfile-file");
 
-      // On page load, populate visible datetime input
-      if ($dateField.value) {
-        const hrd = unixToLocaleDate(parseInt($dateField.value));
-        console.log(hrd);
-        $hrDateField.value = hrd;
-      }
+    // On page load, populate visible datetime input
+    if ($dateField.value) {
+      const hrd = unixToLocaleDate(parseInt($dateField.value));
+      console.log(hrd);
+      $hrDateField.value = hrd;
+    }
 
-      // Everytime I change the human readable date field, update the hidden unix time
-      $hrDateField.addEventListener("change", function (e) {
-        const unixEpoch = Math.floor(
-          new Date($hrDateField.value).getTime() / 1000,
-        );
-        $dateField.value = unixEpoch;
-      });
+    // Everytime I change the human readable date field, update the hidden unix time
+    $hrDateField.addEventListener("change", function (e) {
+      const unixEpoch = Math.floor(
+        new Date($hrDateField.value).getTime() / 1000,
+      );
+      $dateField.value = unixEpoch;
+    });
 
-      function unixToLocaleDate(unixTime) {
-        const d = new Date(unixTime * 1000);
+    // Optionally you can uplaod a file to populate the pyfile contents textfield
+    $pyfileFile.addEventListener("change", (e) => {
+      // Read file contents into textarea
+      const reader = new FileReader();
+      reader.onloadend = function (event) {
+        $pyfileContent.value = this.result;
+      };
+      reader.readAsText(event.target.files[0]);
+      // Clear file from file input
+      $pyfileFile.value = "";
+    });
 
-        const pad = (n) => String(n).padStart(2, "0");
+    function unixToLocaleDate(unixTime) {
+      const d = new Date(unixTime * 1000);
 
-        const local =
-          d.getFullYear() +
-          "-" +
-          pad(d.getMonth() + 1) +
-          "-" +
-          pad(d.getDate()) +
-          "T" +
-          pad(d.getHours()) +
-          ":" +
-          pad(d.getMinutes());
+      const pad = (n) => String(n).padStart(2, "0");
 
-        return local;
-      }
-    </script>
-    {{ template "logoutScript" . }}
-  </body>
+      const local =
+        d.getFullYear() +
+        "-" +
+        pad(d.getMonth() + 1) +
+        "-" +
+        pad(d.getDate()) +
+        "T" +
+        pad(d.getHours()) +
+        ":" +
+        pad(d.getMinutes());
+
+      return local;
+    }
+  </script>
+  {{ template "logoutScript" . }}
+</body>
+
 </html>
 {{ end }}

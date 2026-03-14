@@ -10,14 +10,15 @@ type Storage struct {
 		Create(*Student) error
 		GetByUsername(string) (*Student, error)
 		GetByCourseId(int) ([]*Student, error)
-    ChangePassword(int, string) error
-    CompareHashAndPassword(string, string) bool
+		ChangePassword(int, string) error
+		CompareHashAndPassword(string, string) bool
 	}
 
 	Courses interface {
 		Create(*Course) error
-		GetByTeacherId(int) ([]*Course, error)
 		GetById(int) (*Course, error)
+		GetByJoinCode(string) (*Course, error)
+		GetByTeacherId(int) ([]*Course, error)
 		Update(*Course) error
 	}
 

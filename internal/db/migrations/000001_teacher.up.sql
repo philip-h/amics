@@ -1,6 +1,6 @@
 CREATE TABLE teacher (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    employee_number TEXT NOT NULL UNIQUE,
-    username TEXT NOT NULL UNIQUE,
+    id SERIAL PRIMARY KEY,
+    employee_number VARCHAR(20) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,
     password TEXT NOT NULL
 );

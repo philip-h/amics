@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS course (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    year INTEGER NOT NULL,
-    semester INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    teacher_id INTEGER NOT NULL,
-    FOREIGN KEY (teacher_id) REFERENCES teacher(id)
+    id SERIAL PRIMARY KEY,
+    year SMALLINT NOT NULL,
+    semester SMALLINT NOT NULL,
+    name VARCHAR(20) NOT NULL,
+    join_code VARCHAR(20) NOT NULL UNIQUE,
+    teacher_id INTEGER NOT NULL REFERENCES teacher (id)
 );

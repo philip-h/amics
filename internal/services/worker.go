@@ -64,11 +64,11 @@ func (w *Worker) processNextSubmission() {
 	assignment, err := w.store.Assignments.GetById(submission.AssignmentId)
 	if err != nil {
 		log.Printf("Error getting code for assignment: %v", err)
-		submission.Status = sql.NullString{String: "failed", Valid: true}
+		submission.Status = sql.NullString{String: "failure", Valid: true}
 		submission.Comments = sql.NullString{String: "Could not get code for the assignment", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
-			log.Printf("Error updating submission: %v", err)
+			log.Printf("Error updating submission[1]: %v", err)
 		}
 		return
 	}
@@ -77,11 +77,11 @@ func (w *Worker) processNextSubmission() {
 	result, err := w.testRunner.Pytest(assignment.RequiredFilename, submission.Code, assignment.PytestCode)
 	if err != nil {
 		log.Printf("Error running tests: %v", err)
-		submission.Status = sql.NullString{String: "failed", Valid: true}
+		submission.Status = sql.NullString{String: "failure", Valid: true}
 		submission.Comments = sql.NullString{String: "Could not run pytest", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
-			log.Printf("Error updating submission: %v", err)
+			log.Printf("Error updating submission[2]: %v", err)
 		}
 	}
 
@@ -90,6 +90,6 @@ func (w *Worker) processNextSubmission() {
 	submission.Comments = sql.NullString{String: result.Comments, Valid: true}
 	err = w.store.Submissions.Update(submission)
 	if err != nil {
-		log.Printf("Error updating submission: %v", err)
+		log.Printf("Error updating submission[3]: %v", err)
 	}
 }

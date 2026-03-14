@@ -7,6 +7,7 @@ type Course struct {
 	Year      int
 	Semester  int
 	Name      string
+	JoinCode  string
 	TeacherId int
 }
 
@@ -15,7 +16,8 @@ type CourseStore struct {
 }
 
 func (s *CourseStore) Create(course *Course) error {
-	_, err := s.db.Exec("INSERT INTO course (year, semester, name, teacher_id) VALUES ($1, $2, $3, $4)", course.Year, course.Semester, course.Name, course.TeacherId)
+	_, err := s.db.Exec("INSERT INTO course (year, semester, name, join_code, teacher_id) VALUES ($1, $2, $3, $4, $5)",
+		course.Year, course.Semester, course.Name, course.JoinCode, course.TeacherId)
 	return err
 }
 
@@ -26,13 +28,40 @@ func (s *CourseStore) GetById(courseId int) (*Course, error) {
 		id, 
 		year,
 		semester,
-		name
+		name,
+    join_code
 	FROM course
 	WHERE id = $1`, courseId).Scan(
 		&course.Id,
 		&course.Year,
 		&course.Semester,
-		&course.Name)
+		&course.Name,
+		&course.JoinCode)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return course, nil
+}
+
+func (s *CourseStore) GetByJoinCode(joinCode string) (*Course, error) {
+	course := &Course{}
+
+	err := s.db.QueryRow(`SELECT 
+		id, 
+		year,
+		semester,
+		name,
+    join_code
+	FROM course
+	WHERE join_code = $1`, joinCode).Scan(
+		&course.Id,
+		&course.Year,
+		&course.Semester,
+		&course.Name,
+		&course.JoinCode)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -43,7 +72,7 @@ func (s *CourseStore) GetById(courseId int) (*Course, error) {
 }
 
 func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
-	rows, err := s.db.Query("SELECT id, year, semester, name, teacher_id FROM course WHERE teacher_id = ?", teacherId)
+	rows, err := s.db.Query("SELECT id, year, semester, name, join_code, teacher_id FROM course WHERE teacher_id = $1;", teacherId)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +81,7 @@ func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
 	courses := []*Course{}
 	for rows.Next() {
 		course := &Course{}
-		err := rows.Scan(&course.Id, &course.Year, &course.Semester, &course.Name, &course.TeacherId)
+		err := rows.Scan(&course.Id, &course.Year, &course.Semester, &course.Name, &course.JoinCode, &course.TeacherId)
 		if err != nil {
 			return nil, err
 		}
@@ -63,9 +92,9 @@ func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
 
 func (s *CourseStore) Update(course *Course) error {
 	_, err := s.db.Exec(`UPDATE course
-  SET year=?, semester=?, name=?
-  WHERE id=?`,
-		course.Year, course.Semester, course.Name, course.Id)
+  SET year=$1, semester=$2, name=$3, join_code=$4
+  WHERE id=$5`,
+		course.Year, course.Semester, course.Name, course.JoinCode, course.Id)
 
 	return err
 }
