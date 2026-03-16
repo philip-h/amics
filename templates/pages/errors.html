@@ -1,0 +1,99 @@
+{{define "error_page"}}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>amics/opps/{{.Code}}</title>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #0d1117;
+      color: #00ff9c;
+      font-family: "Courier New", monospace;
+    }
+
+    .container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+      flex-direction: column;
+    }
+
+    .code {
+      font-size: 10rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      text-shadow:
+        0 0 5px #00ff9c,
+        0 0 10px #00ff9c,
+        0 0 20px #00ff9c;
+    }
+
+    .text {
+      font-size: 2rem;
+      margin-top: 10px;
+      color: #8b949e;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #6e7681;
+    }
+
+    a,
+    a:visited {
+      color: #00ff9c;
+    }
+
+    a:hover,
+    a:active {
+      color: #10ce85;
+    }
+
+
+    .grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 255, 156, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 156, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .glow-line {
+      width: 200px;
+      height: 2px;
+      margin-top: 30px;
+      background: linear-gradient(90deg, transparent, #00ff9c, transparent);
+      box-shadow: 0 0 10px #00ff9c;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grid"></div>
+
+  <div class="container">
+    <div class="code">{{.Code}}</div>
+
+    <div class="text">{{.Text}}</div>
+
+    <div class="glow-line"></div>
+
+    <div class="subtitle">
+      <p>The server encountered a problem while processing your request.</p>
+      <p><a href="/">Go back home</a></p>
+    </div>
+  </div>
+</body>
+
+</html>
+{{end}}

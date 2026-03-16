@@ -11,7 +11,7 @@ import (
 )
 
 func (app *Application) withAuth(role string, next http.HandlerFunc) http.HandlerFunc {
-	return makeHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+	return app.makeHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		// Check for token cookie
 		cookie, err := r.Cookie("token")
 		if err != nil {
@@ -31,7 +31,7 @@ func (app *Application) withAuth(role string, next http.HandlerFunc) http.Handle
 					HttpOnly: true,
 					MaxAge:   -1,
 				})
-				
+
 				if role == "teacher" {
 					return &errs.UnauthorizedError{}
 				}
@@ -85,8 +85,8 @@ func (app *Application) withAuth(role string, next http.HandlerFunc) http.Handle
 
 		// Set the user id in request context for later
 		ctx := context.WithValue(r.Context(), "userId", userId)
-    ctx = context.WithValue(ctx, "is-teacher", aud[0] == "teacher")
-    r.Header.Add("Cache-control", "no-store")
+		ctx = context.WithValue(ctx, "is-teacher", aud[0] == "teacher")
+		r.Header.Add("Cache-control", "no-store")
 		next(w, r.WithContext(ctx))
 		return nil
 	})

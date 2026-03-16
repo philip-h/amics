@@ -2,7 +2,7 @@ package server
 
 import (
 	"html/template"
-	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
@@ -13,14 +13,21 @@ import (
 	"github.com/philip-h/amics/internal/store"
 )
 
-// Add a function for dealing with dates
-func unixToDate(unix int64) string {
-	t := time.Unix(unix, 0)
-	return t.Format("Mon Jan 2 @ 15:04")
-
-}
+// ============================================================================
+// Helpers
+// ============================================================================
 func (app *Application) renderTemplate(w http.ResponseWriter, name string, data any) error {
-	return app.Templates.Funcs(template.FuncMap{"unixToDate": unixToDate}).ExecuteTemplate(w, name, data)
+	return app.Templates.ExecuteTemplate(w, name, data)
+}
+
+func (app *Application) requestLogger(r *http.Request, fn string) *slog.Logger {
+	return app.Logger.WithGroup("where").With(
+		slog.String("function", fn),
+		slog.String("method", r.Method),
+		slog.String("path", r.URL.Path),
+		slog.String("host", r.Host),
+		slog.String("remote_addr", r.RemoteAddr),
+	)
 }
 
 // ============================================================================
@@ -28,8 +35,9 @@ func (app *Application) renderTemplate(w http.ResponseWriter, name string, data 
 // ============================================================================
 func (app *Application) handleIndex(w http.ResponseWriter, r *http.Request) error {
 	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return nil
+		w.WriteHeader(http.StatusNotFound)
+		err := app.renderTemplate(w, "error_page", map[string]any{"Code": http.StatusNotFound, "Text": http.StatusText(http.StatusNotFound)})
+		return err
 	}
 	return app.renderTemplate(w, "home", map[string]string{"Active": "home"})
 }
@@ -60,6 +68,7 @@ func (app *Application) handleLoginGet(w http.ResponseWriter, r *http.Request) e
 }
 
 func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleLoginPost")
 	// Read the request body from form values
 	body := &LoginReq{
 		Username: r.FormValue("username"),
@@ -70,10 +79,14 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		return app.renderTemplate(w, "login", map[string]string{"Error": "Username or password field was blank"})
 	}
 
+	if len(body.Password) < 10 {
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Password must be 10 or more characters"})
+	}
+
 	// Look for student in the database
 	student, err := app.Store.Students.GetByUsername(body.Username)
 	if err != nil {
-		log.Printf("%s: %s", "POST /login", err.Error())
+		log.Error("Could not get student by username", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	type UserPass struct {
@@ -95,7 +108,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 		// Check if the user is a teacher
 		teacher, err := app.Store.Teachers.GetByUsername(body.Username)
 		if err != nil {
-			log.Printf("%s: %s", "POST /login", err.Error())
+			log.Error("Could not get teacher by username", slog.String("msg", err.Error()))
 			return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 		}
 		if teacher == nil {
@@ -116,7 +129,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	// Create JWT token and set it as a cookie
 	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), user.Role, time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
-		log.Printf("%s: %s", "POST /login", err.Error())
+		log.Error("Could not create jwt", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
@@ -153,6 +166,7 @@ type RegisterReq struct {
 }
 
 func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleRegisterPost")
 	// Read the request body from form values
 	body := &RegisterReq{
 		StudentNumber: r.FormValue("student-number"),
@@ -165,10 +179,14 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Please make sure to fill out all required fields."})
 	}
 
+	if len(body.Password) < 10 {
+		return app.renderTemplate(w, "login", map[string]string{"Error": "Password must be 10 or more characters"})
+	}
+
 	// Find course the user wants to join
 	course, err := app.Store.Courses.GetByJoinCode(body.JoinCode)
 	if err != nil {
-		log.Printf("%s: %s", "POST /register", err.Error())
+		log.Error("Could not get course by join code", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	if course == nil {
@@ -184,13 +202,13 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 
 	err = app.Store.Students.Create(user)
 	if err != nil {
-		log.Printf("%s: %s", "POST /register", err.Error())
+		log.Error("Could not create student"+body.Username, slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	// Create jwt token and set it as a cookie
 	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), "student", time.Now().Add(90*time.Minute).Unix())
 	if err != nil {
-		log.Printf("%s: %s", "POST /register", err.Error())
+		log.Error("COuld not create jwt", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	http.SetCookie(w, &http.Cookie{
@@ -395,6 +413,8 @@ func (app *Application) handleTeacherDashboard(w http.ResponseWriter, r *http.Re
 // Course Handlers
 // =====================================
 func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleCourseCreate")
+
 	teacherIdStr := r.Context().Value("userId").(string)
 	teacherId, err := strconv.Atoi(teacherIdStr)
 	if err != nil {
@@ -432,7 +452,7 @@ func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Reques
 	// Create a course
 	err = app.Store.Courses.Create(body)
 	if err != nil {
-		log.Printf("%s: %s", "POST /teacher/courses", err.Error())
+		log.Error("Could not create course", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "manage_course", map[string]any{"Course": nil, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
@@ -441,6 +461,7 @@ func (app *Application) handleCourseCreate(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *Application) handleCourseUpdate(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleCourseUpdate")
 	teacherIdStr := r.Context().Value("userId").(string)
 	teacherId, err := strconv.Atoi(teacherIdStr)
 	if err != nil {
@@ -495,7 +516,7 @@ func (app *Application) handleCourseUpdate(w http.ResponseWriter, r *http.Reques
 
 	err = app.Store.Courses.Update(course)
 	if err != nil {
-		log.Printf("%s: %s", "PUT /teacher/courses", err.Error())
+		log.Error("Could not update course", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "manage_course", map[string]any{"Course": course, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
@@ -504,7 +525,7 @@ func (app *Application) handleCourseUpdate(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Request) error {
-
+	log := app.requestLogger(r, "handleTeacherCourses")
 	courseIdStr := r.PathValue("courseId")
 
 	if courseIdStr == "new" {
@@ -520,6 +541,7 @@ func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Requ
 	}
 	course, err := app.Store.Courses.GetById(courseId)
 	if err != nil {
+		log.Error("Could not get course by id", slog.String("msg", err.Error()))
 		return err
 	}
 
@@ -531,6 +553,7 @@ func (app *Application) handleTeacherCourses(w http.ResponseWriter, r *http.Requ
 // =====================================
 
 func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleTeacherAssignments")
 
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
@@ -541,12 +564,14 @@ func (app *Application) handleTeacherAssignments(w http.ResponseWriter, r *http.
 	}
 	assignments, err := app.Store.Assignments.GetByCourseId(courseId)
 	if err != nil {
+		log.Error("Could not get assignments by course id", slog.String("msg", err.Error()))
 		return err
 	}
 	return app.renderTemplate(w, "manage_assignments", map[string]any{"Assignments": assignments, "CourseId": courseId})
 }
 
 func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleTeacherAssignmentDetail")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -569,6 +594,7 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 
 	assignment, err := app.Store.Assignments.GetById(assignmentId)
 	if err != nil {
+		log.Error("Could not get assignment by id", slog.String("msg", err.Error()))
 		return err
 	}
 
@@ -576,6 +602,7 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 }
 
 func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleTeacherAssignmentCreate")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -635,7 +662,7 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 
 	err = app.Store.Assignments.Create(assignment)
 	if err != nil {
-		log.Printf("%s: %s", "POST /teacher/courses/"+strconv.Itoa(courseId)+"/assignments/new", err.Error())
+		log.Error("Could not create assignment", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
@@ -644,6 +671,7 @@ func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *
 }
 
 func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handleTeacherAssignmentUpdate")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -710,7 +738,7 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 
 	err = app.Store.Assignments.Update(assignment)
 	if err != nil {
-		log.Printf("%s: %s", "POST /teacher/courses/"+strconv.Itoa(courseId)+"/assignments/"+strconv.Itoa(assignment.Id), err.Error())
+		log.Error("Could not update assignment", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": body, "Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 
@@ -722,7 +750,7 @@ func (app *Application) handleTeacherAssignmentUpdate(w http.ResponseWriter, r *
 // Student Handlers
 // =====================================
 func (app *Application) handleStudents(w http.ResponseWriter, r *http.Request) error {
-
+	log := app.requestLogger(r, "handleStudents")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -732,12 +760,14 @@ func (app *Application) handleStudents(w http.ResponseWriter, r *http.Request) e
 	}
 	students, err := app.Store.Students.GetByCourseId(courseId)
 	if err != nil {
+		log.Error("Could not get students by course id", slog.String("msg", err.Error()))
 		return err
 	}
 	return app.renderTemplate(w, "manage_students", map[string]any{"Students": students, "CourseId": courseId})
 }
 
 func (app *Application) handlePasswordReset(w http.ResponseWriter, r *http.Request) error {
+	log := app.requestLogger(r, "handlePasswordReset")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))
 	if err != nil {
 		return &errs.ServerError{
@@ -748,21 +778,21 @@ func (app *Application) handlePasswordReset(w http.ResponseWriter, r *http.Reque
 	// Read the request body from form values
 	newPassword := r.FormValue("password")
 	if newPassword == "" {
-		log.Println(r.URL.Path + ": Reset password - password was blank")
+		log.Warn("Incoming password was blank. Nothing happened server side")
 		http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
 	}
 	studentIdStr := r.FormValue("student-id")
 	studentId, err := strconv.Atoi(studentIdStr)
 	if err != nil {
-		log.Println(r.URL.Path + ": Reset password - student id was not an int")
+		log.Warn("Incoming student id was not an int. Nothing happened server side")
 		http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
 	}
 
 	err = app.Store.Students.ChangePassword(studentId, newPassword)
 	if err != nil {
+		log.Error("Could not change password of student "+studentIdStr, slog.String("msg", err.Error()))
 		return err
 	}
 	http.Redirect(w, r, "/teacher/courses/"+strconv.Itoa(courseId)+"/students", http.StatusSeeOther)
 	return nil
-
 }

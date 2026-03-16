@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"regexp"
 	"strconv"
 	"time"
@@ -89,7 +88,6 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 		}
 
 	case <-res.Result:
-		log.Println("Container did indeed finish!")
 	// Container finished successfully
 
 	case <-ctx.Done():

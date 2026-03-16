@@ -2,7 +2,8 @@ package services
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/philip-h/amics/internal/store"
@@ -10,11 +11,12 @@ import (
 
 type Worker struct {
 	store      store.Storage
+	logger     *slog.Logger
 	testRunner *TestRunner
 	stopChan   chan bool
 }
 
-func NewWorker(db *sql.DB) (*Worker, error) {
+func NewWorker(db *sql.DB, logger *slog.Logger) (*Worker, error) {
 	store := store.New(db)
 	testRunner, err := NewTestRunner()
 	if err != nil {
@@ -22,20 +24,21 @@ func NewWorker(db *sql.DB) (*Worker, error) {
 	}
 	return &Worker{
 		store:      store,
+		logger:     logger,
 		testRunner: testRunner,
 		stopChan:   make(chan bool),
 	}, nil
 }
 
 func (w *Worker) Start() {
-	log.Println("Worker started... polling db for submissions...")
-
+	w.logger.Info("Worker started successfully")
 	for {
 		select {
 		case <-w.stopChan:
-			log.Println("Worker stopping...")
+			w.logger.Info("Worker stopping...")
 			return
 		default:
+			w.logger.Debug("Looking for next pending submission")
 			w.processNextSubmission()
 			time.Sleep(2 * time.Second)
 		}
@@ -50,25 +53,29 @@ func (w *Worker) processNextSubmission() {
 	submission, err := w.store.Submissions.GetNextPendingSubmission()
 	// No submission, return early
 	if err != nil {
-		log.Printf("We got an error processing: %v", err)
+		w.logger.Error("Could not get next pending submission", slog.String("msg", err.Error()),
+			slog.Group("where",
+				slog.String("function", "processNextSubmission")))
 		return
 	}
 	if submission == nil {
+		w.logger.Debug("No pending submission found")
 		return
 	}
 
-	log.Printf("Processing submission %d for user %d and assignment %d",
-		submission.Id, submission.StudentId, submission.AssignmentId)
+	w.logger.Debug("Processing submission with id " + strconv.Itoa(submission.Id))
 
 	// Get the test code for this assignment
 	assignment, err := w.store.Assignments.GetById(submission.AssignmentId)
 	if err != nil {
-		log.Printf("Error getting code for assignment: %v", err)
+		w.logger.Error("Could not get the test code for the assignment", slog.String("msg", err.Error()),
+			slog.Group("where",
+				slog.String("function", "processNextSubmission")))
 		submission.Status = sql.NullString{String: "failure", Valid: true}
 		submission.Comments = sql.NullString{String: "Could not get code for the assignment", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
-			log.Printf("Error updating submission[1]: %v", err)
+			w.logger.Error("Could not update submission "+strconv.Itoa(submission.Id)+" with grader failure status", slog.String("msg", err.Error()))
 		}
 		return
 	}
@@ -76,12 +83,14 @@ func (w *Worker) processNextSubmission() {
 	// run tests
 	result, err := w.testRunner.Pytest(assignment.RequiredFilename, submission.Code, assignment.PytestCode)
 	if err != nil {
-		log.Printf("Error running tests: %v", err)
+		w.logger.Error("Error running pytest", slog.String("msg", err.Error()),
+			slog.Group("where",
+				slog.String("function", "processNextSubmission")))
 		submission.Status = sql.NullString{String: "failure", Valid: true}
 		submission.Comments = sql.NullString{String: "Could not run pytest", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
-			log.Printf("Error updating submission[2]: %v", err)
+			w.logger.Error("Could not update submission "+strconv.Itoa(submission.Id)+" with grader failure status", slog.String("msg", err.Error()))
 		}
 	}
 
@@ -90,6 +99,6 @@ func (w *Worker) processNextSubmission() {
 	submission.Comments = sql.NullString{String: result.Comments, Valid: true}
 	err = w.store.Submissions.Update(submission)
 	if err != nil {
-		log.Printf("Error updating submission[3]: %v", err)
+		w.logger.Error("Could not update submission "+strconv.Itoa(submission.Id)+" with grader failure status", slog.String("msg", err.Error()))
 	}
 }

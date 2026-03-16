@@ -44,7 +44,7 @@ func NewInvalidJwtError(message string) *JwtError {
 type UnauthorizedError struct{}
 
 func (e *UnauthorizedError) Error() string {
-	return "Unauthorized"
+	return "Unauthorized access to teacher resource"
 }
 
 func NewUnauthorizedError(message string) *UnauthorizedError {

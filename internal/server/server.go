@@ -3,8 +3,9 @@ package server
 import (
 	"errors"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
@@ -17,11 +18,18 @@ type Application struct {
 	Store     store.Storage
 	Auth      auth.Authenticator
 	Templates *template.Template
+	Logger    *slog.Logger
+	LogLvl    *slog.LevelVar
 }
 
 type Config struct {
 	Port string
 	Db   *db.DbConfig
+}
+
+type Logger struct {
+	Log    *slog.Logger
+	LovLvl *slog.LevelVar
 }
 
 func (app *Application) Mount() *http.ServeMux {
@@ -32,71 +40,84 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
 
 	// Homepage
-	mux.HandleFunc("GET /", makeHTTPHandlerFunc(app.handleIndex))
+	mux.HandleFunc("GET /", app.makeHTTPHandlerFunc(app.handleIndex))
 
 	// Auth handlers
-	mux.HandleFunc("GET /login", makeHTTPHandlerFunc(app.handleLoginGet))
-	mux.HandleFunc("POST /login", makeHTTPHandlerFunc(app.handleLoginPost))
-	mux.HandleFunc("GET /register", makeHTTPHandlerFunc(app.handleRegisterGet))
-	mux.HandleFunc("POST /register", makeHTTPHandlerFunc(app.handleRegisterPost))
-	mux.HandleFunc("POST /logout", makeHTTPHandlerFunc(app.handleLogout))
+	mux.HandleFunc("GET /login", app.makeHTTPHandlerFunc(app.handleLoginGet))
+	mux.HandleFunc("POST /login", app.makeHTTPHandlerFunc(app.handleLoginPost))
+	mux.HandleFunc("GET /register", app.makeHTTPHandlerFunc(app.handleRegisterGet))
+	mux.HandleFunc("POST /register", app.makeHTTPHandlerFunc(app.handleRegisterPost))
+	mux.HandleFunc("POST /logout", app.makeHTTPHandlerFunc(app.handleLogout))
 
 	// App Routes
-	mux.HandleFunc("GET /app", app.withAuth("student", makeHTTPHandlerFunc(app.handleDashboard)))
-	mux.HandleFunc("GET /app/assignments/{assignmentId}", app.withAuth("student", makeHTTPHandlerFunc(app.handleAssignmentDetail)))
-	mux.HandleFunc("POST /app/assignments/{assignmentId}/submit", app.withAuth("student", makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
+	mux.HandleFunc("GET /app", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleDashboard)))
+	mux.HandleFunc("GET /app/assignments/{assignmentId}", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleAssignmentDetail)))
+	mux.HandleFunc("POST /app/assignments/{assignmentId}/submit", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
 
 	// Admin Routes
-	mux.HandleFunc("GET /teacher", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherDashboard)))
+	mux.HandleFunc("GET /teacher", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherDashboard)))
 
 	//   Course Routes
-	mux.HandleFunc("POST /teacher/courses/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseCreate)))
-	mux.HandleFunc("POST /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleCourseUpdate)))
-	mux.HandleFunc("GET /teacher/courses/{courseId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherCourses)))
+	mux.HandleFunc("POST /teacher/courses/new", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleCourseCreate)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleCourseUpdate)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherCourses)))
 
 	//    Assignment Routes
-	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignments)))
-	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
-	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/new", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentCreate)))
-	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleTeacherAssignmentUpdate)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherAssignments)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", app.makeHTTPHandlerFunc((app.handleTeacherAssignmentDetail))))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/new", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherAssignmentCreate)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/assignments/{assignmentId}", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherAssignmentUpdate)))
 
 	//    Student Routes
-	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", makeHTTPHandlerFunc(app.handleStudents)))
-	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", makeHTTPHandlerFunc(app.handlePasswordReset)))
+	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudents)))
+	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handlePasswordReset)))
 
 	return mux
 }
 
-func (app *Application) Run(mux *http.ServeMux) error {
-	server := &http.Server{
-		Addr:    app.Config.Port,
-		Handler: mux,
-	}
-
-	return server.ListenAndServe()
-}
-
-func makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
+func (app *Application) makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		err := f(w, r)
 		if err != nil {
 			se := &errs.ServerError{}
 			jwte := &errs.JwtError{}
 			if errors.As(err, &se) {
-				log.Printf("%s: %s", r.URL.Path, se.Internal)
-				http.Error(w, se.Error(), se.Status)
+				app.Logger.Error("Server Error", slog.String("msg", se.Internal))
+				w.WriteHeader(se.Status)
+				err := app.renderTemplate(w, "error_page", map[string]any{"Code": se.Status, "Text": http.StatusText(se.Status)})
+				if err != nil {
+					app.Logger.Error("Could not render error page template... aborting")
+					os.Exit(1)
+				}
 			} else if errors.Is(err, http.ErrNoCookie) {
-				log.Printf("%s: No auth token provided", r.URL.Path)
+				app.Logger.Warn("No auth token provided trying to access " + r.URL.Path)
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else if errors.As(err, &jwte) {
-				log.Printf("%s: %s", r.URL.Path, jwte.Message)
+				app.Logger.Warn("Issue validating JWT for "+r.URL.Path, slog.String("msg", jwte.Message))
 				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else if errors.Is(err, &errs.UnauthorizedError{}) {
-				log.Printf("%s: Unauthorized access attempt", r.URL.Path)
-				http.NotFound(w, r)
+				app.Logger.Warn("Unauthorized access attempt to "+r.URL.Path, slog.String("host", r.Host), slog.String("remote_addr", r.RemoteAddr))
+				w.WriteHeader(http.StatusNotFound)
+				err := app.renderTemplate(w, "error_page", map[string]any{"Code": http.StatusNotFound, "Text": http.StatusText(http.StatusNotFound)})
+				if err != nil {
+					app.Logger.Error("Could not render error page template... aborting")
+					os.Exit(1)
+				}
 			} else {
-				log.Printf("[?] %s: %s!!", r.URL.Path, err.Error())
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				app.Logger.Error("Something unexpected happened", slog.String("msg", err.Error()))
+				// Log user out just in case
+				http.SetCookie(w, &http.Cookie{
+					Name:     "token",
+					Value:    "",
+					HttpOnly: true,
+					MaxAge:   -1,
+				})
+				err := app.renderTemplate(w, "error_page", map[string]any{"Code": http.StatusInternalServerError, "Text": http.StatusText(http.StatusInternalServerError)})
+				if err != nil {
+					app.Logger.Error("Could not render error page template... aborting")
+					os.Exit(1)
+				}
 			}
 		}
 	}
