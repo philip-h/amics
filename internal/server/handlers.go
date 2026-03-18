@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"html/template"
 	"log/slog"
 	"math"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/philip-h/amics/internal/errs"
 	"github.com/philip-h/amics/internal/store"
+	"github.com/yuin/goldmark"
 )
 
 // ============================================================================
@@ -305,6 +307,14 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 	if err != nil {
 		return err
 	}
+	var buf bytes.Buffer
+	var htmlDescription string
+	err = goldmark.Convert([]byte(aws.Description), &buf)
+	if err != nil {
+		htmlDescription = aws.Description
+	} else {
+		htmlDescription = buf.String()
+	}
 
 	var htmlComments strings.Builder
 	if aws.Submission != nil && aws.Submission.Comments.Valid {
@@ -327,6 +337,7 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 			"Assignment": aws.Assignment,
 			"Submission": aws.Submission,
 			"Comments":   template.HTML(htmlComments.String()),
+      "Description": template.HTML(htmlDescription),
 		})
 }
 
@@ -598,7 +609,12 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 		return err
 	}
 
-	return app.renderTemplate(w, "manage_assignment", map[string]any{"Assignment": assignment, "CourseId": courseId})
+
+	return app.renderTemplate(w, "manage_assignment",
+		map[string]any{
+			"Assignment":  assignment,
+			"CourseId":    courseId,
+		})
 }
 
 func (app *Application) handleTeacherAssignmentCreate(w http.ResponseWriter, r *http.Request) error {

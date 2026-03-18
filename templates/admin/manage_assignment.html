@@ -61,8 +61,8 @@
         </fieldset>
         <fieldset>
           <label for="description">Description</label>
-          <input type="text" id="description" name="description"
-            value="{{if .Assignment}}{{.Assignment.Description}}{{end}}" required />
+          <textarea id="description" name="description" rows="15"
+            required>{{if .Assignment}}{{.Assignment.Description}}{{end}}</textarea>
         </fieldset>
         <fieldset>
           <label for="required-filename">Required Filename</label>
