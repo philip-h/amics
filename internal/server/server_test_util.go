@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/store"
@@ -34,7 +35,7 @@ func checkStatusCode(t *testing.T, got, want int) {
 
 func createLegitStudentCookie(t *testing.T, app *Application) *http.Cookie {
 	t.Helper()
-	token, _ := app.Auth.CreateJwt("42", "student", -1)
+	token, _ := app.Auth.CreateJwt("42", "student", time.Now().Add(time.Minute))
 	return &http.Cookie{
 		Name:     "token",
 		Value:    token,
@@ -44,7 +45,7 @@ func createLegitStudentCookie(t *testing.T, app *Application) *http.Cookie {
 
 func createLegitTeacherCookie(t *testing.T, app *Application) *http.Cookie {
 	t.Helper()
-	token, _ := app.Auth.CreateJwt("72", "teacher", -1)
+	token, _ := app.Auth.CreateJwt("72", "teacher", time.Now().Add(time.Minute))
 	return &http.Cookie{
 		Name:     "token",
 		Value:    token,

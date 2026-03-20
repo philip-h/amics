@@ -16,13 +16,13 @@ func NewMockAuthenticator() *MockAuthenticator {
 	}
 }
 
-func (a *MockAuthenticator) CreateJwt(sub, aud string, exp int64) (string, error) {
+func (a *MockAuthenticator) CreateJwt(sub, aud string, exp time.Time) (string, error) {
 	testClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": sub,
 		"iss": "test-issuer",
 		"aud": aud,
-		"exp": time.Now().Add(1 * time.Minute).Unix(),
-		"iat": time.Now().Unix(),
+		"exp": jwt.NewNumericDate(exp),
+		"iat": jwt.NewNumericDate(time.Now()),
 	})
 
 	tokenString, err := testClaims.SignedString([]byte(a.secret))
@@ -38,4 +38,3 @@ func (a *MockAuthenticator) ValidateJwt(tokenString string) (*jwt.Token, error) 
 		return []byte(a.secret), nil
 	})
 }
-

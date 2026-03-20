@@ -19,11 +19,11 @@ func NewJwtAuthenticator(secretKey, iss string) *JwtAuthenticator {
 	}
 }
 
-func (a *JwtAuthenticator) CreateJwt(userId, role string, exp int64) (string, error) {
+func (a *JwtAuthenticator) CreateJwt(userId, role string, exp time.Time) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": userId,
 		"aud": role,
-		"exp": exp,
+		"exp": jwt.NewNumericDate(exp),
 		"iss": a.iss,
 		"iat": jwt.NewNumericDate(time.Now()),
 	})

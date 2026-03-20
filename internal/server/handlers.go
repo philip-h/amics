@@ -129,7 +129,7 @@ func (app *Application) handleLoginPost(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Create JWT token and set it as a cookie
-	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), user.Role, time.Now().Add(90*time.Minute).Unix())
+	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), user.Role, time.Now().Add(90*time.Minute))
 	if err != nil {
 		log.Error("Could not create jwt", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "login", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
@@ -208,7 +208,7 @@ func (app *Application) handleRegisterPost(w http.ResponseWriter, r *http.Reques
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
 	}
 	// Create jwt token and set it as a cookie
-	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), "student", time.Now().Add(90*time.Minute).Unix())
+	token, err := app.Auth.CreateJwt(strconv.Itoa(user.Id), "student", time.Now().Add(90*time.Minute))
 	if err != nil {
 		log.Error("COuld not create jwt", slog.String("msg", err.Error()))
 		return app.renderTemplate(w, "register", map[string]string{"Error": "Sorry, something went seriously wrong on our end. Please try again in a sec."})
