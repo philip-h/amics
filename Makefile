@@ -1,8 +1,8 @@
 build:
-	go build -o tmp/main ./cmd/main.go
+	go build -o amics ./cmd/amics/main.go
 
 run: build
-	./tmp/main
+	./amics
 
 .PHONY: test
 test:
