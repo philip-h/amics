@@ -24,8 +24,16 @@ func (s *StudentStore) Create(student *Student) error {
 		return err
 	}
 	student.Password = string(hashedPassword)
-	_, err = s.db.Exec("INSERT INTO student (student_number, username, password, course_id) VALUES ($1, $2, $3, $4)", student.StudentNumber, student.Username, student.Password, student.CourseId)
-	return err
+  var id int64
+	err = s.db.QueryRow("INSERT INTO student (student_number, username, password, course_id) VALUES ($1, $2, $3, $4) RETURNING id", student.StudentNumber, student.Username, student.Password, student.CourseId).Scan(&id)
+	if err != nil {
+		return err
+	}
+
+  // Put the id back into the student
+	student.Id = int(id)
+
+	return nil
 }
 
 func (s *StudentStore) GetByUsername(username string) (*Student, error) {
