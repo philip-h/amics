@@ -157,7 +157,9 @@ func (app *Application) handleRegisterGet(w http.ResponseWriter, r *http.Request
 		http.Redirect(w, r, "/app", http.StatusSeeOther)
 		return nil
 	}
-	return app.renderTemplate(w, "register", nil)
+	// If the route has a query parameter for the join code, pass it into the template
+	joinCode := r.URL.Query().Get("joincode")
+	return app.renderTemplate(w, "register", map[string]string{"JoinCode": joinCode})
 }
 
 type RegisterReq struct {
@@ -334,10 +336,10 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 	return app.renderTemplate(w,
 		"assignment_detail",
 		map[string]any{
-			"Assignment": aws.Assignment,
-			"Submission": aws.Submission,
-			"Comments":   template.HTML(htmlComments.String()),
-      "Description": template.HTML(htmlDescription),
+			"Assignment":  aws.Assignment,
+			"Submission":  aws.Submission,
+			"Comments":    template.HTML(htmlComments.String()),
+			"Description": template.HTML(htmlDescription),
 		})
 }
 
@@ -609,11 +611,10 @@ func (app *Application) handleTeacherAssignmentDetail(w http.ResponseWriter, r *
 		return err
 	}
 
-
 	return app.renderTemplate(w, "manage_assignment",
 		map[string]any{
-			"Assignment":  assignment,
-			"CourseId":    courseId,
+			"Assignment": assignment,
+			"CourseId":   courseId,
 		})
 }
 

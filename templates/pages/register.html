@@ -40,7 +40,7 @@
         </fieldset>
         <fieldset>
           <label for="join-code">Join Code</label>
-          <input type="text" id="join-code" name="join-code" aria-describedby="join-code-constraints" />
+          <input type="text" id="join-code" name="join-code" aria-describedby="join-code-constraints" value="{{if .JoinCode}}{{.JoinCode}}{{end}}"/>
           <small id="join-code-constraints">
             Ask your teacher for the join code
           </small>
