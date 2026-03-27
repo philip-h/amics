@@ -4,9 +4,11 @@ import (
 	"errors"
 	"html/template"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
@@ -78,6 +80,30 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudents)))
 	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handlePasswordReset)))
 
+	mux.HandleFunc("GET /ip", func(w http.ResponseWriter, r *http.Request) {
+		// 1. Check X-Real-IP header (often set by nginx)
+		if xri := r.Header.Get("X-Real-IP"); xri != "" {
+			w.Write([]byte(xri))
+			return
+		}
+
+		// 2. Check X-Forwarded-For header
+		if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+			ips := strings.Split(xff, ",")
+			if len(ips) > 0 {
+				w.Write([]byte(strings.TrimSpace(ips[0])))
+				return
+			}
+		}
+
+		// 3. Fallback to RemoteAddr
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Write([]byte(ip))
+	})
 	return mux
 }
 
