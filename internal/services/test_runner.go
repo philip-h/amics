@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strconv"
 	"time"
@@ -69,7 +70,7 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 	}
 
 	containerId := resp.ID
-	defer tr.cleanup(ctx, containerId)
+	// defer tr.cleanup(ctx, containerId)
 
 	if err := tr.copyFilesToContainer(ctx, containerId, filename, studentCode, testCode); err != nil {
 		return nil, err
@@ -112,32 +113,42 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 	return tr.parseTestResults(string(stdouterr)), nil
 }
 
+func (tr *TestRunner) writeToTar(tw *tar.Writer, name string, content []byte) error {
+	tarHeader := &tar.Header{
+		Name: name,
+		Mode: 0644,
+		Size: int64(len(content)),
+	}
+
+	err := tw.WriteHeader(tarHeader)
+	if err != nil {
+		return err
+	}
+
+	_, err = tw.Write(content)
+	return err
+}
+
 func (tr *TestRunner) copyFilesToContainer(ctx context.Context, containerID, filename, studentCode, testCode string) error {
+	// Read conftest.py
+	conftestContent, err := os.ReadFile("conftest/conftest.py")
+	if err != nil {
+		return err
+	}
+
 	// Create tar archive with both files
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 
-	studentHeader := &tar.Header{
-		Name: "app/" + filename,
-		Mode: 0644,
-		Size: int64(len(studentCode)),
-	}
-	if err := tw.WriteHeader(studentHeader); err != nil {
-		return err
-	}
-	if _, err := tw.Write([]byte(studentCode)); err != nil {
+	if err := tr.writeToTar(tw, filename, []byte(studentCode)); err != nil {
 		return err
 	}
 
-	testHeader := &tar.Header{
-		Name: "app/test_" + filename,
-		Mode: 0644,
-		Size: int64(len(testCode)),
-	}
-	if err := tw.WriteHeader(testHeader); err != nil {
+	if err := tr.writeToTar(tw, "test_"+filename, []byte(testCode)); err != nil {
 		return err
 	}
-	if _, err := tw.Write([]byte(testCode)); err != nil {
+
+	if err := tr.writeToTar(tw, "conftest.py", []byte(conftestContent)); err != nil {
 		return err
 	}
 
@@ -146,7 +157,7 @@ func (tr *TestRunner) copyFilesToContainer(ctx context.Context, containerID, fil
 	}
 
 	// Copy tar archive to container
-	_, err := tr.dockerClient.CopyToContainer(
+	_, err = tr.dockerClient.CopyToContainer(
 		ctx,
 		containerID,
 		client.CopyToContainerOptions{
@@ -192,8 +203,8 @@ func (tr *TestRunner) parseTestResults(output string) *TestResult {
 	return result
 }
 
-func (tr *TestRunner) cleanup(ctx context.Context, containerID string) {
-	tr.dockerClient.ContainerRemove(ctx, containerID, client.ContainerRemoveOptions{
-		Force: true,
-	})
-}
+// func (tr *TestRunner) cleanup(ctx context.Context, containerID string) {
+// 	tr.dockerClient.ContainerRemove(ctx, containerID, client.ContainerRemoveOptions{
+// 		Force: true,
+// 	})
+// }
