@@ -1,0 +1,18 @@
+{{ define "nav" }}
+  <nav aria-label="breadcrumb" style="justify-content: space-between">
+    <ul>
+      {{ range .NavLinks }}
+        {{ if eq .Href "" }}
+          <li>{{ .Text }}</li>
+        {{ else }}
+          <li><a href="{{ .Href }}">{{ .Text }}</a></li>
+        {{ end }}
+      {{ end }}
+    </ul>
+    <ul>
+      <li>
+        <button id="logout-button" class="secondary" hx-post="/logout">Logout</button>
+      </li>
+    </ul>
+  </nav>
+{{ end }}

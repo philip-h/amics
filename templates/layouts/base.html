@@ -1,0 +1,30 @@
+{{define "base"}}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ block "title" .}}{{end}}</title>
+    <link rel="stylesheet" href="/static/css/pico.purple.min.css" />
+    <link
+      rel="stylesheet"
+      href="/static/css/github.min.css"
+      media="(prefers-color-scheme: light)"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/css/github-dark.min.css"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link rel="stylesheet" href="/static/css/style.css"/>
+    <script defer src="/static/js/_hyperscript.min.js"></script>
+    <script defer src="/static/js/highlight.min.js"></script>
+    <script defer src="/static/js/python.min.js"></script>
+    <script defer src="/static/js/htmx.min.js"></script>
+  </head>
+
+  <body hx-boost="true">
+    {{ block "content" .}}{{end}}
+  </body>
+</html>
+{{end}}

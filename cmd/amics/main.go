@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"html/template"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -26,6 +28,38 @@ func getenv(key, preset string) string {
 	} else {
 		return preset
 	}
+}
+
+func loadTemplates() (map[string]*template.Template, error) {
+	pages, err := fs.Glob(templates.TemplateFS, "pages/*.html")
+	if err != nil {
+		return nil, err
+	}
+
+	cache := map[string]*template.Template{}
+
+	for _, pagePath := range pages {
+		pageName := strings.TrimPrefix(strings.TrimSuffix(pagePath, ".html"), "pages/")
+		tmpl, err := template.New(pageName).
+			Funcs(template.FuncMap{
+				"unixToDate": func(unix int64) string {
+					return time.Unix(unix, 0).Format("Mon Jan 2 @ 15:04")
+				},
+			}).
+			ParseFS(
+				templates.TemplateFS,
+				"layouts/*.html",
+				"partials/*.html",
+				pagePath,
+			)
+
+		if err != nil {
+			return nil, err
+		}
+
+		cache[pageName] = tmpl
+	}
+	return cache, nil
 }
 
 func main() {
@@ -58,12 +92,7 @@ func main() {
 	store := store.New(db)
 
 	// Templates Setup
-	templates, err := template.New("").Funcs(template.FuncMap{
-		"unixToDate": func(unix int64) string {
-			t := time.Unix(unix, 0)
-			return t.Format("Mon Jan 2 @ 15:04")
-		},
-	}).ParseFS(templates.TemplateFS, "pages/*.html", "partials/*.html", "admin/*.html")
+	templates, err := loadTemplates()
 	if err != nil {
 		logger.Error("Failed to load templates", slog.String("msg", err.Error()))
 		os.Exit(1)

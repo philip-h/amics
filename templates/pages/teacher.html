@@ -1,0 +1,44 @@
+{{ define "title" }}amics/teacher{{ end }}
+{{ define "content" }}
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      {{ template "nav" . }}
+    </div>
+  </header>
+  <main class="container">
+    {{ if .Courses }}
+      <h2>Courses you teach</h2>
+      <section style="display: flex; justify-content: flex-end">
+        <a role="button" href="/teacher/courses/new">Create New Course</a>
+      </section>
+      <article>
+        <table class="striped">
+          <tbody>
+            <thead>
+              <tr>
+                <th scope="col">Name</th>
+              </tr>
+            </thead>
+            {{ range .Courses }}
+              <tr>
+                <th scope="row">{{ .Name }}</th>
+                <td>
+                  <a href="/teacher/courses/{{ .Id }}/assignments">Manage Assignments</a>
+                </td>
+                <td>
+                  <a href="/teacher/courses/{{ .Id }}/students">Manage Students</a>
+                </td>
+                <td><a href="/teacher/courses/{{ .Id }}">Edit</a></td>
+              </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </article>
+    {{ else }}
+      <section style="display: flex; justify-content: flex-end">
+        <a role="button" href="/teacher/courses/new">Create New Course</a>
+      </section>
+      <p>You have no courses yet.</p>
+    {{ end }}
+  </main>
+{{ end }}

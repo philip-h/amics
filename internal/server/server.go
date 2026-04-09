@@ -20,7 +20,7 @@ type Application struct {
 	Config    Config
 	Store     store.Storage
 	Auth      auth.Authenticator
-	Templates *template.Template
+	Templates map[string]*template.Template
 	Logger    *slog.Logger
 	LogLvl    *slog.LevelVar
 }
@@ -57,10 +57,15 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /register", app.makeHTTPHandlerFunc(app.handleRegisterPost))
 	mux.HandleFunc("POST /logout", app.makeHTTPHandlerFunc(app.handleLogout))
 
+	// Validate handlers
+	mux.HandleFunc("POST /login/validate", app.makeHTTPHandlerFunc(app.handleLoginVaidation))
+	mux.HandleFunc("POST /register/validate", app.makeHTTPHandlerFunc(app.handleRegisterValidation))
+
 	// App Routes
 	mux.HandleFunc("GET /app", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleDashboard)))
 	mux.HandleFunc("GET /app/assignments/{assignmentId}", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleAssignmentDetail)))
 	mux.HandleFunc("POST /app/assignments/{assignmentId}/submit", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleAssignmentSubmit)))
+  mux.HandleFunc("GET /app/assignments/{assignmentId}/submit", app.withAuth("student", app.makeHTTPHandlerFunc(app.handleSubmitPoll)))
 
 	// Admin Routes
 	mux.HandleFunc("GET /teacher", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleTeacherDashboard)))

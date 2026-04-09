@@ -1,0 +1,19 @@
+{{ define "title" }}amics/oops{{ end }}
+{{ define "content" }}
+<body>
+  <div class="grid"></div>
+
+  <div class="container">
+    <div class="code">{{.Code}}</div>
+
+    <div class="text">{{.Text}}</div>
+
+    <div class="glow-line"></div>
+
+    <div class="subtitle">
+      <p>The server encountered a problem while processing your request.</p>
+      <p><a href="/">Go back home</a></p>
+    </div>
+  </div>
+  {{end}}
+</body>

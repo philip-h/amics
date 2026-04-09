@@ -71,7 +71,7 @@ func (w *Worker) processNextSubmission() {
 		w.logger.Error("Could not get the test code for the assignment", slog.String("msg", err.Error()),
 			slog.Group("where",
 				slog.String("function", "processNextSubmission")))
-		submission.Status = sql.NullString{String: "failure", Valid: true}
+		submission.Status = "failure"
 		submission.Comments = sql.NullString{String: "Could not get code for the assignment", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
@@ -86,7 +86,7 @@ func (w *Worker) processNextSubmission() {
 		w.logger.Error("Error running pytest", slog.String("msg", err.Error()),
 			slog.Group("where",
 				slog.String("function", "processNextSubmission")))
-		submission.Status = sql.NullString{String: "failure", Valid: true}
+		submission.Status = "failure"
 		submission.Comments = sql.NullString{String: "Could not run pytest", Valid: true}
 		err = w.store.Submissions.Update(submission)
 		if err != nil {
@@ -95,7 +95,7 @@ func (w *Worker) processNextSubmission() {
 	}
 
 	submission.Grade = result.Grade
-	submission.Status = sql.NullString{String: "completed", Valid: true}
+	submission.Status = "completed"
 	submission.Comments = sql.NullString{String: result.Comments, Valid: true}
 	err = w.store.Submissions.Update(submission)
 	if err != nil {

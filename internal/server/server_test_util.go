@@ -10,13 +10,41 @@ import (
 	"github.com/philip-h/amics/internal/store"
 	"github.com/philip-h/amics/templates"
 )
+func loadTemplates() (map[string]*template.Template, error) {
+	pages := []string{"home", "hello"}
+
+	cache := map[string]*template.Template{}
+
+	for _, page := range pages {
+		tmpl, err := template.New("").
+			Funcs(template.FuncMap{
+				"unixToDate": func(unix int64) string {
+					return time.Unix(unix, 0).Format("Mon Jan 2 @ 15:04")
+				},
+			}).
+			ParseFS(
+				templates.TemplateFS,
+				"layouts/*.html",
+				"partials/*.html",
+				"pages/"+page+".html",
+			)
+
+		if err != nil {
+			return nil, err
+		}
+
+		cache[page] = tmpl
+	}
+
+	return cache, nil
+}
 
 func newTestApplication(t *testing.T, cfg Config) *Application {
 	t.Helper()
 
 	mockStore := store.NewMockStore()
 	mockAuth := auth.NewMockAuthenticator()
-	templates, _ := template.ParseFS(templates.TemplateFS, "pages/*.gohtml", "partials/*.gohtml", "admin/*.gohtml")
+	templates, _ := loadTemplates()
 
 	return &Application{
 		Config:    cfg,

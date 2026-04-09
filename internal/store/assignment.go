@@ -110,7 +110,7 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 			Code:         subCode.String,
 			Grade:        int(subGrade.Int64),
 			Comments:     subComments,
-			Status:       subStatus,
+			Status:       subStatus.String,
 		}
 	}
 	return aws, nil

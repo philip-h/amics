@@ -1,0 +1,173 @@
+{{ define "title" }}amics/teacher/assignment{{ end }}
+{{ define "content" }}
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      {{ template "nav" . }}
+    </div>
+  </header>
+  <main class="container">
+    <h2>{{ if .Assignment }}Edit Assignment{{ else }}New Assignment{{ end }}</h2>
+    <article>
+      <form
+        {{ if .Assignment }}
+          hx-post="/teacher/courses/{{ .CourseId }}/assignments/{{ .Assignment.Id }}"
+        {{ else }}
+          hx-post="/teacher/courses/{{ .CourseId }}/assignments/new"
+        {{ end }}
+        hx-target="body"
+        hx-push-url="true"
+      >
+        {{ if .Error }}
+          <p style="color: var(--pico-del-color)">{{ .Error }}</p>
+        {{ end }}
+        <div class="grid">
+          <fieldset>
+            <label for="id">Id</label>
+            <input type="number" id="id" name="id" value="{{ if .Assignment }}{{ .Assignment.Id }}{{ end }}" readonly />
+          </fieldset>
+          <fieldset>
+            <label for="unit-name">Unit Name</label>
+            <input
+              type="text"
+              id="unit-name"
+              name="unit-name"
+              value="{{ if .Assignment }}{{ .Assignment.UnitName }}{{ end }}"
+              required
+              autofocus
+            />
+          </fieldset>
+          <fieldset>
+            <label for="visible">Visible</label>
+            <input
+              type="checkbox"
+              id="visible"
+              name="visible"
+              {{ if .Assignment }}
+                {{ if .Assignment.Visible }}
+                  checked
+                {{ end }}
+              {{ else }}
+                checked
+              {{ end }}
+            />
+          </fieldset>
+        </div>
+        <fieldset>
+          <label for="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value="{{ if .Assignment }}{{ .Assignment.Name }}{{ end }}"
+            required
+          />
+        </fieldset>
+        <fieldset>
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="15" required>
+{{ if .Assignment }}{{ .Assignment.Description }}{{ end }}</textarea
+          >
+        </fieldset>
+        <fieldset>
+          <label for="required-filename">Required Filename</label>
+          <input
+            type="text"
+            id="required-filename"
+            name="required-filename"
+            {{ if .Assignment }}
+              value="{{ .Assignment.RequiredFilename }}"
+            {{ end }}
+            required
+          />
+        </fieldset>
+        <fieldset>
+          <label for="points">Points</label>
+          <input
+            type="number"
+            id="points"
+            name="points"
+            {{ $value := "" }}
+            {{ if .Assignment }}
+              {{ $value = .Assignment.Points }}
+            {{ else }}
+              {{ $value = 4 }}
+            {{ end }}
+            value="{{ $value }}"
+            required
+          />
+        </fieldset>
+        <fieldset
+          _="def pad(n)
+              return String(n).padStart(2, '0')
+            end
+            def unixToLocaleDate(unix)
+              make a Date from (unix*1000) called d
+              return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours(l)) + ':' + pad(d.getMinutes())
+            end
+          "
+        >
+          <input
+            id="due-date-hidden"
+            type="hidden"
+            name="due-date"
+            value="{{ if .Assignment }}{{ .Assignment.DueDate }}{{ end }}"
+            _="on load
+            if my value is not ''
+              get next <input/> then set it's value to unixToLocaleDate(my value) 
+            end
+            "
+          />
+          <label for="due-date">Due Date</label>
+          <input
+            type="datetime-local"
+            id="due-date"
+            _="on change
+              make a Date from (my value) called d
+              get previous <input/> then set it's value to Math.floor(d.getTime()/1000)"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="pyfile-content">Pytest Content</label>
+          <textarea rows="15" name="pyfile-content" id="pyfile-content">
+{{ if .Assignment }}{{ .Assignment.PytestCode }}{{ end }}</textarea
+          >
+          <label for="pyfile-file">Pytest File</label>
+          <input
+            type="file"
+            id="pyfile-file"
+            accept=".py"
+            _="on change
+            set dest to previous <textarea/>
+            js (me, dest)
+                const reader = new FileReader();
+                reader.onloadend = function (event) {
+                  dest.value = reader.result;
+                };
+                reader.readAsText(me.files[0]);
+            end
+            set my.value to ''
+            "
+          />
+        </fieldset>
+        <button type="submit">
+          {{ if .Assignment }}
+            Confirm Edits
+          {{ else }}
+            Create New Assignment
+          {{ end }}
+        </button>
+      </form>
+    </article>
+  </main>
+{{ end }}
+<nav aria-label="breadcrumb" style="justify-content: space-between">
+  <ul>
+    <li><a href="/teacher">Teacher Dashboard</a></li>
+    <li>Manage students</li>
+  </ul>
+  <ul>
+    <li>
+      <button id="logout-button" class="secondary">Logout</button>
+    </li>
+  </ul>
+</nav>

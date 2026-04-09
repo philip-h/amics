@@ -1,0 +1,24 @@
+{
+  "name": "amics",
+  "version": "1.0.0",
+  "description": "A lightweight auto-grading platform for high school computer science courses. Students submit Python code and receive immediate feedback from pytest-based test suites.",
+  "homepage": "https://github.com/philip-h/amics#readme",
+  "bugs": {
+    "url": "https://github.com/philip-h/amics/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philip-h/amics.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1",
+    "prettier-plugin-go-template": "^0.0.15"
+  }
+}

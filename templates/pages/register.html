@@ -1,143 +1,152 @@
-{{define "register"}}
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>amics/register</title>
-  <link rel="stylesheet" href="/static/css/pico.purple.min.css" />
-  <link rel="stylesheet" href="/static/css/style.css" />
-</head>
-
-<body>
+{{ define "title" }}
+  amics/register
+{{ end }}
+{{ define "content" }}
   <main class="container">
     <article>
       <h1>Register</h1>
-      <form method="POST" action="/register">
+      <form hx-post="/register" hx-target="body" hx-push-url="true">
         <fieldset>
-          {{ if .Error}}
-          <p style="color: var(--pico-del-color)">{{.Error}}</p>
-          {{end}}
+          {{ if .Errors.server }}
+            <p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>
+          {{ end }}
           <label for="student-number">Student Number:</label>
-          <input type="text" id="student-number" name="student-number" aria-describedby="student-number-constraints"
-            inputmode="numeric" required autofocus />
-          <small id="student-number-constraints">Must be 5-7 numbers</small>
+          <input
+            type="text"
+            id="student-number"
+            name="student-number"
+            inputmode="numeric"
+            aria-describedby="student-number-constraints"
+            value="{{ .Body.StudentNumber }}"
+            {{ if .Body.StudentNumber }}
+              {{ if .Errors.student_number }}
+                aria-invalid="true"
+              {{ else }}
+                aria-invalid="false"
+              {{ end }}
+            {{ end }}
+            hx-post="/register/validate"
+            hx-trigger="change, keyup delay:200ms changed"
+            hx-target="body"
+            hx-push-url="false"
+          />
+          <small id="student-number-constraints">
+            {{ if .Errors.student_number }}
+              {{ .Errors.student_number }}
+            {{ else }}
+              Student number must be 5-7 numbers
+            {{ end }}
+          </small>
         </fieldset>
         <fieldset>
-          <label for="username">Enter a username</label>
-          <input type="text" id="username" name="username" autocomplete="username" required />
+          <label for="username">Enter your username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            autocomplete="username"
+            aria-describedby="username-constraints"
+            value="{{ .Body.Username }}"
+            {{ if .Body.Username }}
+              {{ if .Errors.username }}
+                aria-invalid="true"
+              {{ else }}
+                aria-invalid="false"
+              {{ end }}
+            {{ end }}
+            hx-post="/register/validate"
+            hx-trigger="change, keyup delay:200ms changed"
+            hx-target="body"
+            hx-push-url="false"
+          />
+          <small id="username-constraints">
+            {{ if .Errors.username }}
+              {{ .Errors.username }}
+            {{ else }}
+              Username must be at least 4 characters
+            {{ end }}
+          </small>
         </fieldset>
         <fieldset>
-          <label for="password">Enter a password</label>
-          <input type="password" id="password" name="password" autocomplete="current-password" minlength="10"
-            aria-describedby="password-constraints" required />
-          <small id="password-constraints">Password must be 10 or more characters</small>
-          <div aria-role="button" id="toggle-password" class="field-button"
-            aria-label="Show password as plain text. Warning: this will display your password on the screen">
+          <label for="password">Enter your password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="current-password"
+            aria-describedby="password-constraints"
+            {{ if .Body.Password }}
+              {{ if .Errors.password }}
+                aria-invalid="true"
+              {{ else }}
+                aria-invalid="false"
+              {{ end }}
+            {{ end }}
+            value="{{ .Body.Password }}"
+            hx-post="/register/validate"
+            hx-trigger="change, keyup delay:200ms changed"
+            hx-target="body"
+            hx-push-url="false"
+          />
+          <small id="password-constraints">
+            {{ if .Errors.password }}
+              {{ .Errors.password }}
+            {{ else }}
+              Password must be at least 10 characters
+            {{ end }}
+          </small>
+          <div
+            aria-role="button"
+            id="toggle-password"
+            class="field-button"
+            aria-label="Show password as plain text. Warning: this will display your password on the screen"
+            _="on click get the previous <input/> then 
+          if it's @type is 'password' 
+            set it's @type to 'text'
+            set my innerText to 'Hide Password'
+            set my @aria-label to 'Hide password'
+          else 
+            set it's @type to 'password'
+            set my innerText to 'Show Password'
+            set my @aria-label to 'Show password as plain text. Warning: this will display your password on the screen'
+          end "
+          >
             Show password
           </div>
         </fieldset>
         <fieldset>
           <label for="join-code">Join Code</label>
-          <input type="text" id="join-code" name="join-code" aria-describedby="join-code-constraints" value="{{if .JoinCode}}{{.JoinCode}}{{end}}"/>
+          <input
+            type="text"
+            id="join-code"
+            name="join-code"
+            aria-describedby="join-code-constraints"
+            {{ if .Body.JoinCode }}
+              {{ if .Errors.join_code }}
+                aria-invalid="true"
+              {{ else }}
+                aria-invalid="false"
+              {{ end }}
+            {{ end }}
+            value="{{ .Body.JoinCode }}"
+            hx-post="/register/validate"
+            hx-target="body"
+            hx-push-url="false"
+          />
           <small id="join-code-constraints">
-            Ask your teacher for the join code
+            {{ if .Errors.join_code }}
+              {{ .Errors.join_code }}
+            {{ else }}
+              Ask your teacher for the join code
+            {{ end }}
           </small>
         </fieldset>
         <button type="submit">Create Account</button>
-        <p>Already have an account? <a href="/login">Login</a></p>
+        <p>
+          Already have an account?
+          <a href="/login">Login</a>
+        </p>
       </form>
     </article>
   </main>
-
-  <script>
-    const $form = document.querySelector("form");
-    const $studentNumber = document.getElementById("student-number");
-    const $username = document.getElementById("username");
-    const $pass = document.getElementById("password");
-    const $joinCode = document.getElementById("join-code");
-    const $togglePassBtn = document.getElementById("toggle-password");
-    const $registerBtn = document.querySelector("button[type='submit']");
-
-    $togglePassBtn.addEventListener("click", clickedTogglePassword);
-    $studentNumber.addEventListener("change", validateStudentNumber);
-
-    $username.addEventListener("change", () => {
-      if ($username.value.length !== 0) {
-        $username.setAttribute("aria-invalid", "false");
-      }
-      $username.reportValidity();
-    });
-
-    $pass.addEventListener("change", () => {
-      if ($pass.value.length < 10) {
-        $pass.setAttribute("aria-invalid", "true");
-      } else {
-        $pass.setAttribute("aria-invalid", "false");
-      }
-
-      $pass.reportValidity();
-    });
-
-    $joinCode.addEventListener("change", () => {
-      if ($joinCode.value.length !== 0) {
-        $joinCode.setAttribute("aria-invalid", "false");
-      }
-      $joinCode.reportValidity();
-    });
-
-    $form.addEventListener("submit", handleFormSubmit);
-
-    function clickedTogglePassword() {
-      if ($pass.type === "password") {
-        $pass.type = "text";
-        $togglePassBtn.textContent = "Hide password";
-      } else {
-        $pass.type = "password";
-        $togglePassBtn.textContent = "Show password ";
-        $togglePassBtn.setAttribute(
-          "aria-label",
-          "Sow password as plain text. Warning: this will display your password on the screen",
-        );
-      }
-    }
-
-    function validateStudentNumber() {
-      if (!/^[0-9]*$/.test($studentNumber.value)) {
-        console.log("Not all numbers");
-        $studentNumber.setCustomValidity(
-          "Student number must consist of only numbers",
-        );
-        $studentNumber.setAttribute("aria-invalid", "true");
-      } else if ($studentNumber.value.length < 5) {
-        console.log("too short");
-        $studentNumber.setCustomValidity(
-          "Student number must be at least 5 numbers.",
-        );
-        $studentNumber.setAttribute("aria-invalid", "true");
-      } else if ($studentNumber.value.length > 7) {
-        console.log("too long");
-        $studentNumber.setCustomValidity(
-          "Student number must be at most 7 numbers.",
-        );
-        $studentNumber.setAttribute("aria-invalid", "true");
-      } else {
-        console.log("just rright");
-        $studentNumber.setCustomValidity("");
-        $studentNumber.setAttribute("aria-invalid", "false");
-      }
-      $studentNumber.reportValidity();
-    }
-
-    function handleFormSubmit(e) {
-      if (form.checkValidity()) {
-        $registerBtn.disabled = "true";
-        form.submit();
-      }
-    }
-  </script>
-</body>
-
-</html>
-{{end}}
+{{ end }}

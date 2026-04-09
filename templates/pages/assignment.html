@@ -1,0 +1,72 @@
+{{ define "title" }}amics/app/assignment{{ end }}
+{{ define "content" }}
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      {{ template "nav" . }}
+    </div>
+  </header>
+  <main class="container" _="js hljs.highlightAll()">
+    <section>
+      <div class="grid">
+        <h2>{{ .Assignment.Name }}</h2>
+        <p>Due: {{ .Assignment.DueDate | unixToDate }}</p>
+      </div>
+    </section>
+    <hr />
+
+    <section>
+      <details name="instructions" {{ if not .Submission }}open{{ end }}>
+        <summary>
+          <span style="font-size: 1.75rem; font-weight:700">Instructions</span>
+        </summary>
+        {{ .Description }}
+      </details>
+    </section>
+
+    <hr />
+
+    <section id="submission-overview" hx-target="this" hx-swap="outerHTML">
+      {{ if .Submission }}
+        {{ template "submission_overview" . }}
+      {{ else }}
+        <p>You have not submitted this assignment yet.</p>
+      {{ end }}
+    </section>
+
+    <form action="/app/assignments/{{ .Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
+      {{ if .Submission }}
+        <label for="file">Re-upload your assignment:</label>
+      {{ else }}
+        <label for="file">Upload your assignment:</label>
+      {{ end }}
+      <input
+        type="file"
+        name="file"
+        id="file"
+        accept=".py"
+        aria-describedby="file-constraints"
+        _="on change
+        set rfn to '{{ .Assignment.RequiredFilename }}'
+        if my.files[0] is null
+          exit
+        end
+
+        if my.files[0].name is not rfn
+          set my @aria-invalid to 'true'
+          set my value to ''
+        else
+          set my @aria-invalid to 'false'
+        end"
+      />
+      <small id="file-constraints">
+        Please upload
+        {{ .Assignment.RequiredFilename }}
+      </small>
+      {{ if .Submission }}
+        <button type="submit">Re-grade Assignment</button>
+      {{ else }}
+        <button type="submit">Grade Assignment</button>
+      {{ end }}
+    </form>
+  </main>
+{{ end }}

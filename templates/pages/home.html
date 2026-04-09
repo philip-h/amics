@@ -1,15 +1,5 @@
-{{define "home"}}
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>amics/</title>
-  <link rel="stylesheet" href="/static/css/pico.purple.min.css" />
-</head>
-
-<body>
+{{ define "title" }}amics/{{ end }}
+{{ define "content" }}
   <header style="box-shadow: var(--pico-box-shadow)">
     <div class="container">
       <nav>
@@ -27,7 +17,4 @@
     <h1>Welcome to AMICS</h1>
     <p>This is the home page for the AMICS application.</p>
   </main>
-</body>
-
-</html>
-{{end}}
+{{ end }}

@@ -1,0 +1,31 @@
+{{ define "submission_overview" }}
+  {{ if eq .Submission.Status "grading" }}
+    <div hx-get="/app/assignments/{{ .Assignment.Id }}/submit" hx-trigger="load delay:1s">
+      <div class="grid">
+        <h5 style="margin: 0">Grading...</h5>
+        {{ template "spinner" . }}
+      </div>
+    </div>
+  {{ else }}
+    <div class="grid">
+      <h5>Score: {{ .Submission.Grade }} / {{ .Assignment.Points }}</h5>
+      <p>Status: {{ .Submission.Status }}</p>
+    </div>
+    {{ if .Comments }}
+      <details name="grader-output" open>
+        <summary>Grader Output:</summary>
+        <code style="width: 100%; padding: 1em">
+          <pre>{{ .Comments }}</pre>
+        </code>
+      </details>
+    {{ end }}
+    <details name="submission">
+      <summary>Your current submission: [{{ .Assignment.RequiredFilename }}]</summary>
+      <span role="textbox">
+        <code class="language-python">
+          <pre style="padding: 1em">{{ .Submission.Code }}</pre>
+        </code>
+      </span>
+    </details>
+  {{ end }}
+{{ end }}
