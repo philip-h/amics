@@ -4,39 +4,29 @@
 {{ define "content" }}
   <main class="container">
     <article>
-      <h1>Register</h1>
-      <form hx-post="/register" hx-target="body" hx-push-url="true">
+      <h1>Login to amics</h1>
+      <form hx-post="/register" hx-push-url="true" hx-disabled-elt="button" hx-target="body">
+        {{ if and .Errors .Errors.server }}<p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>{{ end }}
+        {{ if .Errors }}
+          <div hx-post="/register/validate" hx-swap="none" hx-trigger="load" hx-push-url="false">
+            {{ template "register_form_errors" . }}
+          </div>
+        {{ end }}
         <fieldset>
-          {{ if .Errors.server }}
-            <p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>
-          {{ end }}
           <label for="student-number">Student Number:</label>
           <input
             type="text"
             id="student-number"
             name="student-number"
-            inputmode="numeric"
+            required
             aria-describedby="student-number-constraints"
             value="{{ .Body.StudentNumber }}"
-            {{ if .Body.StudentNumber }}
-              {{ if .Errors.student_number }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             hx-post="/register/validate"
             hx-trigger="change, keyup delay:200ms changed"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="student-number-constraints">
-            {{ if .Errors.student_number }}
-              {{ .Errors.student_number }}
-            {{ else }}
-              Student number must be 5-7 numbers
-            {{ end }}
-          </small>
+          <small id="student-number-constraints">Student number must be 5-7 numbers</small>
         </fieldset>
         <fieldset>
           <label for="username">Enter your username</label>
@@ -45,27 +35,15 @@
             id="username"
             name="username"
             autocomplete="username"
+            required
             aria-describedby="username-constraints"
             value="{{ .Body.Username }}"
-            {{ if .Body.Username }}
-              {{ if .Errors.username }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             hx-post="/register/validate"
             hx-trigger="change, keyup delay:200ms changed"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="username-constraints">
-            {{ if .Errors.username }}
-              {{ .Errors.username }}
-            {{ else }}
-              Username must be at least 4 characters
-            {{ end }}
-          </small>
+          <small id="username-constraints">Username must be at least 4 characters</small>
         </fieldset>
         <fieldset>
           <label for="password">Enter your password</label>
@@ -74,27 +52,15 @@
             id="password"
             name="password"
             autocomplete="current-password"
+            required
             aria-describedby="password-constraints"
-            {{ if .Body.Password }}
-              {{ if .Errors.password }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             value="{{ .Body.Password }}"
             hx-post="/register/validate"
             hx-trigger="change, keyup delay:200ms changed"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="password-constraints">
-            {{ if .Errors.password }}
-              {{ .Errors.password }}
-            {{ else }}
-              Password must be at least 10 characters
-            {{ end }}
-          </small>
+          <small id="password-constraints">Password must be at least 10 characters</small>
           <div
             aria-role="button"
             id="toggle-password"
@@ -120,26 +86,14 @@
             type="text"
             id="join-code"
             name="join-code"
+            required
             aria-describedby="join-code-constraints"
-            {{ if .Body.JoinCode }}
-              {{ if .Errors.join_code }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             value="{{ .Body.JoinCode }}"
             hx-post="/register/validate"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="join-code-constraints">
-            {{ if .Errors.join_code }}
-              {{ .Errors.join_code }}
-            {{ else }}
-              Ask your teacher for the join code
-            {{ end }}
-          </small>
+          <small id="join-code-constraints">Ask your teacher for the join code</small>
         </fieldset>
         <button type="submit">Create Account</button>
         <p>

@@ -1,7 +1,7 @@
 {{ define "submission_overview" }}
   {{ if eq .Submission.Status "grading" }}
     <div hx-get="/app/assignments/{{ .Assignment.Id }}/submit" hx-trigger="load delay:1s">
-      <div class="grid">
+      <div id="spin-me" class="grid">
         <h5 style="margin: 0">Grading...</h5>
         {{ template "spinner" . }}
       </div>

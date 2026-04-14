@@ -34,9 +34,10 @@ type Storage struct {
 
 	Submissions interface {
 		Create(int, int, string) error
-		GetByAssignmentAndStudentIds(int,int) (*Submission, error)
+		GetByAssignmentAndStudentIds(int, int) (*Submission, error)
 		GetNextPendingSubmission() (*Submission, error)
 		Update(*Submission) error
+		GetAllByCourseId(int) ([]*SubmissionExport, error)
 	}
 }
 

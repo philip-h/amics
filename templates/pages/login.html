@@ -3,9 +3,12 @@
   <main class="container">
     <article>
       <h1>Login to amics</h1>
-      <form hx-post="/login" hx-target="body" hx-push-url="true">
-        {{ if .Errors.server }}
-          <p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>
+      <form hx-post="/login" hx-push-url="true" hx-disabled-elt="button" hx-target="body">
+        {{ if and .Errors .Errors.server }}<p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>{{ end }}
+        {{ if .Errors }}
+          <div hx-post="/login/validate" hx-swap="none" hx-trigger="load" hx-push-url="false">
+            {{ template "login_form_errors" . }}
+          </div>
         {{ end }}
         <fieldset>
           <label for="username">Enter your username</label>
@@ -14,27 +17,15 @@
             id="username"
             name="username"
             autocomplete="username"
+            required
             aria-describedby="username-constraints"
             value="{{ .Body.Username }}"
-            {{ if .Body.Username }}
-              {{ if .Errors.username }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             hx-post="/login/validate"
             hx-trigger="change, keyup delay:200ms changed"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="username-constraints">
-            {{ if .Errors.username }}
-              {{ .Errors.username }}
-            {{ else }}
-              Username must be at least 4 characters
-            {{ end }}
-          </small>
+          <small id="username-constraints">Username must be at least 4 characters</small>
         </fieldset>
         <fieldset>
           <label for="password">Enter your password</label>
@@ -43,27 +34,15 @@
             id="password"
             name="password"
             autocomplete="current-password"
+            required
             aria-describedby="password-constraints"
-            {{ if .Body.Password }}
-              {{ if .Errors.password }}
-                aria-invalid="true"
-              {{ else }}
-                aria-invalid="false"
-              {{ end }}
-            {{ end }}
             value="{{ .Body.Password }}"
             hx-post="/login/validate"
             hx-trigger="change, keyup delay:200ms changed"
-            hx-target="body"
             hx-push-url="false"
+            hx-swap="none"
           />
-          <small id="password-constraints">
-            {{ if .Errors.password }}
-              {{ .Errors.password }}
-            {{ else }}
-              Password must be at least 10 characters
-            {{ end }}
-          </small>
+          <small id="password-constraints">Password must be at least 10 characters</small>
           <div
             aria-role="button"
             id="toggle-password"
@@ -84,6 +63,7 @@
           </div>
         </fieldset>
         <button type="submit" hx-push-url="true">Login</button>
+
         <p>
           New to amics?
           <a href="/register">Create an account</a>

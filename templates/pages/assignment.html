@@ -25,7 +25,7 @@
 
     <hr />
 
-    <section id="submission-overview" hx-target="this" hx-swap="outerHTML">
+    <section id="submission-overview" hx-swap="outerHTML" hx-target="this">
       {{ if .Submission }}
         {{ template "submission_overview" . }}
       {{ else }}
@@ -33,7 +33,12 @@
       {{ end }}
     </section>
 
-    <form action="/app/assignments/{{ .Assignment.Id }}/submit" method="post" enctype="multipart/form-data">
+    <form
+      hx-post="/app/assignments/{{ .Assignment.Id }}/submit"
+      hx-encoding="multipart/form-data"
+      hx-target="body"
+      hx-push-url="true"
+    >
       {{ if .Submission }}
         <label for="file">Re-upload your assignment:</label>
       {{ else }}
@@ -62,11 +67,13 @@
         Please upload
         {{ .Assignment.RequiredFilename }}
       </small>
-      {{ if .Submission }}
-        <button type="submit">Re-grade Assignment</button>
-      {{ else }}
-        <button type="submit">Grade Assignment</button>
-      {{ end }}
+      <button type="submit" {{ if .DisableSubmit }}disabled{{ end }}>
+        {{ if .Submission }}
+          Re-grade Assignment
+        {{ else }}
+          Grade Assignment
+        {{ end }}
+      </button>
     </form>
   </main>
 {{ end }}

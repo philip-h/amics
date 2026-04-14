@@ -1,0 +1,27 @@
+{{ define "login_form_errors" }}
+
+  {{ if .Body.Username }}
+    {{ if .Errors.username }}
+      <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Errors.username }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        Username must be at least 4 characters
+      </small>
+    {{ end }}
+  {{ end }}
+
+  {{ if .Body.Password }}
+    {{ if .Errors.password }}
+      <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Errors.password }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        Password must be at least 10 characters
+      </small>
+    {{ end }}
+  {{ end }}
+
+{{ end }}

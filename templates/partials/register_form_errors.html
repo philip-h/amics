@@ -1,0 +1,57 @@
+{{ define "register_form_errors" }}
+  {{ if .Body.StudentNumber }}
+    {{ if .Errors.student_number }}
+      <small
+        hx-swap-oob="true"
+        id="student-number-constraints"
+        _="on load set @aria-invalid of previous <input/> to true"
+      >
+        {{ .Errors.student_number }}
+      </small>
+    {{ else }}
+      <small
+        hx-swap-oob="true"
+        id="student-number-constraints"
+        _="on load set @aria-invalid of previous <input/> to false"
+      >
+        Student number must be 5-7 numbers
+      </small>
+    {{ end }}
+  {{ end }}
+  {{ if .Body.Username }}
+    {{ if .Errors.username }}
+      <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Errors.username }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        Username must be at least 4 characters
+      </small>
+    {{ end }}
+  {{ end }}
+
+  {{ if .Body.Password }}
+    {{ if .Errors.password }}
+      <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Errors.password }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        Password must be at least 10 characters
+      </small>
+    {{ end }}
+  {{ end }}
+
+  {{ if .Body.JoinCode }}
+    {{ if .Errors.join_code }}
+      <small hx-swap-oob="true" id="join-code-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Errors.join_code }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="join-code-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        Ask your teacher for the join code
+      </small>
+    {{ end }}
+  {{ end }}
+
+{{ end }}

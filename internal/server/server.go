@@ -58,7 +58,7 @@ func (app *Application) Mount() *http.ServeMux {
 	mux.HandleFunc("POST /logout", app.makeHTTPHandlerFunc(app.handleLogout))
 
 	// Validate handlers
-	mux.HandleFunc("POST /login/validate", app.makeHTTPHandlerFunc(app.handleLoginVaidation))
+	mux.HandleFunc("POST /login/validate", app.makeHTTPHandlerFunc(app.handleLoginValidation))
 	mux.HandleFunc("POST /register/validate", app.makeHTTPHandlerFunc(app.handleRegisterValidation))
 
 	// App Routes
@@ -84,6 +84,7 @@ func (app *Application) Mount() *http.ServeMux {
 	//    Student Routes
 	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudents)))
 	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handlePasswordReset)))
+  mux.HandleFunc("GET /teacher/courses/{courseId}/export", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudentsExport)) )
 
 	mux.HandleFunc("GET /ip", func(w http.ResponseWriter, r *http.Request) {
 		// 1. Check X-Real-IP header (often set by nginx)
@@ -122,7 +123,7 @@ func (app *Application) makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Re
 			if errors.As(err, &se) {
 				app.Logger.Error("Server Error", slog.String("msg", se.Internal))
 				w.WriteHeader(se.Status)
-				err := app.renderTemplate(w, "error_page", map[string]any{"Code": se.Status, "Text": http.StatusText(se.Status)})
+				err := app.renderPage(w, "error_page", map[string]any{"Code": se.Status, "Text": http.StatusText(se.Status)})
 				if err != nil {
 					app.Logger.Error("Could not render error page template... aborting")
 					os.Exit(1)
@@ -136,7 +137,7 @@ func (app *Application) makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Re
 			} else if errors.Is(err, &errs.UnauthorizedError{}) {
 				app.Logger.Warn("Unauthorized access attempt to "+r.URL.Path, slog.String("host", r.Host), slog.String("remote_addr", r.RemoteAddr))
 				w.WriteHeader(http.StatusNotFound)
-				err := app.renderTemplate(w, "error_page", map[string]any{"Code": http.StatusNotFound, "Text": http.StatusText(http.StatusNotFound)})
+				err := app.renderPage(w, "error_page", map[string]any{"Code": http.StatusNotFound, "Text": http.StatusText(http.StatusNotFound)})
 				if err != nil {
 					app.Logger.Error("Could not render error page template... aborting")
 					os.Exit(1)
@@ -150,7 +151,7 @@ func (app *Application) makeHTTPHandlerFunc(f func(http.ResponseWriter, *http.Re
 					HttpOnly: true,
 					MaxAge:   -1,
 				})
-				err := app.renderTemplate(w, "error_page", map[string]any{"Code": http.StatusInternalServerError, "Text": http.StatusText(http.StatusInternalServerError)})
+				err := app.renderPage(w, "error_page", map[string]any{"Code": http.StatusInternalServerError, "Text": http.StatusText(http.StatusInternalServerError)})
 				if err != nil {
 					app.Logger.Error("Could not render error page template... aborting")
 					os.Exit(1)

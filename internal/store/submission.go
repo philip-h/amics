@@ -16,6 +16,12 @@ type Submission struct {
 	GradedOn     sql.NullInt64
 }
 
+type SubmissionExport struct {
+	StudentNumber  string
+	AssignmentName string
+	Grade          sql.NullInt16
+}
+
 type SubmissionStore struct {
 	db *sql.DB
 }
@@ -131,4 +137,35 @@ func (s *SubmissionStore) Update(submission *Submission) error {
   WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
 	return err
+}
+
+func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, error) {
+	rows, err := s.db.Query(`SELECT student.student_number, assignment.name, submission.grade
+  FROM assignment
+  JOIN student on student.course_id = assignment.course_id
+  LEFT JOIN submission
+    ON submission.student_id = student.id 
+    AND submission.assignment_id = assignment.id
+  WHERE assignment.course_id = $1
+  ORDER BY student.student_number`, courseId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	submissionExport := []*SubmissionExport{}
+	for rows.Next() {
+		export := &SubmissionExport{}
+		err := rows.Scan(&export.StudentNumber, &export.AssignmentName, &export.Grade)
+		if err != nil {
+			return nil, err
+		}
+		submissionExport = append(submissionExport, export)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return submissionExport, nil
 }
