@@ -88,7 +88,13 @@
             name="join-code"
             required
             aria-describedby="join-code-constraints"
-            value="{{ .Body.JoinCode }}"
+            {{ $value := "" }}
+            {{ if .JoinCode }}
+              {{ $value = .JoinCode }}
+            {{ else }}
+              {{ $value = .Body.JoinCode }}
+            {{ end }}
+            value="{{ $value }}"
             hx-post="/register/validate"
             hx-push-url="false"
             hx-swap="none"
