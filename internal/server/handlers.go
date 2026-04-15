@@ -204,7 +204,7 @@ func (app *Application) handleRegisterValidation(w http.ResponseWriter, r *http.
 	}
 	errors := app.validateRegisterReq(body)
 
-	return app.renderPartial(w, "register", map[string]any{"Body": body, "Errors": errors})
+	return app.renderPartial(w, "register_form_errors", map[string]any{"Body": body, "Errors": errors})
 }
 
 func (app *Application) handleRegisterGet(w http.ResponseWriter, r *http.Request) error {
