@@ -26,9 +26,9 @@ def pytest_runtest_makereport(item, call):
 
         if call.excinfo is None:
             earned_points += points
-            print(f"\n✔{item.name} ({points}/{points}) - {feedback}")
+            print(f"\n✔ {item.name} ({points}/{points}) - {feedback}")
         else:
-            print(f"\n✘{item.name} (0/{points}) - {feedback}")
+            print(f"\n✘ {item.name} (0/{points}) - {feedback}")
 
 
 @pytest.fixture(autouse=True)

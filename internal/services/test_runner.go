@@ -70,7 +70,7 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 	}
 
 	containerId := resp.ID
-	// defer tr.cleanup(ctx, containerId)
+	defer tr.cleanup(ctx, containerId)
 
 	if err := tr.copyFilesToContainer(ctx, containerId, filename, studentCode, testCode); err != nil {
 		return nil, err
@@ -203,8 +203,8 @@ func (tr *TestRunner) parseTestResults(output string) *TestResult {
 	return result
 }
 
-// func (tr *TestRunner) cleanup(ctx context.Context, containerID string) {
-// 	tr.dockerClient.ContainerRemove(ctx, containerID, client.ContainerRemoveOptions{
-// 		Force: true,
-// 	})
-// }
+func (tr *TestRunner) cleanup(ctx context.Context, containerID string) {
+	tr.dockerClient.ContainerRemove(ctx, containerID, client.ContainerRemoveOptions{
+		Force: true,
+	})
+}

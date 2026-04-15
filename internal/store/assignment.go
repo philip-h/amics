@@ -138,7 +138,8 @@ func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentW
 	FROM assignment a
 	JOIN student ON a.course_id = student.course_id
 	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = student.id
-	WHERE student.id = $1`, studentId)
+	WHERE student.id = $1
+  ORDER BY a.due_date`, studentId)
 
 	if err != nil {
 		return nil, err
