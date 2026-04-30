@@ -3,7 +3,7 @@
   <main class="container">
     <article>
       <h1>Login to amics</h1>
-      <form hx-post="/login" hx-push-url="true" hx-disabled-elt="button" hx-target="body">
+      <form hx-post="/login" hx-push-url="true" hx-target="body">
         {{ if and .Errors .Errors.server }}<p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>{{ end }}
         {{ if .Errors }}
           <div hx-post="/login/validate" hx-swap="none" hx-trigger="load" hx-push-url="false">

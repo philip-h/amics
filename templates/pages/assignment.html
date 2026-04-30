@@ -14,12 +14,26 @@
     </section>
     <hr />
 
-    <section>
+    <section >
       <details name="instructions" {{ if not .Submission }}open{{ end }}>
         <summary>
           <span style="font-size: 1.75rem; font-weight:700">Instructions</span>
         </summary>
-        {{ .Description }}
+        <div _="init 
+        for code in (<pre/> in me)
+          add .relative to code
+          make a <button.field-button/>
+          set its textContent to 'Copy'
+          set its @_ to 
+            `on click 
+              writeText(innerText of the previous <code/>) on navigator.clipboard
+              put 'Copied' into me
+              wait 1s
+              put 'Copy' into me`
+          append it to code
+        end ">
+          {{ .Description }}
+        </div>
       </details>
     </section>
 

@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/philip-h/amics/internal/auth"
@@ -39,12 +38,7 @@ func (app *Application) Mount() *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Serve static files
-	cwd, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		app.Logger.Error("Could not get cwd", slog.String("msg", err.Error()))
-		os.Exit(1)
-	}
-	fs := http.FileServer(http.Dir(filepath.Join(cwd, "/static")))
+	fs := http.FileServer(http.Dir("./static"))
 	mux.Handle("GET /static/{path...}", http.StripPrefix("/static/", fs))
 
 	// Homepage

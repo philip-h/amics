@@ -211,7 +211,8 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 		visible, 
 		course_id
 	FROM assignment
-	WHERE course_id = $1`, courseId)
+	WHERE course_id = $1
+  ORDER BY due_date`, courseId)
 
 	if err != nil {
 		return nil, err

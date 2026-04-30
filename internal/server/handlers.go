@@ -386,14 +386,19 @@ func (app *Application) handleAssignmentDetail(w http.ResponseWriter, r *http.Re
 		}
 	}
 
+	disableSubmit := false
+	if aws.Submission != nil {
+		disableSubmit = aws.Submission.Status == "grading"
+	}
+
 	return app.renderPage(w,
 		"assignment",
 		map[string]any{
-			"Assignment":  aws.Assignment,
-			"Submission":  aws.Submission,
-			"Comments":    template.HTML(htmlComments.String()),
-			"Description": template.HTML(htmlDescription),
-      "DisableSubmit": aws.Submission.Status == "grading",
+			"Assignment":    aws.Assignment,
+			"Submission":    aws.Submission,
+			"Comments":      template.HTML(htmlComments.String()),
+			"Description":   template.HTML(htmlDescription),
+			"DisableSubmit": disableSubmit,
 			"NavLinks": []NavLink{
 				{Text: "Dashboard", Href: "/app"},
 				{Text: aws.Assignment.Name, Href: ""},

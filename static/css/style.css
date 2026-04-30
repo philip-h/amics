@@ -2,6 +2,10 @@ fieldset {
   position: relative !important;
 }
 
+.relative {
+  position: relative !important;
+}
+
 .field-button {
   position: absolute;
   top: 0;
