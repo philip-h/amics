@@ -8,6 +8,7 @@ type Storage struct {
 	}
 	Students interface {
 		Create(*Student) error
+		GetById(int) (*Student, error)
 		GetByUsername(string) (*Student, error)
 		GetByCourseId(int) ([]*Student, error)
 		ChangePassword(int, string) error

@@ -77,6 +77,7 @@ func (app *Application) Mount() *http.ServeMux {
 
 	//    Student Routes
 	mux.HandleFunc("GET /teacher/courses/{courseId}/students", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudents)))
+  mux.HandleFunc("GET /teacher/courses/{courseId}/students/{studentId}", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudent)))
 	mux.HandleFunc("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handlePasswordReset)))
   mux.HandleFunc("GET /teacher/courses/{courseId}/export", app.withAuth("teacher", app.makeHTTPHandlerFunc(app.handleStudentsExport)) )
 

@@ -957,6 +957,51 @@ func (app *Application) handleStudents(w http.ResponseWriter, r *http.Request) e
 	})
 }
 
+func (app *Application) handleStudent(w http.ResponseWriter, r *http.Request) error {
+	courseId := r.PathValue("courseId")
+	studentId, err := strconv.Atoi(r.PathValue("studentId"))
+	if err != nil {
+		return &errs.ServerError{
+			Status:   http.StatusBadRequest,
+			Internal: "Failed to convert student ID to int: " + r.PathValue("studentId"),
+		}
+	}
+
+	assignments, err := app.Store.Assignments.GetWithGradeByStudentId(studentId)
+	if err != nil {
+		return err
+	}
+
+	// Organize assignment by units for nicer rendering
+	byUnit := make(map[string][]*store.AssignmentWithGrade)
+	// And also calculate student average
+	var studentAvgNum float64
+	var studentAvgDenom float64
+
+	for _, ass := range assignments {
+		if ass.Visible {
+			byUnit[ass.UnitName] = append(byUnit[ass.UnitName], ass)
+			if ass.Grade.Valid {
+				studentAvgNum += float64(ass.Grade.Int64)
+			}
+			studentAvgDenom += float64(ass.Points)
+		}
+	}
+	studentAverage := math.Round((studentAvgNum / studentAvgDenom) * 100)
+
+	return app.renderPage(w,
+		"manage_student",
+		map[string]any{
+			"Assignments":    byUnit,
+			"StudentAverage": studentAverage,
+			"NavLinks": []NavLink{
+				{Text: "Teacher Dashboard", Href: "/teacher"},
+				{Text: "Manage students", Href: "/teacher/courses/" + courseId + "/students"},
+				{Text: "Manage Student", Href: ""},
+			},
+		})
+}
+
 func (app *Application) handlePasswordReset(w http.ResponseWriter, r *http.Request) error {
 	log := app.requestLogger(r, "handlePasswordReset")
 	courseId, err := strconv.Atoi(r.PathValue("courseId"))

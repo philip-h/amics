@@ -24,16 +24,31 @@ func (s *StudentStore) Create(student *Student) error {
 		return err
 	}
 	student.Password = string(hashedPassword)
-  var id int64
+	var id int64
 	err = s.db.QueryRow("INSERT INTO student (student_number, username, password, course_id) VALUES ($1, $2, $3, $4) RETURNING id", student.StudentNumber, student.Username, student.Password, student.CourseId).Scan(&id)
 	if err != nil {
 		return err
 	}
 
-  // Put the id back into the student
+	// Put the id back into the student
 	student.Id = int(id)
 
 	return nil
+}
+
+func (s *StudentStore) GetById(id int) (*Student, error) {
+	student := &Student{}
+	err := s.db.QueryRow(
+		"SELECT id, student_number, username, password, course_id FROM student WHERE id = $1", id,
+	).Scan(&student.Id, &student.StudentNumber, &student.Username, &student.Password, &student.CourseId)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return student, nil
 }
 
 func (s *StudentStore) GetByUsername(username string) (*Student, error) {

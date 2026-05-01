@@ -13,6 +13,7 @@ func NewMockStore() Storage {
 // ============================================================================
 type MockStudentStore struct {
 	CreateInvoked         bool
+	GetByIdInvoked        bool
 	GetByUsernameInvoked  bool
 	GetByTeacherIdInvoked bool
 	GetByCourseIdInvoked  bool
@@ -24,6 +25,14 @@ type MockStudentStore struct {
 func (m *MockStudentStore) Create(student *Student) error {
 	m.CreateInvoked = true
 	return nil
+}
+
+func (m *MockStudentStore) GetById(id int) (*Student, error) {
+	m.GetByIdInvoked = true
+	return &Student{
+		Username: "testuser",
+		Password: "testpass",
+	}, nil
 }
 
 func (m *MockStudentStore) GetByUsername(username string) (*Student, error) {

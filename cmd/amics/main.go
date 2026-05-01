@@ -43,6 +43,7 @@ func loadTemplates() (map[string]*template.Template, error) {
 		"manage_assignments": {"layouts/base.html", "pages/manage_assignments.html", "partials/nav.html"},
 		"manage_assignment":  {"layouts/base.html", "pages/manage_assignment.html", "partials/nav.html"},
 		"manage_students":    {"layouts/base.html", "pages/manage_students.html", "partials/nav.html"},
+		"manage_student":     {"layouts/base.html", "pages/manage_student.html", "partials/nav.html"},
 
 		// error page
 		"error_page": {"layouts/base.html", "pages/error_page.html"},
