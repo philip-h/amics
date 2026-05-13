@@ -1,0 +1,44 @@
+{{ define "title" }}TODO import grades{{ end }}
+{{ define "content" }}
+  <header style="box-shadow: var(--pico-box-shadow)">
+    <div class="container">
+      {{ template "nav" . }}
+    </div>
+  </header>
+  <main class="container">
+    <section>
+      <h3>CSV Must include only the following headers</h3>
+      <p>student_number,grade,comments</p>
+      <p>
+        Perhaps one day I may include a dedicated form here for inline grading, but I do all my grading in
+        <a href="https://github.com/andmarti1424/sc-im">sc-im</a>
+        so all I need is an import button
+      </p>
+    </section>
+    <article>
+      <form
+        hx-post="/teacher/courses/{{ .CourseId }}/assignments/{{ .AssignmentId }}/import"
+        hx-encoding="multipart/form-data"
+        hx-target="body"
+        hx-push-url="true"
+      >
+        <label for="file">Upload grades</label>
+        <input
+          type="file"
+          name="file"
+          id="file"
+          accept="text/csv"
+          aria-describedby="file-constraints"
+          required
+          _="on change
+          if my.files[0] is not null
+            set my @aria-invalid to false 
+          else 
+            set my @aria-invalid to true"
+        />
+        <small id="file-constraints">Please upload a csv</small>
+        <button type="submit">Upload grades</button>
+      </form>
+    </article>
+  </main>
+{{ end }}

@@ -1,8 +1,8 @@
-package store
+package storage
 
 func NewMockStore() Storage {
 	return Storage{
-		Students:    &MockStudentStore{},
+		People:      &MockPersonStore{},
 		Assignments: &MockAssignmentStore{},
 		Courses:     &MockCourseStore{},
 	}
@@ -11,7 +11,7 @@ func NewMockStore() Storage {
 // ============================================================================
 // Mock Student Store
 // ============================================================================
-type MockStudentStore struct {
+type MockPersonStore struct {
 	CreateInvoked         bool
 	GetByIdInvoked        bool
 	GetByUsernameInvoked  bool
@@ -22,43 +22,43 @@ type MockStudentStore struct {
 	CompareHashAndPasswordInvoked bool
 }
 
-func (m *MockStudentStore) Create(student *Student) error {
+func (m *MockPersonStore) Create(*Person, int) error {
 	m.CreateInvoked = true
 	return nil
 }
 
-func (m *MockStudentStore) GetById(id int) (*Student, error) {
+func (m *MockPersonStore) GetById(id int) (*Person, error) {
 	m.GetByIdInvoked = true
-	return &Student{
+	return &Person{
 		Username: "testuser",
 		Password: "testpass",
 	}, nil
 }
 
-func (m *MockStudentStore) GetByUsername(username string) (*Student, error) {
+func (m *MockPersonStore) GetByUsername(username string) (*Person, error) {
 	m.GetByUsernameInvoked = true
-	return &Student{
+	return &Person{
 		Username: "testuser",
 		Password: "testpass",
 	}, nil
 }
 
-func (m *MockStudentStore) GetByTeacherId(teacherId int) ([]*Assignment, error) {
+func (m *MockPersonStore) GetByTeacherId(teacherId int) ([]*Assignment, error) {
 	m.GetByTeacherIdInvoked = true
 	return []*Assignment{}, nil
 }
 
-func (m *MockStudentStore) GetByCourseId(int) ([]*Student, error) {
+func (m *MockPersonStore) GetByCourseId(int) ([]*Person, error) {
 	m.GetByCourseIdInvoked = true
 	return nil, nil
 }
 
-func (m *MockStudentStore) ChangePassword(int, string) error {
+func (m *MockPersonStore) ChangePassword(int, string) error {
 	m.ChangePasswordInvoked = true
 	return nil
 }
 
-func (m *MockStudentStore) CompareHashAndPassword(string, string) bool {
+func (m *MockPersonStore) CompareHashAndPassword(string, string) bool {
 	m.CompareHashAndPasswordInvoked = true
 	return true
 }
@@ -74,7 +74,7 @@ type MockCourseStore struct {
 	UpdateInvoked         bool
 }
 
-func (m *MockCourseStore) Create(*Course) error {
+func (m *MockCourseStore) Create(*Course, int) error {
 	m.CreateInvoked = true
 	return nil
 }
@@ -102,12 +102,13 @@ func (m *MockCourseStore) Update(*Course) error {
 // ============================================================================
 type MockAssignmentStore struct {
 	CreateInvoked                                     bool
-	GetWithGradeByStudentIdInvoked                    bool
+	GetWithGradeInvoked                               bool
 	GetWithSubmissionByAssignmentAndStudentIdsInvoked bool
 	SubmitInvoked                                     bool
 	GetByIdInvoked                                    bool
 	GetByCourseIdInvoked                              bool
 	UpdateInvoked                                     bool
+	UpdateAllInvoked                                  bool
 }
 
 func (m *MockAssignmentStore) Create(*Assignment) error {
@@ -115,8 +116,8 @@ func (m *MockAssignmentStore) Create(*Assignment) error {
 	return nil
 }
 
-func (m *MockAssignmentStore) GetWithGradeByStudentId(int) ([]*AssignmentWithGrade, error) {
-	m.GetWithGradeByStudentIdInvoked = true
+func (m *MockAssignmentStore) GetWithGrade(int) ([]*AssignmentWithGrade, error) {
+	m.GetWithGradeInvoked = true
 	return nil, nil
 
 }
@@ -138,5 +139,10 @@ func (m *MockAssignmentStore) GetByCourseId(int) ([]*Assignment, error) {
 
 func (m *MockAssignmentStore) Update(*Assignment) error {
 	m.UpdateInvoked = true
+	return nil
+}
+
+func (m *MockAssignmentStore) UpdateAll(int, [][]string) error {
+	m.UpdateAllInvoked = true
 	return nil
 }

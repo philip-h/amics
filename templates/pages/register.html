@@ -5,9 +5,9 @@
   <main class="container">
     <article>
       <h1>Login to amics</h1>
-      <form hx-post="/register" hx-push-url="true" hx-disabled-elt="button" hx-target="body">
-        {{ if and .Errors .Errors.server }}<p style="color: var(--pico-del-color)">{{ .Errors.server }}</p>{{ end }}
-        {{ if .Errors }}
+      <form hx-post="/register" hx-push-url="true" hx-target="body">
+        {{ if and .Problems .Problems.server }}<p style="color: var(--pico-del-color)">{{ .Problems.server }}</p>{{ end }}
+        {{ if .Problems }}
           <div hx-post="/register/validate" hx-swap="none" hx-trigger="load" hx-push-url="false">
             {{ template "register_form_errors" . }}
           </div>
@@ -27,6 +27,22 @@
             hx-swap="none"
           />
           <small id="student-number-constraints">Student number must be 5-7 numbers</small>
+        </fieldset>
+        <fieldset>
+          <label for="first-name">Enter your first name</label>
+          <input
+            type="text"
+            id="first-name"
+            name="first-name"
+            required
+            aria-describedby="first-name-constraints"
+            value="{{ .Body.FirstName }}"
+            hx-post="/register/validate"
+            hx-trigger="change, keyup delay:200ms changed"
+            hx-push-url="false"
+            hx-swap="none"
+          />
+          <small id="first-name-constraints">First name required</small>
         </fieldset>
         <fieldset>
           <label for="username">Enter your username</label>

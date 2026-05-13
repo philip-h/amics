@@ -1,0 +1,6 @@
+CREATE TABLE sessions (
+    id VARCHAR(64) PRIMARY KEY,
+    person_id INTEGER NOT NULL REFERENCES person(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL
+);

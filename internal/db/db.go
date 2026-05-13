@@ -2,34 +2,19 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 )
 
 type DbConfig struct {
-	User     string
-	Password string
-	Host     string
-	DbName   string
-	Params   string
+	ConnStr string
 }
 
-func (cfg *DbConfig) ToSqlite3Addr() string {
-	return fmt.Sprintf("./%s.db", cfg.DbName)
-}
-
-func (cfg *DbConfig) ToPGAddr() string {
-	return fmt.Sprintf("postgres://%s:%s@%s/%s?%s",
-		cfg.User,
-		cfg.Password,
-		cfg.Host,
-		cfg.DbName,
-		cfg.Params,
-	)
+func (cfg *DbConfig) String() string {
+	return cfg.ConnStr
 }
 
 func New(dbCfg *DbConfig) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dbCfg.ToPGAddr())
+	db, err := sql.Open("postgres", dbCfg.String())
 	if err != nil {
 		return nil, err
 	}

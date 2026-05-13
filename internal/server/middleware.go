@@ -2,92 +2,109 @@ package server
 
 import (
 	"context"
-	"errors"
+	"log/slog"
 	"net/http"
-	"slices"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/philip-h/amics/internal/errs"
+	"github.com/philip-h/amics/internal/storage"
 )
 
-func (app *Application) withAuth(role string, next http.HandlerFunc) http.HandlerFunc {
-	return app.makeHTTPHandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
-		// Check for token cookie
-		cookie, err := r.Cookie("token")
-		if err != nil {
-			if role == "teacher" {
-				return &errs.UnauthorizedError{}
-			}
-			return err
+const personKey = "person_id"
+const roleKey = "role"
+
+func requiresStudent(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookieValue := r.Context().Value(roleKey)
+		if cookieValue == nil {
+			http.Error(w, "Not allowed", http.StatusForbidden)
+			return
 		}
 
-		// Validate token
-		token, err := app.Auth.ValidateJwt(cookie.Value)
-		if err != nil {
-			if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
-				http.SetCookie(w, &http.Cookie{
-					Name:     "token",
-					Value:    "",
-					HttpOnly: true,
-					MaxAge:   -1,
-				})
-
-				if role == "teacher" {
-					return &errs.UnauthorizedError{}
-				}
-				return &errs.JwtError{
-					Message: "JWT token is either expired or not active yet",
-				}
-			}
-			return err
+		role := cookieValue.(string)
+		if role != "student" && role != "teacher" {
+			http.Error(w, "Not allowed", http.StatusForbidden)
+			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok {
-			if role == "teacher" {
-				return &errs.UnauthorizedError{}
-			}
-			return &errs.JwtError{
-				Message: "Failed to extract claims from JWT",
-			}
-		}
-
-		userId, err := claims.GetSubject()
-		if err != nil {
-			if role == "teacher" {
-				return &errs.UnauthorizedError{}
-			}
-			return &errs.JwtError{
-				Message: "Failed to extract username from JWT claims",
-			}
-		}
-
-		aud, err := claims.GetAudience()
-		if err != nil {
-			if role == "teacher" {
-				return &errs.UnauthorizedError{}
-			}
-			return &errs.JwtError{
-				Message: "Failed to extract role from JWT claims",
-			}
-		}
-
-		// A teacher can access both teacher and student routes, but a student can only access student routes
-		allowedRoles := map[string][]string{"teacher": {"teacher", "student"}, "student": {"student"}}
-		if allowed, ok := allowedRoles[aud[0]]; !ok || !slices.Contains(allowed, role) {
-			if role == "teacher" {
-				return &errs.UnauthorizedError{}
-			}
-			return &errs.JwtError{
-				Message: "Role does not match expected role",
-			}
-		}
-
-		// Set the user id in request context for later
-		ctx := context.WithValue(r.Context(), "userId", userId)
-		ctx = context.WithValue(ctx, "is-teacher", aud[0] == "teacher")
-		r.Header.Add("Cache-control", "no-store")
-		next(w, r.WithContext(ctx))
-		return nil
+		h.ServeHTTP(w, r)
 	})
+}
+
+func requiresTeacher(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookieValue := r.Context().Value(roleKey)
+		if cookieValue == nil {
+			http.Error(w, "Not allowed", http.StatusForbidden)
+			return
+		}
+
+		role := cookieValue.(string)
+		if role != "teacher" {
+			http.Error(w, "Not allowed", http.StatusForbidden)
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
+}
+
+func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		session, err := store.Sessions.GetById(cookie.Value)
+		if err != nil {
+			logger.L.Error("Could not get session by id", "err", err)
+			h.ServeHTTP(w, r)
+			return
+		}
+		if session == nil {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    "",
+				HttpOnly: true,
+				MaxAge:   -1,
+			})
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		person, err := store.People.GetById(session.PersonId)
+		if err != nil {
+			logger.L.Error("Could not get person by id", "err", err)
+			h.ServeHTTP(w, r)
+			return
+		}
+		if person == nil {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), personKey, person.Id)
+		ctx = context.WithValue(ctx, roleKey, person.Role)
+
+		h.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func panicRecovery(logger *Logger, handler http.Handler) http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if p := recover(); p != nil {
+					logger.L.Error(
+						"panic recovered",
+						slog.String("method", r.Method),
+						slog.String("path", r.URL.Path),
+						"panic",
+						p,
+					)
+					http.Error(w, "Big oopsies", http.StatusInternalServerError)
+				}
+			}()
+			handler.ServeHTTP(w, r)
+		})
 }

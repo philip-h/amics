@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS course (
+    id SERIAL PRIMARY KEY,
+    year SMALLINT NOT NULL,
+    semester SMALLINT NOT NULL,
+    name TEXT NOT NULL,
+    join_code VARCHAR(20) NOT NULL UNIQUE
+);

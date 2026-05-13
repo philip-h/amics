@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS course (
-    id SERIAL PRIMARY KEY,
-    year SMALLINT NOT NULL,
-    semester SMALLINT NOT NULL,
-    name VARCHAR(20) NOT NULL,
-    join_code VARCHAR(20) NOT NULL UNIQUE,
-    teacher_id INTEGER NOT NULL REFERENCES teacher (id)
-);

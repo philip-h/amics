@@ -24,6 +24,8 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter the teacher employee number\n> ")
 	employee_number, _ := reader.ReadString('\n')
+	fmt.Print("Enter the teacher's first name\n> ")
+	first_name, _ := reader.ReadString('\n')
 	fmt.Print("Enter the teacher username\n> ")
 	username, _ := reader.ReadString('\n')
 	fmt.Print("Enter the teacher password\n> ")
@@ -37,7 +39,11 @@ func main() {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(strings.TrimSpace(teacher_password)), bcrypt.DefaultCost)
 
 	// Store it
-	_, err = db.Exec("INSERT INTO teacher (employee_number, username, password) VALUES ($1,$2,$3);", strings.TrimSpace(employee_number), strings.TrimSpace(username), string(hashed))
+	_, err = db.Exec("INSERT INTO person (id, first_name, username, password, role) VALUES ($1,$2,$3,$4,'teacher');",
+		strings.TrimSpace(employee_number),
+		strings.TrimSpace(first_name),
+		strings.TrimSpace(username),
+		string(hashed))
 	if err != nil {
 		panic(err)
 	}

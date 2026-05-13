@@ -6,6 +6,11 @@
     </div>
   </header>
   <main class="container">
+    {{ if .IsTeacher }}
+      <p style="text-align: right;">
+        <a href="/teacher">Teacher Portal</a>
+      </p>
+    {{ end }}
     {{ if .Assignments }}
       <div class="grid">
         <h2>Assignments</h2>
@@ -44,7 +49,7 @@
                       color: var(--pico-primary)
                     {{ end }}"
                   >
-                    {{ unixToDate .DueDate }}
+                    {{ .DueDate.Format "Mon Jan 02 @ 15:04" }}
                   </td>
                   <td
                     style="{{ if .Grade.Valid }}

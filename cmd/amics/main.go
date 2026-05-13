@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -11,22 +12,21 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/philip-h/amics/internal/auth"
 	"github.com/philip-h/amics/internal/db"
 	"github.com/philip-h/amics/internal/server"
 	"github.com/philip-h/amics/internal/services"
-	"github.com/philip-h/amics/internal/store"
+	"github.com/philip-h/amics/internal/storage"
 	"github.com/philip-h/amics/templates"
 )
 
-func getenv(key, preset string) string {
-	value, exists := os.LookupEnv(key)
-	if exists {
-		return value
-	} else {
-		return preset
-	}
-}
+// func getenv(key, preset string) string {
+// 	value, exists := os.LookupEnv(key)
+// 	if exists {
+// 		return value
+// 	} else {
+// 		return preset
+// 	}
+// }
 
 func loadTemplates() (map[string]*template.Template, error) {
 	pages := map[string][]string{
@@ -44,6 +44,7 @@ func loadTemplates() (map[string]*template.Template, error) {
 		"manage_assignment":  {"layouts/base.html", "pages/manage_assignment.html", "partials/nav.html"},
 		"manage_students":    {"layouts/base.html", "pages/manage_students.html", "partials/nav.html"},
 		"manage_student":     {"layouts/base.html", "pages/manage_student.html", "partials/nav.html"},
+		"import_grades":      {"layouts/base.html", "pages/import_grades.html", "partials/nav.html"},
 
 		// error page
 		"error_page": {"layouts/base.html", "pages/error_page.html"},
@@ -58,11 +59,6 @@ func loadTemplates() (map[string]*template.Template, error) {
 
 	for pageName, neededTemplates := range pages {
 		tmpl, err := template.New(pageName).
-			Funcs(template.FuncMap{
-				"unixToDate": func(unix int64) string {
-					return time.Unix(unix, 0).Format("Mon Jan 2 @ 15:04")
-				},
-			}).
 			ParseFS(
 				templates.TemplateFS,
 				neededTemplates...,
@@ -77,96 +73,99 @@ func loadTemplates() (map[string]*template.Template, error) {
 	return cache, nil
 }
 
-func main() {
-
+func run(
+	ctx context.Context,
+	getenv func(string) string,
+) error {
 	// Logging setup
 	levelVar := new(slog.LevelVar)
 	levelVar.Set(slog.LevelInfo)
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	log := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: levelVar,
 	}))
+	logger := &server.Logger{L: log, LogLvl: levelVar}
 
 	// DB Setup
-	dbConfig := &db.DbConfig{
-		User:     getenv("DATABASE_USER", "postgres"),
-		Password: getenv("DATABASE_PASSWORD", ""),
-		Host:     getenv("DATABASE_HOST", "0.0.0.0"),
-		DbName:   getenv("DATABASE_NAME", "amics"),
-		Params:   getenv("DATABASE_PARAMS", "sslmode=disable"),
+	dbConn := getenv("DB_CONN")
+	if dbConn == "" {
+		dbConn = "postgresql://postgres@127.0.0.1/amics?sslmode=disable"
 	}
-	cfg := server.Config{
-		Port: getenv("SERVER_PORT", ":8080"),
+
+	dbConfig := &db.DbConfig{
+		ConnStr: dbConn,
+	}
+
+	port := getenv("SERVER_PORT")
+	if port == "" {
+		port = ":8080"
+	}
+
+	cfg := &server.Config{
+		Port: port,
 		Db:   dbConfig,
 	}
 	db, err := db.New(dbConfig)
 	if err != nil {
-		logger.Error("Failed to connect to database", slog.String("msg", err.Error()))
-		os.Exit(1)
+		return fmt.Errorf("Failed to connect to database: %w", err)
 	}
 	defer db.Close()
-	store := store.New(db)
+	store := storage.New(db)
 
 	// Templates Setup
 	templates, err := loadTemplates()
 	if err != nil {
-		logger.Error("Failed to load templates", slog.String("msg", err.Error()))
-		os.Exit(1)
-	}
-
-	// JWT Setup
-	jwtKey := getenv("JWT_SECRET", "super-secret-key")
-	jwtIss := getenv("JWT_ISS", "amics-server")
-	auth := auth.NewJwtAuthenticator(jwtKey, jwtIss)
-
-	// The app!
-	app := &server.Application{
-		Config:    cfg,
-		Store:     store,
-		Auth:      auth,
-		Templates: templates,
-		Logger:    logger,
+		return fmt.Errorf("Failed to load templates: %w", err)
 	}
 
 	// Grader worker
 	worker, err := services.NewWorker(db, logger)
 	if err != nil {
-		logger.Error("Failed to start worker", slog.String("msg", err.Error()))
-		os.Exit(1)
+		return fmt.Errorf("Failed to start worker: %w", err)
 	}
 	go worker.Start()
 	defer worker.Stop()
 
-	// Let's get started!
-	mux := app.Mount()
-
+	myServer := server.NewServer(
+		logger,
+		store,
+		templates,
+	)
 	server := &http.Server{
-		Addr:    app.Config.Port,
-		Handler: mux,
+		Addr:    cfg.Port,
+		Handler: myServer,
 	}
 
 	done := make(chan bool)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		logger.Info("Starting server on port " + cfg.Port)
+		logger.L.Info("Starting server on port " + cfg.Port)
 		if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			logger.Error("HTTP server error", slog.String("msg", err.Error()))
+			logger.L.Error("HTTP server error", slog.String("msg", err.Error()))
 			os.Exit(1)
 		}
-		logger.Info("Stopped serving new connections")
+		logger.L.Info("Stopped serving new connections")
 	}()
 
 	<-quit
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	server.SetKeepAlivesEnabled(false)
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Error("HTTP shutdown error", slog.String("msg", err.Error()))
-		os.Exit(1)
+		return fmt.Errorf("Failed to shutdown server: %w", err)
 	}
 	close(done)
 
 	<-done
-	logger.Info("Graceful shutdown copmplete")
+	logger.L.Info("Graceful shutdown copmplete")
+	return nil
+}
+
+func main() {
+	ctx := context.Background()
+	if err := run(ctx, os.Getenv); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 }

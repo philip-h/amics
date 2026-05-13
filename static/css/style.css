@@ -16,3 +16,18 @@ fieldset {
   cursor: pointer;
   opacity: 80%;
 }
+
+.toast {
+  background-color: white;
+  padding: 0.5em 1em;
+  position: fixed;
+  bottom: 5em;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: 80%;
+  background-color: rgb(136, 56.5, 53);
+  color: white;
+
+  z-index: 1000;
+}

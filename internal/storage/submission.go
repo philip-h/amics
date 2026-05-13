@@ -1,7 +1,8 @@
-package store
+package storage
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Submission struct {
@@ -10,10 +11,10 @@ type Submission struct {
 	AssignmentId int
 	Code         string
 	Grade        int
-	SubmittedOn  int64
+	SubmittedOn  time.Time
 	Comments     sql.NullString
 	Status       string
-	GradedOn     sql.NullInt64
+	GradedOn     sql.NullTime
 }
 
 type SubmissionExport struct {
@@ -48,7 +49,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 		// Update existing submission
 		_, err = tx.Exec(
 			`UPDATE submission
-      SET code=$1, status='grading', comments='Working on it...', submitted_on = EXTRACT(EPOCH FROM now())
+      SET code=$1, status='grading', comments='Working on it...', submitted_on = NOW()
       WHERE id = $2`, code, submissionId)
 		if err != nil {
 			return err
@@ -133,21 +134,22 @@ func (s *SubmissionStore) GetByAssignmentAndStudentIds(assignmentId, studentId i
 
 func (s *SubmissionStore) Update(submission *Submission) error {
 	_, err := s.db.Exec(`UPDATE submission
-  SET grade = $1, comments = $2, status = $3, graded_on = EXTRACT(EPOCH FROM now())
+  SET grade = $1, comments = $2, status = $3, graded_on = NOW() 
   WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
 	return err
 }
 
 func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, error) {
-	rows, err := s.db.Query(`SELECT student.student_number, assignment.name, submission.grade
+  rows, err := s.db.Query(`SELECT person.id, assignment.name, submission.grade
   FROM assignment
-  JOIN student on student.course_id = assignment.course_id
+  JOIN student_course on student_course.course_id = assignment.course_id
+  JOIN person on student_course.student_id = person.id
   LEFT JOIN submission
-    ON submission.student_id = student.id 
+    ON submission.student_id = person.id 
     AND submission.assignment_id = assignment.id
-  WHERE assignment.course_id = $1
-  ORDER BY student.student_number`, courseId)
+  WHERE assignment.course_id = $1 
+  ORDER BY person.id`, courseId);
 
 	if err != nil {
 		return nil, err

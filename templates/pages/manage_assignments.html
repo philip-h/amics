@@ -27,7 +27,8 @@
                     {{ .Name }}
                   </a>
                 </th>
-                <td>{{ .DueDate | unixToDate }}</td>
+                <td>{{ .DueDate.Format "Mon Jan 2 @ 15:04"  }}</td>
+                <td><a href="/teacher/courses/{{ .CourseId }}/assignments/{{ .Id }}/import">Import Grades</a></td>
               </tr>
             {{ end }}
           </tbody>

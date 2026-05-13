@@ -10,23 +10,22 @@
     <article>
       <form
         {{ if .Course }}
-          hx-post="/teacher/courses/{{ .Course.Id }}"
+          hx-put="/teacher/courses/{{ .Course.Id }}"
         {{ else }}
-          hx-post="/teacher/courses/new"
+          hx-post="/teacher/courses"
         {{ end }}
         hx-target="body"
-        hx-push-url="true"
       >
-        {{ if .Errors.server }}
-          <p style="color: rgb(136, 56.5, 53)">{{ .Errors.sever }}</p>
+        {{ if .Problems.server }}
+          <p style="color: rgb(136, 56.5, 53)">{{ .Problems.server }}</p>
         {{ end }}
         <div class="grid">
           <fieldset>
-            <label for="cid">Id</label>
+            <label for="id">Id</label>
             <input
               type="text"
-              id="cid"
-              name="cid"
+              id="id"
+              name="id"
               {{ $value := "" }}
               {{ if .Course }}
                 {{ $value = .Course.Id }}
@@ -52,7 +51,7 @@
               {{ end }}
               value="{{ $value }}"
               {{ if .Body.JoinCode }}
-                {{ if .Errors.join_code }}
+                {{ if .Problems.join_code }}
                   aria-invalid="true"
                 {{ else }}
                   aria-invalid="false"
@@ -60,8 +59,8 @@
               {{ end }}
             />
             <small id="join-code-constraints">
-              {{ if .Errors.join_code }}
-                {{ .Errors.join_code }}
+              {{ if .Problems.join_code }}
+                {{ .Problems.join_code }}
               {{ else }}
                 Join code required
               {{ end }}
@@ -98,7 +97,7 @@
             {{ end }}
             value="{{ $value }}"
             {{ if .Body.Name }}
-              {{ if .Errors.name }}
+              {{ if .Problems.name }}
                 aria-invalid="true"
               {{ else }}
                 aria-invalid="false"
@@ -106,8 +105,8 @@
             {{ end }}
           />
           <small id="name-constraints">
-            {{ if .Errors.name }}
-              {{ .Errors.name }}
+            {{ if .Problems.name }}
+              {{ .Problems.name }}
             {{ else }}
               Name required
             {{ end }}
@@ -130,7 +129,7 @@
               {{ end }}
               value="{{ $value }}"
               {{ if .Body.Year }}
-                {{ if .Errors.year }}
+                {{ if .Problems.year }}
                   aria-invalid="true"
                 {{ else }}
                   aria-invalid="false"
@@ -138,8 +137,8 @@
               {{ end }}
             />
             <small id="year-constraints">
-              {{ if .Errors.year }}
-                {{ .Errors.year }}
+              {{ if .Problems.year }}
+                {{ .Problems.year }}
               {{ else }}
                 Year must be YYYY
               {{ end }}
@@ -161,7 +160,7 @@
               {{ end }}
               value="{{ $value }}"
               {{ if .Body.Semester }}
-                {{ if .Errors.semester }}
+                {{ if .Problems.semester }}
                   aria-invalid="true"
                 {{ else }}
                   aria-invalid="false"
@@ -169,8 +168,8 @@
               {{ end }}
             />
             <small id="semester-constraints">
-              {{ if .Errors.semester }}
-                {{ .Errors.semester }}
+              {{ if .Problems.semester }}
+                {{ .Problems.semester }}
               {{ else }}
                 Semester must be 1 or 2
               {{ end }}

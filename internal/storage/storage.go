@@ -1,4 +1,4 @@
-package store
+package storage
 
 import "database/sql"
 
@@ -6,31 +6,33 @@ type Storage struct {
 	Teachers interface {
 		GetByUsername(string) (*Teacher, error)
 	}
-	Students interface {
-		Create(*Student) error
-		GetById(int) (*Student, error)
-		GetByUsername(string) (*Student, error)
-		GetByCourseId(int) ([]*Student, error)
+
+	People interface {
+		Create(*Person, int) error
+		GetById(int) (*Person, error)
+		GetByUsername(string) (*Person, error)
+		GetByCourseId(int) ([]*Person, error)
 		ChangePassword(int, string) error
 		CompareHashAndPassword(string, string) bool
 	}
 
 	Courses interface {
-		Create(*Course) error
+		Create(*Course, int) error
 		GetById(int) (*Course, error)
 		GetByJoinCode(string) (*Course, error)
 		GetByTeacherId(int) ([]*Course, error)
-		Update(*Course) error
+    Update(*Course) error
 	}
 
 	Assignments interface {
 		Create(*Assignment) error
-		GetWithGradeByStudentId(int) ([]*AssignmentWithGrade, error)
+		GetWithGrade(int) ([]*AssignmentWithGrade, error)
 		GetWithSubmissionByAssignmentAndStudentIds(int, int) (*AssignmentSubmission, error)
 
 		GetById(int) (*Assignment, error)
 		GetByCourseId(int) ([]*Assignment, error)
 		Update(*Assignment) error
+		UpdateAll(int, [][]string) error
 	}
 
 	Submissions interface {
@@ -40,14 +42,21 @@ type Storage struct {
 		Update(*Submission) error
 		GetAllByCourseId(int) ([]*SubmissionExport, error)
 	}
+
+	Sessions interface {
+		Create(int, bool) (string, error)
+		GetById(string) (*Session, error)
+		Delete(string) error
+	}
 }
 
-func New(db *sql.DB) Storage {
-	return Storage{
+func New(db *sql.DB) *Storage {
+	return &Storage{
 		Teachers:    &TeacherStore{db},
-		Students:    &StudentStore{db},
+		People:      &PersonStore{db},
 		Assignments: &AssignmentStore{db},
 		Courses:     &CourseStore{db},
 		Submissions: &SubmissionStore{db},
+		Sessions:    &SessionStore{db},
 	}
 }

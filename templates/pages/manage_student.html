@@ -1,4 +1,3 @@
-
 {{ define "title" }}amics/teacher/student{{ end }}
 {{ define "content" }}
   <header style="box-shadow: var(--pico-box-shadow)">
@@ -27,7 +26,7 @@
               {{ range $ass }}
                 <tr>
                   <th scope="row">
-                      {{ .Name }}
+                    {{ .Name }}
                   </th>
                   <td
                     style="{{ if .Grade.Valid }}
@@ -36,7 +35,7 @@
                       color: var(--pico-primary)
                     {{ end }}"
                   >
-                    {{ unixToDate .DueDate }}
+                    {{ .DueDate.Format "Mon Jan 02 @ 15:04" }}
                   </td>
                   <td
                     style="{{ if .Grade.Valid }}

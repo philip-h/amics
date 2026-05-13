@@ -6,12 +6,12 @@ EXCEPTION
 END $$;
 CREATE TABLE submission (
     id SERIAL PRIMARY KEY,
-    student_id INTEGER NOT NULL REFERENCES student (id),
-    assignment_id INTEGER NOT NULL REFERENCES assignment (id),
+    student_id INTEGER NOT NULL REFERENCES person(id),
+    assignment_id INTEGER NOT NULL REFERENCES assignment(id),
     code TEXT NOT NULL,
     grade SMALLINT,
-    submitted_on BIGINT NOT NULL DEFAULT EXTRACT(EPOCH FROM now()),
+    submitted_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     comments TEXT,
     status status_type,
-    graded_on BIGINT
+    graded_on TIMESTAMPTZ
 );

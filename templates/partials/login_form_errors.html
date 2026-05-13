@@ -1,9 +1,9 @@
 {{ define "login_form_errors" }}
 
   {{ if .Body.Username }}
-    {{ if .Errors.username }}
+    {{ if .Problems.username }}
       <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to true">
-        {{ .Errors.username }}
+        {{ .Problems.username }}
       </small>
     {{ else }}
       <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to false">
@@ -13,9 +13,9 @@
   {{ end }}
 
   {{ if .Body.Password }}
-    {{ if .Errors.password }}
+    {{ if .Problems.password }}
       <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to true">
-        {{ .Errors.password }}
+        {{ .Problems.password }}
       </small>
     {{ else }}
       <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to false">

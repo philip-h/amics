@@ -1,24 +1,53 @@
-package store
+package storage
 
 import "database/sql"
 
 type Course struct {
-	Id        int
-	Year      int
-	Semester  int
-	Name      string
-	JoinCode  string
-	TeacherId int
+	Id       int
+	JoinCode string
+	Year     int
+	Semester int
+	Name     string
 }
 
 type CourseStore struct {
 	db *sql.DB
 }
 
-func (s *CourseStore) Create(course *Course) error {
-	_, err := s.db.Exec("INSERT INTO course (year, semester, name, join_code, teacher_id) VALUES ($1, $2, $3, $4, $5)",
-		course.Year, course.Semester, course.Name, course.JoinCode, course.TeacherId)
-	return err
+func (s *CourseStore) Create(course *Course, teacherId int) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.QueryRow(`
+  INSERT INTO course (year, semester, name, join_code)
+  VALUES ($1, $2, $3, $4)
+  RETURNING id`,
+		course.Year,
+		course.Semester,
+		course.Name,
+		course.JoinCode,
+	).Scan(&course.Id)
+
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(`
+  INSERT INTO teacher_course
+  VALUES ($1, $2)
+  ON CONFLICT (teacher_id, course_id)
+  DO NOTHING`,
+		teacherId,
+		course.Id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *CourseStore) GetById(courseId int) (*Course, error) {
@@ -72,7 +101,10 @@ func (s *CourseStore) GetByJoinCode(joinCode string) (*Course, error) {
 }
 
 func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
-	rows, err := s.db.Query("SELECT id, year, semester, name, join_code, teacher_id FROM course WHERE teacher_id = $1;", teacherId)
+	rows, err := s.db.Query(`SELECT id, year, semester, name, join_code
+  FROM course 
+  JOIN teacher_course tc ON course.id = tc.course_id
+  WHERE tc.teacher_id = $1;`, teacherId)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +113,13 @@ func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
 	courses := []*Course{}
 	for rows.Next() {
 		course := &Course{}
-		err := rows.Scan(&course.Id, &course.Year, &course.Semester, &course.Name, &course.JoinCode, &course.TeacherId)
+		err := rows.Scan(
+			&course.Id,
+			&course.Year,
+			&course.Semester,
+			&course.Name,
+			&course.JoinCode,
+		)
 		if err != nil {
 			return nil, err
 		}

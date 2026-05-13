@@ -3,7 +3,6 @@ module github.com/philip-h/amics
 go 1.25.7
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/lib/pq v1.11.2
 	github.com/moby/moby/api v1.53.0
 	github.com/moby/moby/client v0.2.2

@@ -10,27 +10,33 @@
       <h2>Managing Students</h2>
       <article>
         <table>
+          <thead>
+            <tr>
+              <th scope="col">Student Number</th>
+              <th scope="col">Username</th>
+              <th scope="col">New Password</th>
+            </tr>
+          </thead>
           <tbody>
-            <thead>
-              <tr>
-                <th scope="col">Student Number</th>
-                <th scope="col">Username</th>
-                <th scope="col">New Password</th>
-              </tr>
-            </thead>
             {{ range .Students }}
 
               <tr>
-                <th scope="row">{{ .StudentNumber }}</th>
-                <td><a href="/teacher/courses/{{ .CourseId }}/students/{{ .Id }}">{{ .Username }}</a></td>
+                <th scope="row">{{ .Id }}</th>
+                <td><a href="/teacher/courses/{{ $.CourseId }}/students/{{ .Id }}">{{ .FirstName }}</a></td>
                 <td>
-                  <form action="/teacher/courses/{{ .CourseId }}/students/{{ .Id }}/passwordreset" method="POST">
-                    <fieldset role="group">
-                      <input type="text" name="password" autocomplete="off" />
-                      <input type="hidden" name="student-id" value="{{ .Id }}" />
-                      <button id="password-reset">Reset</button>
-                    </fieldset>
-                  </form>
+                  <fieldset role="group">
+                    <input type="text" name="password" autocomplete="off" />
+                    <button
+                      id="password-reset"
+                      hx-post="/teacher/courses/{{ $.CourseId }}/students/{{ .Id }}/passwordreset"
+                      hx-push-url="true"
+                      hx-target="body"
+                      hx-include="previous <input/>"
+                      hx-vals='{"student-id": {{ .Id }}}'
+                    >
+                      Reset
+                    </button>
+                  </fieldset>
                 </td>
               </tr>
             {{ end }}

@@ -1,7 +1,8 @@
-package store
+package storage
 
 import (
 	"database/sql"
+	"time"
 )
 
 type Assignment struct {
@@ -12,19 +13,20 @@ type Assignment struct {
 	RequiredFilename string
 	PytestCode       string
 	Points           int
-	DueDate          int64
+	DueDate          time.Time
 	Visible          bool
 	CourseId         int
-}
-
-type AssignmentStore struct {
-	db *sql.DB
 }
 
 type AssignmentSubmission struct {
 	Assignment
 	Submission *Submission
 }
+
+type AssignmentStore struct {
+	db *sql.DB
+}
+
 
 func (s *AssignmentStore) Create(assignment *Assignment) error {
 	_, err := s.db.Exec(
@@ -121,7 +123,7 @@ type AssignmentWithGrade struct {
 	Grade sql.NullInt64
 }
 
-func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentWithGrade, error) {
+func (s *AssignmentStore) GetWithGrade(studentId int) ([]*AssignmentWithGrade, error) {
 	// Get all assignments for the course the user is enrolled in, along with
 	// the user's submission grade for each assignment (if it exists)
 	rows, err := s.db.Query(`SELECT 
@@ -136,9 +138,10 @@ func (s *AssignmentStore) GetWithGradeByStudentId(studentId int) ([]*AssignmentW
 		a.course_id ,
 		s.grade
 	FROM assignment a
-	JOIN student ON a.course_id = student.course_id
-	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = student.id
-	WHERE student.id = $1
+  JOIN student_course sc ON sc.course_id = a.course_id
+  JOIN person p ON sc.student_id = p.id
+	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = p.id
+	WHERE p.id = $1
   ORDER BY a.due_date`, studentId)
 
 	if err != nil {
@@ -259,6 +262,31 @@ func (s *AssignmentStore) Update(assignment *Assignment) error {
 
 	if err != nil {
 		return err
+	}
+
+	return tx.Commit()
+}
+
+func (s *AssignmentStore) UpdateAll(assignmentId int, grades [][]string) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, row := range grades[1:] {
+		studentNumber := row[0]
+		grade := row[1]
+		comments := row[2]
+		_, err := tx.Exec(`INSERT INTO submission (student_id, assignment_id,code,grade,submitted_on,comments,status,graded_on)
+    VALUES ($1, $2, 'Graded by Mr. Habib', $3, NOW(), $4, 'completed', NOW())`,
+			studentNumber,
+			assignmentId,
+			grade,
+			comments)
+		if err != nil {
+			return err
+		}
 	}
 
 	return tx.Commit()

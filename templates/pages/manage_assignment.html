@@ -10,20 +10,33 @@
     <article>
       <form
         {{ if .Assignment }}
-          hx-post="/teacher/courses/{{ .CourseId }}/assignments/{{ .Assignment.Id }}"
+          hx-put="/teacher/courses/{{ .CourseId }}/assignments/{{ .Assignment.Id }}"
         {{ else }}
-          hx-post="/teacher/courses/{{ .CourseId }}/assignments/new"
+          hx-post="/teacher/courses/{{ .CourseId }}/assignments"
         {{ end }}
         hx-target="body"
-        hx-push-url="true"
       >
-        {{ if .Error }}
-          <p style="color: var(--pico-del-color)">{{ .Error }}</p>
+        {{ if .Problems }}
+        <ul>
+          {{ range $_, $msg := .Problems }}
+            <lip style="color: var(--pico-del-color)">{{ $msg }}</li>
+          {{ end }}
+        </ul>
         {{ end }}
         <div class="grid">
           <fieldset>
             <label for="id">Id</label>
-            <input type="number" id="id" name="id" value="{{ if .Assignment }}{{ .Assignment.Id }}{{ end }}" readonly />
+            <input 
+            type="number" 
+            id="id" 
+            name="id" 
+            {{ $value := "" }}
+            {{ if .Assignment }}
+              {{ $value = .Assignment.Id }}
+            {{ end }}
+            value="{{ $value }}"
+            readonly 
+            />
           </fieldset>
           <fieldset>
             <label for="unit-name">Unit Name</label>
@@ -31,7 +44,13 @@
               type="text"
               id="unit-name"
               name="unit-name"
-              value="{{ if .Assignment }}{{ .Assignment.UnitName }}{{ end }}"
+              {{ $value := "" }}
+              {{ if .Assignment }}
+                {{ $value = .Assignment.UnitName }}
+              {{ else if .Body.UnitName }}
+                {{ $value = .Body.UnitName }}
+              {{ end }}
+              value="{{ $value }}"
               required
               autofocus
             />
@@ -42,10 +61,13 @@
               type="checkbox"
               id="visible"
               name="visible"
+              {{ $value := "" }}
               {{ if .Assignment }}
                 {{ if .Assignment.Visible }}
                   checked
                 {{ end }}
+              {{ else if .Body.Visible }}
+                checked
               {{ else }}
                 checked
               {{ end }}
@@ -58,25 +80,35 @@
             type="text"
             id="name"
             name="name"
-            value="{{ if .Assignment }}{{ .Assignment.Name }}{{ end }}"
+            {{ $value := "" }}
+            {{ if .Assignment }}
+              {{ $value = .Assignment.Name }}
+            {{ else if .Body.Name }}
+              {{ $value = .Body.Name }}
+            {{ end }}
+            value="{{ $value }}"
             required
           />
         </fieldset>
         <fieldset>
           <label for="description">Description</label>
           <textarea id="description" name="description" rows="15" required>
-{{ if .Assignment }}{{ .Assignment.Description }}{{ end }}</textarea
-          >
+{{ if .Assignment }}{{ .Assignment.Description }}{{ else if .Body }}{{ .Body.Description }}{{ end }}</textarea>
         </fieldset>
+
         <fieldset>
           <label for="required-filename">Required Filename</label>
           <input
             type="text"
             id="required-filename"
             name="required-filename"
+            {{ $value := "" }}
             {{ if .Assignment }}
-              value="{{ .Assignment.RequiredFilename }}"
+              {{ $value = .Assignment.RequiredFilename }}
+            {{ else if .Body.RequiredFilename }}
+              {{ $value = .Body.RequiredFilename }}
             {{ end }}
+            value="{{ $value }}"
             required
           />
         </fieldset>
@@ -89,48 +121,37 @@
             {{ $value := "" }}
             {{ if .Assignment }}
               {{ $value = .Assignment.Points }}
+            {{ else if .Body.Points }}
+              {{ $value = .Body.Points }}
             {{ else }}
-              {{ $value = 4 }}
+              {{ $value = "4" }}
             {{ end }}
             value="{{ $value }}"
             required
           />
         </fieldset>
-        <fieldset
-          _="def pad(n)
-              return String(n).padStart(2, '0')
-            end
-            def unixToLocaleDate(unix)
-              make a Date from (unix*1000) called d
-              return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours(l)) + ':' + pad(d.getMinutes())
-            end
-          "
-        >
-          <input
-            id="due-date-hidden"
-            type="hidden"
-            name="due-date"
-            value="{{ if .Assignment }}{{ .Assignment.DueDate }}{{ end }}"
-            _="on load
-            if my value is not ''
-              get next <input/> then set it's value to unixToLocaleDate(my value) 
-            end
-            "
-          />
+        <fieldset>
           <label for="due-date">Due Date</label>
           <input
             type="datetime-local"
             id="due-date"
-            _="on change
-              make a Date from (my value) called d
-              get previous <input/> then set it's value to Math.floor(d.getTime()/1000)"
+            name="due-date"
+            {{ if .Assignment }}
+              value="{{ .Assignment.DueDate.Format `2006-01-02T15:04` }}"
+            {{ end }}
+            {{ $value := "" }}
+            {{ if .Assignment }}
+              {{ $value = .Assignment.DueDate.Format "2006-01-02T15:04" }}
+            {{ else if .Body.DueDate }}
+              {{ $value = .Body.DueDate }}
+            {{ end }}
+            value="{{ $value }}"
           />
         </fieldset>
         <fieldset>
           <label for="pyfile-content">Pytest Content</label>
           <textarea rows="15" name="pyfile-content" id="pyfile-content">
-{{ if .Assignment }}{{ .Assignment.PytestCode }}{{ end }}</textarea
-          >
+{{ if .Assignment }}{{ .Assignment.PytestCode }}{{ else if .Body.PytestCode}}{{ .Body.PytestCode }}{{ end }}</textarea>
           <label for="pyfile-file">Pytest File</label>
           <input
             type="file"
@@ -160,14 +181,3 @@
     </article>
   </main>
 {{ end }}
-<nav aria-label="breadcrumb" style="justify-content: space-between">
-  <ul>
-    <li><a href="/teacher">Teacher Dashboard</a></li>
-    <li>Manage students</li>
-  </ul>
-  <ul>
-    <li>
-      <button id="logout-button" class="secondary">Logout</button>
-    </li>
-  </ul>
-</nav>

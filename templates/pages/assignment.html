@@ -7,19 +7,26 @@
   </header>
   <main class="container" _="js hljs.highlightAll()">
     <section>
+      {{ if .Problems }}
+        <p>{{ .Problems }}</p>
+      {{ end }}
+    </section>
+
+    <section>
       <div class="grid">
         <h2>{{ .Assignment.Name }}</h2>
-        <p>Due: {{ .Assignment.DueDate | unixToDate }}</p>
+        <p>Due: {{ .Assignment.DueDate.Format "Mon Jan 02 @ 15:04" }}</p>
       </div>
     </section>
     <hr />
 
-    <section >
+    <section>
       <details name="instructions" {{ if not .Submission }}open{{ end }}>
         <summary>
           <span style="font-size: 1.75rem; font-weight:700">Instructions</span>
         </summary>
-        <div _="init 
+        <div
+          _="init 
         for code in (<pre/> in me)
           add .relative to code
           make a <button.field-button/>
@@ -31,7 +38,8 @@
               wait 1s
               put 'Copy' into me`
           append it to code
-        end ">
+        end "
+        >
           {{ .Description }}
         </div>
       </details>
@@ -48,10 +56,19 @@
     </section>
 
     <form
-      hx-post="/app/assignments/{{ .Assignment.Id }}/submit"
+      hx-post="/app/assignments/{{ .Assignment.Id }}"
       hx-encoding="multipart/form-data"
       hx-target="body"
       hx-push-url="true"
+      _="on htmx:responseError
+      set txt to event.detail.xhr.responseText then 
+      log txt
+      get #toast
+      set it's innerText to txt
+      show it
+      wait 5s
+      hide it
+      "
     >
       {{ if .Submission }}
         <label for="file">Re-upload your assignment:</label>
@@ -64,24 +81,29 @@
         id="file"
         accept=".py"
         aria-describedby="file-constraints"
-        _="on change
+        required
+        _="init set my value to '' then get next <button/> then add @disabled to it
+        on change
         set rfn to '{{ .Assignment.RequiredFilename }}'
         if my.files[0] is null
+          get next <button/> then add @disabled to it
           exit
         end
 
         if my.files[0].name is not rfn
           set my @aria-invalid to 'true'
           set my value to ''
+          get next <button/> then add @disabled to it
         else
           set my @aria-invalid to 'false'
+          get next <button/> then remove @disabled from it
         end"
       />
       <small id="file-constraints">
         Please upload
         {{ .Assignment.RequiredFilename }}
       </small>
-      <button type="submit" {{ if .DisableSubmit }}disabled{{ end }}>
+      <button type="submit" disabled>
         {{ if .Submission }}
           Re-grade Assignment
         {{ else }}

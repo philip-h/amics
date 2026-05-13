@@ -6,25 +6,26 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/philip-h/amics/internal/store"
+	"github.com/philip-h/amics/internal/server"
+	"github.com/philip-h/amics/internal/storage"
 )
 
 type Worker struct {
-	store      store.Storage
+	store      *storage.Storage
 	logger     *slog.Logger
 	testRunner *TestRunner
 	stopChan   chan bool
 }
 
-func NewWorker(db *sql.DB, logger *slog.Logger) (*Worker, error) {
-	store := store.New(db)
+func NewWorker(db *sql.DB, logger *server.Logger) (*Worker, error) {
+	store := storage.New(db)
 	testRunner, err := NewTestRunner()
 	if err != nil {
 		return nil, err
 	}
 	return &Worker{
 		store:      store,
-		logger:     logger,
+		logger:     logger.L,
 		testRunner: testRunner,
 		stopChan:   make(chan bool),
 	}, nil

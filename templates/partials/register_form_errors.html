@@ -1,12 +1,12 @@
 {{ define "register_form_errors" }}
   {{ if .Body.StudentNumber }}
-    {{ if .Errors.student_number }}
+    {{ if .Problems.student_number }}
       <small
         hx-swap-oob="true"
         id="student-number-constraints"
         _="on load set @aria-invalid of previous <input/> to true"
       >
-        {{ .Errors.student_number }}
+        {{ .Problems.student_number }}
       </small>
     {{ else }}
       <small
@@ -18,10 +18,23 @@
       </small>
     {{ end }}
   {{ end }}
+
+  {{ if .Body.FirstName }}
+    {{ if .Problems.first_name }}
+      <small hx-swap-oob="true" id="first-name-constraints" _="on load set @aria-invalid of previous <input/> to true">
+        {{ .Problems.first_name }}
+      </small>
+    {{ else }}
+      <small hx-swap-oob="true" id="first-name-constraints" _="on load set @aria-invalid of previous <input/> to false">
+        First name required
+      </small>
+    {{ end }}
+  {{ end }}
+
   {{ if .Body.Username }}
-    {{ if .Errors.username }}
+    {{ if .Problems.username }}
       <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to true">
-        {{ .Errors.username }}
+        {{ .Problems.username }}
       </small>
     {{ else }}
       <small hx-swap-oob="true" id="username-constraints" _="on load set @aria-invalid of previous <input/> to false">
@@ -31,9 +44,9 @@
   {{ end }}
 
   {{ if .Body.Password }}
-    {{ if .Errors.password }}
+    {{ if .Problems.password }}
       <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to true">
-        {{ .Errors.password }}
+        {{ .Problems.password }}
       </small>
     {{ else }}
       <small hx-swap-oob="true" id="password-constraints" _="on load set @aria-invalid of previous <input/> to false">
@@ -43,9 +56,9 @@
   {{ end }}
 
   {{ if .Body.JoinCode }}
-    {{ if .Errors.join_code }}
+    {{ if .Problems.join_code }}
       <small hx-swap-oob="true" id="join-code-constraints" _="on load set @aria-invalid of previous <input/> to true">
-        {{ .Errors.join_code }}
+        {{ .Problems.join_code }}
       </small>
     {{ else }}
       <small hx-swap-oob="true" id="join-code-constraints" _="on load set @aria-invalid of previous <input/> to false">
