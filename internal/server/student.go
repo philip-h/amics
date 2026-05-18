@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"html/template"
 	"math"
 	"net/http"
@@ -12,6 +13,14 @@ import (
 	"github.com/philip-h/amics/internal/storage"
 	"github.com/yuin/goldmark"
 )
+
+func setLocation(w http.ResponseWriter, r *http.Request, url string) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Location", url)
+	} else {
+		http.Redirect(w, r, url, http.StatusSeeOther)
+	}
+}
 
 func handleStudentDashboardGet(store *storage.Storage, tmpl *template.Template) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
@@ -54,7 +63,7 @@ func handleStudentDashboardGet(store *storage.Storage, tmpl *template.Template) 
 	})
 }
 
-func handleStudentAssignmentGet(logger *Logger, store *storage.Storage, tmpl *template.Template) http.Handler {
+func handleStudentAssignmentGet(store *storage.Storage, tmpl *template.Template) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		studentId := r.Context().Value(personKey).(int)
@@ -110,8 +119,7 @@ func handleStudentAssignmentGet(logger *Logger, store *storage.Storage, tmpl *te
 	})
 }
 
-func handleStudentAssignmentPost(logger *Logger, store *storage.Storage) http.Handler {
-
+func handleStudentAssignmentPost(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		studentId := r.Context().Value(personKey).(int)
@@ -121,33 +129,40 @@ func handleStudentAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 
-		// Limit upload size to 2MB
-		err = r.ParseMultipartForm(2 << 20)
+		// Parse up to 10 MB in memory; rest stored in temp files
+		err = r.ParseMultipartForm(10 << 20)
 		if err != nil {
-			return err
+			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 
 		file, handler, err := r.FormFile("file")
 		if err != nil {
-			return err
+			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 		defer file.Close()
 
 		// Read the file content into a byte slice
 		fileContent := make([]byte, handler.Size)
-		_, err = file.Read(fileContent)
+		nbytes, err := file.Read(fileContent)
+		if nbytes == 0 {
+			return httpe.ServerError(errors.New("Content of "+handler.Filename+" is empty"), http.StatusUnprocessableEntity)
+		}
 		if err != nil {
 			return err
 		}
 
-		// Status is set to pending by deault
-		// all pending statuses will be picked up byeeorker started in main function
-		err = store.Submissions.Create(assignmentId, studentId, string(fileContent))
+		fileContentStr := strings.TrimSpace(string(fileContent))
+		if len(fileContentStr) == 0 {
+			return httpe.ServerError(errors.New("Content of "+handler.Filename+" is empty"), http.StatusUnprocessableEntity)
+		} 
+		// Status is set to 'grading' by deault
+		// all 'grading' statuses will be picked up byeeorker started in main function
+		err = store.Submissions.Create(assignmentId, studentId, fileContentStr)
 		if err != nil {
 			return err
 		}
 
-		w.Header().Set("HX-Redirect", "/app/assignments/"+strconv.Itoa(assignmentId))
+		setLocation(w, r, "/app/assignments/"+strconv.Itoa(assignmentId))
 		return nil
 	})
 }
@@ -159,7 +174,7 @@ func handleStudentAssignmentPoll(store *storage.Storage, tmpl *template.Template
 
 		assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
 		if err != nil {
-			return err
+			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 
 		aws, err := store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(assignmentId, studentId)

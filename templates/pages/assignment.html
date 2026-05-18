@@ -60,15 +60,6 @@
       hx-encoding="multipart/form-data"
       hx-target="body"
       hx-push-url="true"
-      _="on htmx:responseError
-      set txt to event.detail.xhr.responseText then 
-      log txt
-      get #toast
-      set it's innerText to txt
-      show it
-      wait 5s
-      hide it
-      "
     >
       {{ if .Submission }}
         <label for="file">Re-upload your assignment:</label>

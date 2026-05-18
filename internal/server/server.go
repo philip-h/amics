@@ -39,7 +39,7 @@ type NavLink struct {
 func NewServer(
 	logger *Logger,
 	store *storage.Storage,
-	templates map[string]*template.Template,
+	tmpls map[string]*template.Template,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -47,7 +47,7 @@ func NewServer(
 		mux,
 		logger,
 		store,
-		templates,
+		tmpls,
 	)
 
 	var handler http.Handler = mux

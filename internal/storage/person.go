@@ -31,25 +31,22 @@ func (s *PersonStore) Create(student *Person, courseId int) error {
 	}
 	defer tx.Rollback()
 
-	var id int64
-	err = tx.QueryRow(`
-  INSERT INTO person (student_number, first_name, username, password) 
-  VALUES ($1, $2, $3, $4)
-  RETURNING id`,
-		student.Id,
-		student.FirstName,
-		student.Username,
-		student.Password).Scan(&id)
+	_, err = tx.Exec(`
+  INSERT INTO person (id, first_name, username, password) 
+  VALUES ($1, $2, $3, $4)`,
+	student.Id,
+	student.FirstName,
+	student.Username,
+	student.Password)
+
 	if err != nil {
 		return err
 	}
 
-	student.Id = int(id)
-
 	_, err = tx.Exec(`
-  INSERT INTO student_course (student_id, couse_id)
+  INSERT INTO student_course (student_id, course_id)
   VALUES ($1, $2)`,
-		id, courseId,
+		student.Id, courseId,
 	)
 	if err != nil {
 		return err

@@ -6,28 +6,35 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/philip-h/amics/internal/httpe"
 	"github.com/philip-h/amics/internal/storage"
 )
+
+func redirect(w http.ResponseWriter, r *http.Request, url string) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", url)
+	} else {
+		http.Redirect(w, r, url, http.StatusSeeOther)
+	}
+}
 
 // ============================================================================
 // Login
 // ============================================================================
 func handleAuthLoginGet(tmpl *template.Template) http.Handler {
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
-			// Check to see if the user is already logged in, if so redirect to home page
-			_, err := r.Cookie("session_id")
-			if err == nil {
-				http.Redirect(w, r, "/app", http.StatusSeeOther)
-				return
-			}
+		// Check to see if the user is already logged in, if so redirect to home page
+		personId := r.Context().Value(personKey)
+		if personId != nil {
+			redirect(w, r, "/app")
+			return nil
+		}
 
-			body := make(map[string]string)
-			problems := make(map[string]string)
-			tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-		},
-	)
+		body := make(map[string]string)
+		problems := make(map[string]string)
+		return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+	})
 }
 
 func handleAuthLoginPost(
@@ -41,79 +48,72 @@ func handleAuthLoginPost(
 		RememberMe bool
 	}
 
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
-			// Read the request body from form values
-			body := &request{
-				Username:   r.PostFormValue("username"),
-				Password:   r.PostFormValue("password"),
-				RememberMe: false,
-			}
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		// Read the request body from form values
+		body := &request{
+			Username:   r.PostFormValue("username"),
+			Password:   r.PostFormValue("password"),
+			RememberMe: false,
+		}
 
-			problems := validateLoginReq(body.Username, body.Password)
-			if len(problems) != 0 {
-				tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-				return
-			}
+		problems := validateLoginReq(body.Username, body.Password)
+		if len(problems) != 0 {
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+		}
 
-			// Look for person in the database
-			person, err := store.People.GetByUsername(body.Username)
-			if err != nil {
-				logger.L.Error("Could not get person by username", slog.String("msg", err.Error()))
-				problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
-				body.Password = ""
-				tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-				return
-			}
+		// Look for person in the database
+		person, err := store.People.GetByUsername(body.Username)
+		if err != nil {
+			logger.L.Error("Could not get person by username", slog.String("msg", err.Error()))
+			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
+			body.Password = ""
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+		}
 
-			if person == nil {
-				problems["server"] = "Hmm, I could not find your account."
-				logger.L.Info("Cannot find user", "problems", problems)
-				body.Password = ""
-				tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-				return
-			}
+		if person == nil {
+			problems["server"] = "Hmm, I could not find your account."
+			logger.L.Info("Cannot find user", "username", body.Username)
+			body.Password = ""
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+		}
 
-			if ok := store.People.CompareHashAndPassword(person.Password, body.Password); !ok {
-				problems["server"] = "Hmm, I could not find your account."
-				logger.L.Info("Incorrect password", "problems", problems)
-				body.Password = ""
-				tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-				return
-			}
+		if ok := store.People.CompareHashAndPassword(person.Password, body.Password); !ok {
+			problems["server"] = "Hmm, I could not find your account."
+			logger.L.Info("Incorrect password", "problems", problems)
+			body.Password = ""
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+		}
 
-			// Create session
-			sessionId, err := store.Sessions.Create(person.Id, body.RememberMe)
-			if err != nil {
-				logger.L.Error("Could not create session", slog.String("msg", err.Error()))
-				problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
-				body.Password = ""
-				tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-				return
-			}
+		// Create session
+		sessionId, err := store.Sessions.Create(person.Id, body.RememberMe)
+		if err != nil {
+			logger.L.Error("Could not create session", slog.String("msg", err.Error()))
+			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
+			body.Password = ""
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
+		}
 
-			var maxAge int
-			if body.RememberMe {
-				// 7 days in seconds
-				maxAge = 7 * 24 * 60 * 60
-			} else {
-				// expires when browser is closed!
-				maxAge = 0
-			}
+		var maxAge int
+		if body.RememberMe {
+			// 7 days in seconds
+			maxAge = 7 * 24 * 60 * 60
+		} else {
+			// expires when browser is closed!
+			maxAge = 0
+		}
 
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_id",
-				Value:    sessionId,
-				HttpOnly: true,
-				MaxAge:   maxAge,
-				SameSite: http.SameSiteLaxMode,
-			})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    sessionId,
+			HttpOnly: true,
+			MaxAge:   maxAge,
+			SameSite: http.SameSiteLaxMode,
+		})
 
-			// Redirect to home page and send back the cookie
-			http.Redirect(w, r, "/app", http.StatusSeeOther)
-		},
-	)
-
+		redirect(w, r, "/app")
+		return nil
+	})
 }
 
 func handleAuthLoginValidation(tmpl *template.Template) http.Handler {
@@ -121,18 +121,15 @@ func handleAuthLoginValidation(tmpl *template.Template) http.Handler {
 		Username string
 		Password string
 	}
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		body := &request{
+			Username: r.PostFormValue("username"),
+			Password: r.PostFormValue("password"),
+		}
+		problems := validateLoginReq(body.Username, body.Password)
 
-			body := &request{
-				Username: r.PostFormValue("username"),
-				Password: r.PostFormValue("password"),
-			}
-			problems := validateLoginReq(body.Username, body.Password)
-
-			tmpl.ExecuteTemplate(w, "login_form_errors", map[string]any{"Problems": problems, "Body": body})
-		},
-	)
+		return tmpl.ExecuteTemplate(w, "login_form_errors", map[string]any{"Problems": problems, "Body": body})
+	})
 }
 
 // ============================================================================
@@ -140,19 +137,19 @@ func handleAuthLoginValidation(tmpl *template.Template) http.Handler {
 // ============================================================================
 
 func handleAuthRegisterGet(tmpl *template.Template) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		// Check to see if the user is already logged in, if so redirect to home page
-		_, err := r.Cookie("session_id")
-
-		if err != http.ErrNoCookie {
-			http.Redirect(w, r, "/app", http.StatusSeeOther)
-			return
+		personId := r.Context().Value(personKey)
+		if personId != nil {
+			redirect(w, r, "/app")
+			return nil
 		}
+
 		// If the route has a query parameter for the join code, pass it into the template
 		joinCode := r.URL.Query().Get("joincode")
 		body := make(map[string]string)
 		problems := make(map[string]string)
-		tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "JoinCode": joinCode, "Problems": problems})
+		return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "JoinCode": joinCode, "Problems": problems})
 	})
 }
 
@@ -166,7 +163,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage, tmpl *templa
 		JoinCode      string
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		// Read the request body from form values
 		body := &request{
@@ -187,27 +184,20 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage, tmpl *templa
 		)
 
 		if len(problems) != 0 {
-			tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-			return
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
 		}
+
 		course, err := store.Courses.GetByJoinCode(body.JoinCode)
 		if err != nil {
 			logger.L.Error("Could not get course by join code", slog.String("err", err.Error()))
 			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
 			body.Password = ""
-			tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-			return
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
 		}
 
-		// Create a user
-		intStudentNumber, err := strconv.Atoi(body.StudentNumber)
-		if err != nil {
-			problems["student_number"] = "Student number must be only numeric values"
-			body.Password = ""
-			body.StudentNumber = ""
-			tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-			return
-		}
+		// Already validated
+		intStudentNumber, _ := strconv.Atoi(body.StudentNumber)
 		person := &storage.Person{
 			Id:       intStudentNumber,
 			Username: body.Username,
@@ -218,8 +208,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage, tmpl *templa
 		if err != nil {
 			logger.L.Error("Could not create student"+body.Username, slog.String("msg", err.Error()))
 			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
-			tmpl.ExecuteTemplate(w, "register", map[string]any{"Body": body, "Problems": problems})
-			return
+			return tmpl.ExecuteTemplate(w, "register", map[string]any{"Body": body, "Problems": problems})
 		}
 
 		// Create session
@@ -228,8 +217,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage, tmpl *templa
 			logger.L.Error("Could not create session", slog.String("msg", err.Error()))
 			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
 			body.Password = ""
-			tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
-			return
+			return tmpl.ExecuteTemplate(w, "base", map[string]any{"Body": body, "Problems": problems})
 		}
 
 		http.SetCookie(w, &http.Cookie{
@@ -240,8 +228,8 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage, tmpl *templa
 			SameSite: http.SameSiteLaxMode,
 		})
 
-		// Redirect to home page and send back the cookie
-		http.Redirect(w, r, "/app", http.StatusSeeOther)
+		redirect(w, r, "/app")
+		return nil
 	})
 }
 
@@ -253,28 +241,25 @@ func handleAuthRegisterValidation(store *storage.Storage, tmpl *template.Templat
 		Password      string
 		JoinCode      string
 	}
-	return http.HandlerFunc(
-		func(w http.ResponseWriter, r *http.Request) {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+		body := &request{
+			StudentNumber: r.PostFormValue("student-number"),
+			FirstName:     r.PostFormValue("first-name"),
+			Username:      r.PostFormValue("username"),
+			Password:      r.PostFormValue("password"),
+			JoinCode:      r.PostFormValue("join-code"),
+		}
+		problems := validateRegisterReq(
+			store,
+			body.StudentNumber,
+			body.FirstName,
+			body.Username,
+			body.Password,
+			body.JoinCode,
+		)
 
-			body := &request{
-				StudentNumber: r.PostFormValue("student-number"),
-				FirstName:     r.PostFormValue("first-name"),
-				Username:      r.PostFormValue("username"),
-				Password:      r.PostFormValue("password"),
-				JoinCode:      r.PostFormValue("join-code"),
-			}
-			problems := validateRegisterReq(
-				store,
-				body.StudentNumber,
-				body.FirstName,
-				body.Username,
-				body.Password,
-				body.JoinCode,
-			)
-
-			tmpl.ExecuteTemplate(w, "register_form_errors", map[string]any{"Problems": problems, "Body": body})
-		},
-	)
+		return tmpl.ExecuteTemplate(w, "register_form_errors", map[string]any{"Problems": problems, "Body": body})
+	})
 }
 
 // ============================================================================
@@ -301,7 +286,6 @@ func handleAuthLogout(logger *Logger, store *storage.Storage) http.Handler {
 			HttpOnly: true,
 			MaxAge:   -1,
 		})
-		w.Header().Set("HX-Redirect", "/")
-		w.WriteHeader(http.StatusNoContent)
+		redirect(w, r, "/login")
 	})
 }

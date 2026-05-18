@@ -8,18 +8,24 @@ import (
 	"github.com/philip-h/amics/internal/storage"
 )
 
-const personKey = "person_id"
-const roleKey = "role"
+const (
+	personKey = "person_id"
+	roleKey = "role"
+) 
 
 func requiresStudent(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookieValue := r.Context().Value(roleKey)
-		if cookieValue == nil {
-			http.Error(w, "Not allowed", http.StatusForbidden)
+		roleFromContext := r.Context().Value(roleKey)
+		if roleFromContext == nil {
+			if r.Header.Get("HX-Request") == "true" {
+				w.Header().Set("HX-Redirect", "/login")
+			} else {
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			}
 			return
 		}
 
-		role := cookieValue.(string)
+		role := roleFromContext.(string)
 		if role != "student" && role != "teacher" {
 			http.Error(w, "Not allowed", http.StatusForbidden)
 			return
@@ -31,13 +37,13 @@ func requiresStudent(h http.Handler) http.Handler {
 
 func requiresTeacher(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookieValue := r.Context().Value(roleKey)
-		if cookieValue == nil {
+		roleFromContext := r.Context().Value(roleKey)
+		if roleFromContext == nil {
 			http.Error(w, "Not allowed", http.StatusForbidden)
 			return
 		}
 
-		role := cookieValue.(string)
+		role := roleFromContext.(string)
 		if role != "teacher" {
 			http.Error(w, "Not allowed", http.StatusForbidden)
 			return
@@ -50,14 +56,19 @@ func requiresTeacher(h http.Handler) http.Handler {
 func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
-		if err != nil {
+		if err == http.ErrNoCookie {
 			h.ServeHTTP(w, r)
 			return
 		}
 
 		session, err := store.Sessions.GetById(cookie.Value)
 		if err != nil {
-			logger.L.Error("Could not get session by id", "err", err)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    "",
+				HttpOnly: true,
+				MaxAge:   -1,
+			})
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -75,10 +86,22 @@ func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler)
 		person, err := store.People.GetById(session.PersonId)
 		if err != nil {
 			logger.L.Error("Could not get person by id", "err", err)
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    "",
+				HttpOnly: true,
+				MaxAge:   -1,
+			})
 			h.ServeHTTP(w, r)
 			return
 		}
 		if person == nil {
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    "",
+				HttpOnly: true,
+				MaxAge:   -1,
+			})
 			h.ServeHTTP(w, r)
 			return
 		}

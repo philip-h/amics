@@ -4,7 +4,7 @@
 {{ define "content" }}
   <main class="container">
     <article>
-      <h1>Login to amics</h1>
+      <h1>Register for amics</h1>
       <form hx-post="/register" hx-push-url="true" hx-target="body">
         {{ if and .Problems .Problems.server }}<p style="color: var(--pico-del-color)">{{ .Problems.server }}</p>{{ end }}
         {{ if .Problems }}

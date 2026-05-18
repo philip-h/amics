@@ -43,11 +43,11 @@ func addRoutes(
 		))
 	mux.Handle("GET /app/assignments/{assignmentId}",
 		requiresStudent(
-			handleStudentAssignmentGet(logger, store, templates["assignment"]),
+			handleStudentAssignmentGet(store, templates["assignment"]),
 		))
 	mux.Handle("POST /app/assignments/{assignmentId}",
 		requiresStudent(
-			handleStudentAssignmentPost(logger, store),
+			handleStudentAssignmentPost(store),
 		))
 	mux.Handle("GET /app/assignments/{assignmentId}/poll",
 		requiresStudent(
