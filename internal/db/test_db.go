@@ -2,6 +2,8 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
+	"os"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -28,8 +30,13 @@ func NewTestDB() (*IntegrationTestDB, error) {
 		return nil, err
 	}
 
+  cwd, err := os.Getwd()
+  if err != nil {
+    panic(err)
+  }
+  fmt.Println(cwd)
 	m, err := migrate.New(
-		"file:///Users/philiphabib/dev/git/amics/internal/db/migrations",
+		"file://../db/migrations",
 		testConnStr,
 	)
 

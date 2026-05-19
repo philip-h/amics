@@ -43,7 +43,7 @@ func run(
 	// DB Setup
 	dbConn := getenv("DB_CONN")
 	if dbConn == "" {
-		dbConn = "postgresql://postgres@127.0.0.1/amics_test?sslmode=disable"
+		dbConn = "postgresql://postgres@127.0.0.1/amics?sslmode=disable"
 	}
 
 	dbConfig := &db.DbConfig{
