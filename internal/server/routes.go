@@ -105,11 +105,15 @@ func addRoutes(
 		requiresTeacher(
 			handleTeacherCourseGradesExport(logger, store),
 		))
+	mux.Handle("GET /teacher/courses/{courseId}/assignments/{assignmentId}/export_code",
+		requiresTeacher(
+			handleTeacherCodeExport(store),
+		))
 
 	// teacher student management
 	mux.Handle("GET /teacher/courses/{courseId}/students",
 		requiresTeacher(
-			handleTeacherStudentsGet(logger, store, templates["manage_students"]),
+			handleTeacherStudentsGet(store, templates["manage_students"]),
 		))
 	mux.Handle("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset",
 		requiresTeacher(

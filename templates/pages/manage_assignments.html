@@ -18,6 +18,8 @@
               <tr>
                 <th scope="col">Name</th>
                 <th scope="col">Due</th>
+                <th scope="col">Import</th>
+                <th scope="col">Export</th>
               </tr>
             </thead>
             {{ range .Assignments }}
@@ -29,6 +31,7 @@
                 </th>
                 <td>{{ .DueDate.Format "Mon Jan 2 @ 15:04"  }}</td>
                 <td><a href="/teacher/courses/{{ .CourseId }}/assignments/{{ .Id }}/import">Import Grades</a></td>
+                <td><a hx-boost="false" href="/teacher/courses/{{ .CourseId }}/assignments/{{ .Id }}/export_code">Export Code</a></td>
               </tr>
             {{ end }}
           </tbody>

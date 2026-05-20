@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -42,7 +43,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
     WHERE student_id = $1 AND assignment_id = $2`,
 		studentId, assignmentId).Scan(&submissionId)
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		return fmt.Errorf("Could not select id from submission: %w", err)
 	}
 
 	if submissionId > 0 {
@@ -52,7 +53,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
       SET code=$1, status='grading', comments='Working on it...', submitted_on = NOW()
       WHERE id = $2`, code, submissionId)
 		if err != nil {
-			return err
+			return fmt.Errorf("Could not update submission: %w", err)
 		}
 	} else {
 		// Insert new submission
@@ -63,11 +64,14 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 			assignmentId,
 			code)
 		if err != nil {
-			return err
+			return fmt.Errorf("Could not insert into submission: %w", err)
 		}
 	}
 	err = tx.Commit()
-	return err
+	if err != nil {
+		return fmt.Errorf("Could not commit tx: %w", err)
+	}
+	return nil
 }
 
 func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
@@ -132,6 +136,42 @@ func (s *SubmissionStore) GetByAssignmentAndStudentIds(assignmentId, studentId i
 	return submission, nil
 }
 
+func (s *SubmissionStore) GetByAssignmentId(assignmentId int) ([]*Submission, error) {
+	rows, err := s.db.Query(`
+  SELECT id, student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on
+  FROM submission
+  WHERE assignment_id = $1`, assignmentId)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	submissions := []*Submission{}
+	for rows.Next() {
+		submission := &Submission{}
+		err := rows.Scan(
+			&submission.Id,
+			&submission.StudentId,
+			&submission.AssignmentId,
+			&submission.Code,
+			&submission.Grade,
+			&submission.SubmittedOn,
+			&submission.Comments,
+			&submission.Status,
+			&submission.GradedOn)
+		if err != nil {
+			return nil, err
+		}
+		submissions = append(submissions, submission)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return submissions, nil
+}
+
 func (s *SubmissionStore) Update(submission *Submission) error {
 	_, err := s.db.Exec(`UPDATE submission
   SET grade = $1, comments = $2, status = $3, graded_on = NOW() 
@@ -141,7 +181,7 @@ func (s *SubmissionStore) Update(submission *Submission) error {
 }
 
 func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, error) {
-  rows, err := s.db.Query(`SELECT person.id, assignment.name, submission.grade
+	rows, err := s.db.Query(`SELECT person.id, assignment.name, submission.grade
   FROM assignment
   JOIN student_course on student_course.course_id = assignment.course_id
   JOIN person on student_course.student_id = person.id
@@ -149,7 +189,7 @@ func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, e
     ON submission.student_id = person.id 
     AND submission.assignment_id = assignment.id
   WHERE assignment.course_id = $1 
-  ORDER BY person.id`, courseId);
+  ORDER BY person.id`, courseId)
 
 	if err != nil {
 		return nil, err

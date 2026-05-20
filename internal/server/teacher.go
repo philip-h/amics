@@ -1,6 +1,7 @@
 package server
 
 import (
+	"archive/zip"
 	"encoding/csv"
 	"errors"
 	"html/template"
@@ -564,7 +565,57 @@ func handleTeacherCourseGradesExport(logger *Logger, store *storage.Storage) htt
 	})
 }
 
-func handleTeacherStudentsGet(logger *Logger, store *storage.Storage, tmpl *template.Template) http.Handler {
+func handleTeacherCodeExport(store *storage.Storage) http.Handler {
+	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
+
+		_, err := strconv.Atoi(r.PathValue("courseId"))
+		if err != nil {
+			return httpe.ServerError(err, http.StatusBadRequest)
+		}
+
+		assignmentId, err := strconv.Atoi(r.PathValue("assignmentId"))
+		if err != nil {
+			return httpe.ServerError(err, http.StatusBadRequest)
+		}
+
+		submissions, err := store.Submissions.GetByAssignmentId(assignmentId)
+		if err != nil {
+			return err
+		}
+		assignment, err := store.Assignments.GetById(assignmentId)
+		if err != nil {
+			return err
+		}
+
+		// prep the zip archive in w
+		zipWriter := zip.NewWriter(w)
+
+		for _, submission := range submissions {
+			student_number := strconv.Itoa(submission.StudentId)
+			fileName := student_number + "_" + assignment.RequiredFilename
+			f, err := zipWriter.Create(fileName)
+			if err != nil {
+				return err
+			}
+			if _, err := f.Write([]byte(submission.Code)); err != nil {
+				return err
+			}
+		}
+
+		// send it to the client
+		zipName := assignment.Name + "_code.zip"
+		w.Header().Set("Content-Disposition", "attachment; filename="+zipName)
+		w.Header().Set("Content-Type", "application/zip")
+		if err := zipWriter.Close(); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}
+
+func handleTeacherStudentsGet(store *storage.Storage, tmpl *template.Template) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		courseId, err := strconv.Atoi(r.PathValue("courseId"))
@@ -613,7 +664,7 @@ func handleTeacherStudentPasswordReset(logger *Logger, store *storage.Storage) h
 		}
 
 		w.Header().Set("HX-Redirect", "/teacher/courses/"+strconv.Itoa(courseId)+"/students")
-    return nil
+		return nil
 
 	})
 }
@@ -624,12 +675,12 @@ func handleTeacherStudentGet(logger *Logger, store *storage.Storage, tmpl *templ
 		courseId := r.PathValue("courseId")
 		studentId, err := strconv.Atoi(r.PathValue("studentId"))
 		if err != nil {
-      return httpe.ServerError(err, http.StatusBadRequest)
+			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 
 		assignments, err := store.Assignments.GetWithGrade(studentId)
 		if err != nil {
-      return err
+			return err
 		}
 
 		// Organize assignment by units for nicer rendering
