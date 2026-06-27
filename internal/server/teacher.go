@@ -545,13 +545,13 @@ func handleTeacherCourseGradesExport(logger *Logger, store *storage.Storage) htt
 
 		// build csv
 		rawCSV := make([][]string, len(studentGrades)+1)
-		rawCSV[0] = []string{"Student Number", "Assignment Name", "Grade"}
+		rawCSV[0] = []string{"Student Number", "First Name", "Assignment Name", "Grade"}
 		for i, student := range studentGrades {
 			grade := "NULL"
 			if student.Grade.Valid {
 				grade = strconv.Itoa(int(student.Grade.Int16))
 			}
-			rawCSV[i+1] = []string{student.StudentNumber, student.AssignmentName, grade}
+			rawCSV[i+1] = []string{student.StudentNumber, student.FirstName, student.AssignmentName, grade}
 		}
 
 		// Set headers to force download

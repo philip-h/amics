@@ -20,6 +20,7 @@ type Submission struct {
 
 type SubmissionExport struct {
 	StudentNumber  string
+	FirstName      string
 	AssignmentName string
 	Grade          sql.NullInt16
 }
@@ -181,7 +182,7 @@ func (s *SubmissionStore) Update(submission *Submission) error {
 }
 
 func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, error) {
-	rows, err := s.db.Query(`SELECT person.id, assignment.name, submission.grade
+	rows, err := s.db.Query(`SELECT person.id, person.first_name, assignment.name, submission.grade
   FROM assignment
   JOIN student_course on student_course.course_id = assignment.course_id
   JOIN person on student_course.student_id = person.id
@@ -199,7 +200,7 @@ func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, e
 	submissionExport := []*SubmissionExport{}
 	for rows.Next() {
 		export := &SubmissionExport{}
-		err := rows.Scan(&export.StudentNumber, &export.AssignmentName, &export.Grade)
+		err := rows.Scan(&export.StudentNumber, &export.FirstName, &export.AssignmentName, &export.Grade)
 		if err != nil {
 			return nil, err
 		}

@@ -35,7 +35,7 @@ func HandlerFunc(hf func(http.ResponseWriter, *http.Request) error) http.Handler
 			if errors.As(err, &se) {
 				http.Error(w, se.Error(), se.status)
 			} else {
-				http.Error(w, "OH SHIT", http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		}
 	}
