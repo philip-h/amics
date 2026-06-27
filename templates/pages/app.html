@@ -14,7 +14,17 @@
     {{ if .Assignments }}
       <div class="grid">
         <h2>Assignments</h2>
-        <h3 style="justify-self: flex-end">{{ .StudentAverage }}%</h3>
+        <h3 data-showing="false" style="justify-self: flex-end; user-select: none;"
+          _="on click
+          if my @data-showing is 'true'
+            set my textContent to '</>'
+            set my @data-showing to 'false'
+          else
+            set my textContent to '{{ .StudentAverage }}%'
+            set my @data-showing to 'true'
+          ">
+          &lt;/&gt;
+        </h3>
       </div>
       {{ range $unit, $ass := .Assignments }}
         <h3>{{ $unit }}</h3>
