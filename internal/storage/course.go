@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 )
@@ -19,14 +20,14 @@ type CourseStore struct {
 	db *sql.DB
 }
 
-func (s *CourseStore) Create(course *Course, teacherId int) error {
-	tx, err := s.db.Begin()
+func (s *CourseStore) Create(ctx context.Context, course *Course, teacherId int) error {
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db(course.create): %w", err)
 	}
 	defer tx.Rollback()
 
-	err = tx.QueryRow(`
+	err = tx.QueryRowContext(ctx, `
   INSERT INTO course (course_code, section, name, year, semester, join_code)
   VALUES ($1, $2, $3, $4)
   RETURNING id`,
@@ -42,7 +43,7 @@ func (s *CourseStore) Create(course *Course, teacherId int) error {
 		return fmt.Errorf("db(course.create): %w", err)
 	}
 
-	_, err = tx.Exec(`
+	_, err = tx.ExecContext(ctx, `
   INSERT INTO teacher_course
   VALUES ($1, $2)
   ON CONFLICT (teacher_id, course_id)
@@ -57,10 +58,10 @@ func (s *CourseStore) Create(course *Course, teacherId int) error {
 	return tx.Commit()
 }
 
-func (s *CourseStore) GetById(courseId int) (*Course, error) {
+func (s *CourseStore) GetById(ctx context.Context, courseId int) (*Course, error) {
 	course := &Course{}
 
-	err := s.db.QueryRow(`SELECT 
+	err := s.db.QueryRowContext(ctx, `SELECT 
 		id, 
 		course_code,
 		section,
@@ -86,10 +87,10 @@ func (s *CourseStore) GetById(courseId int) (*Course, error) {
 	return course, nil
 }
 
-func (s *CourseStore) GetByJoinCode(joinCode string) (*Course, error) {
+func (s *CourseStore) GetByJoinCode(ctx context.Context, joinCode string) (*Course, error) {
 	course := &Course{}
 
-	err := s.db.QueryRow(`SELECT 
+	err := s.db.QueryRowContext(ctx, `SELECT 
 		id, 
 		course_code,
 		section,
@@ -115,8 +116,8 @@ func (s *CourseStore) GetByJoinCode(joinCode string) (*Course, error) {
 	return course, nil
 }
 
-func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
-	rows, err := s.db.Query(`SELECT 
+func (s *CourseStore) GetByTeacherId(ctx context.Context, teacherId int) ([]*Course, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT 
 	id, 
 	course_code,
 	section,
@@ -156,8 +157,8 @@ func (s *CourseStore) GetByTeacherId(teacherId int) ([]*Course, error) {
 	return courses, nil
 }
 
-func (s *CourseStore) GetByStudentId(studentId int) ([]*Course, error) {
-	rows, err := s.db.Query(`SELECT 
+func (s *CourseStore) GetByStudentId(ctx context.Context, studentId int) ([]*Course, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT 
 		id, 
 		course_code,
 		section,
@@ -197,8 +198,8 @@ func (s *CourseStore) GetByStudentId(studentId int) ([]*Course, error) {
 	return courses, nil
 }
 
-func (s *CourseStore) Update(course *Course) error {
-	_, err := s.db.Exec(`UPDATE course
+func (s *CourseStore) Update(ctx context.Context, course *Course) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE course
   SET 
 	course_code=$1,
 	section=$2,

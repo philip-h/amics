@@ -58,7 +58,7 @@ func handleAuthLoginPost(
 		}
 
 		// Look for person in the database
-		person, err := store.People.GetByUsername(body.Username)
+		person, err := store.People.GetByUsername(r.Context(), body.Username)
 		if err != nil {
 			logger.L.Error("[auth.login.post] Could not get person by username", slog.String("msg", err.Error()))
 			body.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -82,7 +82,7 @@ func handleAuthLoginPost(
 
 		// Create session
 		// TODO: add remember me functionality
-		sessionId, err := store.Sessions.Create(person.Id, true)
+		sessionId, err := store.Sessions.Create(r.Context(), person.Id, true)
 		if err != nil {
 			logger.L.Error("[auth.login.post] Could not create session", slog.String("msg", err.Error()))
 			body.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -144,6 +144,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage) http.Handler
 
 		// Read the request body from form values
 		body := model.NewRegisterFormPost(
+			r.Context(),
 			store,
 			r.FormValue("first-name"),
 			r.FormValue("student-number"),
@@ -158,7 +159,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage) http.Handler
 			return auth.Register(body).Render(r.Context(), w)
 		}
 
-		course, err := store.Courses.GetByJoinCode(body.JoinCode)
+		course, err := store.Courses.GetByJoinCode(r.Context(), body.JoinCode)
 		if err != nil {
 			logger.L.Error("[auth.register.post] Could not get course by join code", slog.String("err", err.Error()))
 			body.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -175,7 +176,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage) http.Handler
 			Password:  body.Password,
 		}
 
-		err = store.People.Create(person, course.Id)
+		err = store.People.Create(r.Context(), person, course.Id)
 		if err != nil {
 			logger.L.Error("[auth.register.post] Could not create student"+body.Username, slog.String("msg", err.Error()))
 			body.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -184,7 +185,7 @@ func handleAuthRegisterPost(logger *Logger, store *storage.Storage) http.Handler
 		}
 
 		// Create session
-		sessionId, err := store.Sessions.Create(person.Id, false)
+		sessionId, err := store.Sessions.Create(r.Context(), person.Id, false)
 		if err != nil {
 			logger.L.Error("[auth.register.post] Could not create session", slog.String("msg", err.Error()))
 			body.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -203,6 +204,7 @@ func handleAuthRegisterValidation(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		body := model.NewRegisterFormPost(
+			r.Context(),
 			store,
 			r.FormValue("first-name"),
 			r.FormValue("student-number"),
@@ -226,7 +228,7 @@ func handleAuthLogout(logger *Logger, store *storage.Storage) http.Handler {
 			return
 		}
 
-		err = store.Sessions.Delete(cookie.Value)
+		err = store.Sessions.Delete(r.Context(), cookie.Value)
 		if err != nil {
 			logger.L.Error("[auth.logout] Could not delete session", slog.String("msg", err.Error()))
 			// no return - I still want to clear the session cookie even if I cannot delete the session

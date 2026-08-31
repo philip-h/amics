@@ -1,6 +1,7 @@
 package httpe
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -24,6 +25,15 @@ func ServerError(err error, status int) *serverError {
 func HandlerFunc(hf func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := hf(w, r); err != nil {
+			if errors.Is(err, context.Canceled) {
+				slog.Debug("Request canceled by client",
+					slog.Group("where",
+						slog.String("method", r.Method),
+						slog.String("path", r.URL.Path),
+						slog.String("host", r.Host)),
+				)
+				return
+			}
 			slog.Error("Big oops",
 				slog.String("err", err.Error()),
 				slog.Group("where",

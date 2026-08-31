@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -155,7 +156,7 @@ func TestHandleAuthLogin(t *testing.T) {
 			t.Errorf("Expected cookie name to be amics-cookie, got %s", cookies[0].Name)
 		}
 
-		session, err := testStore.Sessions.GetById(cookies[0].Value)
+		session, err := testStore.Sessions.GetById(context.Background(), cookies[0].Value)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -440,7 +441,7 @@ func TestHandleAuthRegister(t *testing.T) {
 			t.Errorf("Expected cookie name to be amics-cookie, got %s", cookies[0].Name)
 		}
 
-		session, err := testStore.Sessions.GetById(cookies[0].Value)
+		session, err := testStore.Sessions.GetById(context.Background(), cookies[0].Value)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -452,7 +453,7 @@ func TestHandleAuthRegister(t *testing.T) {
 			t.Errorf("Expected session PersonId to be %s, got %d", formData.Get("student-number"), session.PersonId)
 		}
 
-		person, err := testStore.People.GetById(session.PersonId)
+		person, err := testStore.People.GetById(context.Background(), session.PersonId)
 		if err != nil {
 			t.Fatal(err)
 		}

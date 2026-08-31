@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 )
 
@@ -15,9 +16,9 @@ type TeacherStore struct {
 	db *sql.DB
 }
 
-func (s *TeacherStore) GetByUsername(username string) (*Teacher, error) {
+func (s *TeacherStore) GetByUsername(ctx context.Context, username string) (*Teacher, error) {
 	teacher := &Teacher{}
-	err := s.db.QueryRow("SELECT id, employee_number, username, password FROM teacher WHERE username = $1", username).Scan(&teacher.Id, &teacher.EmployeeNumber, &teacher.Username, &teacher.Password)
+	err := s.db.QueryRowContext(ctx, "SELECT id, employee_number, username, password FROM teacher WHERE username = $1", username).Scan(&teacher.Id, &teacher.EmployeeNumber, &teacher.Username, &teacher.Password)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -26,4 +27,3 @@ func (s *TeacherStore) GetByUsername(username string) (*Teacher, error) {
 	}
 	return teacher, nil
 }
-

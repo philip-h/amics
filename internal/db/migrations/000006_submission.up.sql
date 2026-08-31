@@ -13,6 +13,6 @@ CREATE TABLE submission (
     submitted_on TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     comments TEXT,
     status status_type,
-    graded_on TIMESTAMPTZ
+    graded_on TIMESTAMPTZ,
     UNIQUE (student_id, assignment_id)
 );

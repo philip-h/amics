@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -28,8 +29,8 @@ type AssignmentStore struct {
 	db *sql.DB
 }
 
-func (s *AssignmentStore) Create(assignment *Assignment) error {
-	_, err := s.db.Exec(
+func (s *AssignmentStore) Create(ctx context.Context, assignment *Assignment) error {
+	_, err := s.db.ExecContext(ctx,
 		`INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		assignment.UnitName,
@@ -45,7 +46,7 @@ func (s *AssignmentStore) Create(assignment *Assignment) error {
 	return fmt.Errorf("db(assignment.create): %w", err)
 }
 
-func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentId int, studentId int) (*AssignmentSubmission, error) {
+func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(ctx context.Context, assignmentId int, studentId int) (*AssignmentSubmission, error) {
 	aws := &AssignmentSubmission{}
 
 	// Dealing with the potential of nil values
@@ -61,7 +62,7 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		subGradedOn     sql.NullTime
 	)
 
-	err := s.db.QueryRow(`SELECT 
+	err := s.db.QueryRowContext(ctx, `SELECT 
 		a.id, 
 		a.unit_name, 
 		a.name, 
@@ -128,8 +129,8 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 	return aws, nil
 }
 
-func (s *AssignmentStore) GetAllWithSubmissionByCourseAndStudentIds(courseId, studentId int) ([]*AssignmentSubmission, error) {
-	rows, err := s.db.Query(`SELECT
+func (s *AssignmentStore) GetAllWithSubmissionByCourseAndStudentIds(ctx context.Context, courseId, studentId int) ([]*AssignmentSubmission, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT
 		a.id,
 		a.course_id,
 		a.unit_name,
@@ -226,10 +227,10 @@ type AssignmentWithGrade struct {
 	Grade sql.NullInt64
 }
 
-func (s *AssignmentStore) GetWithGrade(studentId, courseId int) ([]*AssignmentWithGrade, error) {
+func (s *AssignmentStore) GetWithGrade(ctx context.Context, studentId, courseId int) ([]*AssignmentWithGrade, error) {
 	// Get all assignments for the given course, along with
 	// the user's submission grade for each assignment (if it exists)
-	rows, err := s.db.Query(`SELECT 
+	rows, err := s.db.QueryContext(ctx, `SELECT 
 		a.id, 
 		a.unit_name, 
 		a.name, 
@@ -268,10 +269,10 @@ func (s *AssignmentStore) GetWithGrade(studentId, courseId int) ([]*AssignmentWi
 	return assignments, nil
 }
 
-func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
+func (s *AssignmentStore) GetById(ctx context.Context, assignmentId int) (*Assignment, error) {
 	assignment := &Assignment{}
 
-	err := s.db.QueryRow(`SELECT 
+	err := s.db.QueryRowContext(ctx, `SELECT 
 		id, 
 		unit_name, 
 		name, 
@@ -303,8 +304,8 @@ func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
 	return assignment, nil
 }
 
-func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
-	rows, err := s.db.Query(`SELECT 
+func (s *AssignmentStore) GetByCourseId(ctx context.Context, courseId int) ([]*Assignment, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT 
 		id, 
 		unit_name, 
 		name, 
@@ -341,14 +342,14 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 	return assignments, nil
 }
 
-func (s *AssignmentStore) Update(assignment *Assignment) error {
-	tx, err := s.db.Begin()
+func (s *AssignmentStore) Update(ctx context.Context, assignment *Assignment) error {
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db(assignment.update): %w", err)
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec(`UPDATE assignment 
+	_, err = tx.ExecContext(ctx, `UPDATE assignment 
   SET unit_name=$1, name=$2, description=$3, required_filename=$4, points=$5, pytest_code=$6, due_date=$7, visible=$8, course_id=$9
   WHERE id=$10`,
 		assignment.UnitName,
@@ -369,8 +370,8 @@ func (s *AssignmentStore) Update(assignment *Assignment) error {
 	return tx.Commit()
 }
 
-func (s *AssignmentStore) GetUnitNamesByCourseId(courseId int) ([]string, error) {
-	rows, err := s.db.Query(`SELECT DISTINCT unit_name FROM assignment WHERE course_id = $1`, courseId)
+func (s *AssignmentStore) GetUnitNamesByCourseId(ctx context.Context, courseId int) ([]string, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT DISTINCT unit_name FROM assignment WHERE course_id = $1`, courseId)
 	if err != nil {
 		return nil, fmt.Errorf("db(assignment.getUnitNames): %w", err)
 	}

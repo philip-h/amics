@@ -10,8 +10,8 @@ import (
 
 const (
 	personKey = "person_id"
-	roleKey = "role"
-) 
+	roleKey   = "role"
+)
 
 func requiresStudent(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +61,7 @@ func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler)
 			return
 		}
 
-		session, err := store.Sessions.GetById(cookie.Value)
+		session, err := store.Sessions.GetById(r.Context(), cookie.Value)
 		if err != nil {
 			http.SetCookie(w, logoutCookie())
 			h.ServeHTTP(w, r)
@@ -73,7 +73,7 @@ func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler)
 			return
 		}
 
-		person, err := store.People.GetById(session.PersonId)
+		person, err := store.People.GetById(r.Context(), session.PersonId)
 		if err != nil {
 			logger.L.Error("Could not get person by id", "err", err)
 			http.SetCookie(w, logoutCookie())

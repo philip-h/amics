@@ -23,7 +23,7 @@ func handleTeacherDashboardGet(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		teacherId := r.Context().Value(personKey).(int)
 
-		courses, err := store.Courses.GetByTeacherId(teacherId)
+		courses, err := store.Courses.GetByTeacherId(r.Context(), teacherId)
 		if err != nil {
 			return fmt.Errorf("[teacher.dashboard.get] Could not get courses: %w", err)
 		}
@@ -42,12 +42,12 @@ func handleTeacherDashboardDetailsGet(store *storage.Storage) http.Handler {
 			return httpe.ServerError(err, http.StatusBadRequest)
 		}
 
-		assignments, err := store.Assignments.GetByCourseId(courseId)
+		assignments, err := store.Assignments.GetByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.dashboard.details.get] Could not get assignments: %w", err)
 		}
 
-		students, err := store.People.GetByCourseId(courseId)
+		students, err := store.People.GetByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.dashboard.details.get] Could not get students: %w", err)
 		}
@@ -56,7 +56,7 @@ func handleTeacherDashboardDetailsGet(store *storage.Storage) http.Handler {
 		var submissionCounts map[int]int
 		submissionCounts = make(map[int]int)
 		for _, assignment := range assignments {
-			submissions, err := store.Submissions.ListByAssignmentId(assignment.Id)
+			submissions, err := store.Submissions.ListByAssignmentId(r.Context(), assignment.Id)
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func handleTeacherCourseGet(store *storage.Storage) http.Handler {
 		if err != nil {
 			return httpe.ServerError(fmt.Errorf("[teacher.course.get] Could not convert course ID to int: %w", err), http.StatusBadRequest)
 		}
-		course, err := store.Courses.GetById(courseId)
+		course, err := store.Courses.GetById(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.course.get] Could not get course: %w", err)
 		}
@@ -128,7 +128,7 @@ func handleTeacherCoursePost(logger *Logger, store *storage.Storage) http.Handle
 			JoinCode:   reqBody.JoinCode,
 		}
 
-		err := store.Courses.Create(course, teacherId)
+		err := store.Courses.Create(r.Context(), course, teacherId)
 		if err != nil {
 			logger.L.Error("[teacher.course.post] Could not create course", slog.String("err", err.Error()))
 			reqBody.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -180,7 +180,7 @@ func handleTeacherCoursePut(logger *Logger, store *storage.Storage) http.Handler
 			JoinCode:   reqBody.JoinCode,
 		}
 
-		err = store.Courses.Update(course)
+		err = store.Courses.Update(r.Context(), course)
 		if err != nil {
 			logger.L.Error("[teacher.course.put] Could not update course", slog.String("err", err.Error()))
 			reqBody.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -201,7 +201,7 @@ func handleTeacherAssignmentGet(store *storage.Storage) http.Handler {
 		}
 
 		assignmentIdStr := r.PathValue("assignmentId")
-		unitNames, err := store.Assignments.GetUnitNamesByCourseId(courseId)
+		unitNames, err := store.Assignments.GetUnitNamesByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.get] Could not get unit names: %w", err)
 		}
@@ -217,7 +217,7 @@ func handleTeacherAssignmentGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.assignment.get] Could not convert assignment ID to int: %w", err)
 		}
 
-		assignment, err := store.Assignments.GetById(assignmentId)
+		assignment, err := store.Assignments.GetById(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.get] Could not get assignment: %w", err)
 		}
@@ -236,7 +236,7 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 		if err != nil {
 			return httpe.ServerError(fmt.Errorf("[teacher.assignment.post] Could not convert course ID to int: %w", err), http.StatusBadRequest)
 		}
-		unitNames, err := store.Assignments.GetUnitNamesByCourseId(courseIdInt)
+		unitNames, err := store.Assignments.GetUnitNamesByCourseId(r.Context(), courseIdInt)
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.post] Could not get unit names: %w", err)
 		}
@@ -290,7 +290,7 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 			CourseId:         courseIdInt,
 		}
 
-		err = store.Assignments.Create(assignment)
+		err = store.Assignments.Create(r.Context(), assignment)
 		if err != nil {
 			logger.L.Error("[teacher.assignment.post] Could not create assignment", slog.String("msg", err.Error()))
 			reqBody.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -317,7 +317,7 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 		if err != nil {
 			return httpe.ServerError(fmt.Errorf("[teacher.assignment.put] Could not convert assignment ID to int: %w", err), http.StatusBadRequest)
 		}
-		unitNames, err := store.Assignments.GetUnitNamesByCourseId(courseIdInt)
+		unitNames, err := store.Assignments.GetUnitNamesByCourseId(r.Context(), courseIdInt)
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.put] Could not get unit names: %w", err)
 		}
@@ -371,7 +371,7 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 			CourseId:         courseIdInt,
 		}
 
-		err = store.Assignments.Update(assignment)
+		err = store.Assignments.Update(r.Context(), assignment)
 		if err != nil {
 			logger.L.Error("[teacher.assignment.put] Could not update assignment", slog.String("msg", err.Error()))
 			reqBody.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
@@ -399,17 +399,17 @@ func handleTeacherGradesImportGet(store *storage.Storage) http.Handler {
 			return httpe.ServerError(fmt.Errorf("[teacher.grades.import.get] Could not convert assignment ID to int: %w", err), http.StatusBadRequest)
 		}
 
-		students, err := store.People.GetByCourseId(courseId)
+		students, err := store.People.GetByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.get] Could not get students: %w", err)
 		}
 
-		submissions, err := store.Submissions.ListByAssignmentId(assignmentId)
+		submissions, err := store.Submissions.ListByAssignmentId(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.get] Could not get submissions: %w", err)
 		}
 
-		assignment, err := store.Assignments.GetById(assignmentId)
+		assignment, err := store.Assignments.GetById(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.get] Could not get assignment: %w", err)
 		}
@@ -436,12 +436,12 @@ func handleTeacherGradesImportTemplateGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.grades.import.template.get] Could not convert assignment ID to int: %w", err)
 		}
 
-		students, err := store.People.GetByCourseId(courseId)
+		students, err := store.People.GetByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.template.get] Could not get students: %w", err)
 		}
 
-		assignment, err := store.Assignments.GetById(assignmentId)
+		assignment, err := store.Assignments.GetById(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.template.get] Could not get assignment: %w", err)
 		}
@@ -488,7 +488,7 @@ func handleTeacherGradesImportPost(logger *Logger, store *storage.Storage) http.
 			}
 		}
 
-		err := store.Submissions.UpdateAll(submissions)
+		err := store.Submissions.UpdateAll(r.Context(), submissions)
 		if err != nil {
 			return fmt.Errorf("[teacher.grades.import.post] Could not update submissions: %w", err)
 		}
@@ -507,7 +507,7 @@ func handleTeacherCourseGradesExport(logger *Logger, store *storage.Storage) htt
 			return httpe.ServerError(fmt.Errorf("[teacher.course.grades.export] Could not convert course ID to int: %w", err), http.StatusBadRequest)
 		}
 
-		studentGrades, err := store.Submissions.ListByCourseId(courseId)
+		studentGrades, err := store.Submissions.ListByCourseId(r.Context(), courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.course.grades.export] Could not get student grades: %w", err)
 		}
@@ -547,11 +547,11 @@ func handleTeacherCodeExport(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.course.code.export] Could not convert assignment ID to int: %w", err)
 		}
 
-		submissions, err := store.Submissions.ListByAssignmentId(assignmentId)
+		submissions, err := store.Submissions.ListByAssignmentId(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.course.code.export] Could not get submissions: %w", err)
 		}
-		assignment, err := store.Assignments.GetById(assignmentId)
+		assignment, err := store.Assignments.GetById(r.Context(), assignmentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.course.code.export] Could not get assignment: %w", err)
 		}
@@ -598,7 +598,7 @@ func handleTeacherStudentPasswordReset(logger *Logger, store *storage.Storage) h
 			return httpe.ServerError(errors.New("[teacher.student.password.reset] Could not convert student ID to int"), http.StatusUnprocessableEntity)
 		}
 
-		err = store.People.ChangePassword(studentId, newPassword)
+		err = store.People.ChangePassword(r.Context(), studentId, newPassword)
 		if err != nil {
 			return fmt.Errorf("[teacher.student.password.reset] Could not change password: %w", err)
 
@@ -622,7 +622,7 @@ func handleTeacherStudentGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.student.get] Could not convert student ID to int: %w", err)
 		}
 
-		student, err := store.People.GetById(studentId)
+		student, err := store.People.GetById(r.Context(), studentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.student.get] Could not get student: %w", err)
 		}
@@ -630,7 +630,7 @@ func handleTeacherStudentGet(store *storage.Storage) http.Handler {
 			return httpe.ServerError(errors.New("[teacher.student.get] Student not found"), http.StatusNotFound)
 		}
 
-		assignments, err := store.Assignments.GetWithGrade(studentId, courseId)
+		assignments, err := store.Assignments.GetWithGrade(r.Context(), studentId, courseId)
 		if err != nil {
 			return fmt.Errorf("[teacher.student.get] Could not get assignments: %w", err)
 		}
@@ -674,7 +674,7 @@ func handleTeacherStudentSubmissionGet(logger *Logger, store *storage.Storage) h
 			return fmt.Errorf("[teacher.student.submission.get] Could not convert assignment ID to int: %w", err)
 		}
 
-		submission, err := store.Submissions.GetByAssignmentAndStudentIds(assignmentId, studentId)
+		submission, err := store.Submissions.GetByAssignmentAndStudentIds(r.Context(), assignmentId, studentId)
 		if err != nil {
 			return fmt.Errorf("[teacher.student.submission.get] Could not get submission: %w", err)
 		}

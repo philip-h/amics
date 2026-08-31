@@ -60,8 +60,9 @@ func Run(
 	if err != nil {
 		return fmt.Errorf("Failed to start worker: %w", err)
 	}
-	go worker.Start()
-	defer worker.Stop()
+	workerCtx, cancelWorker := context.WithCancel(ctx)
+	defer cancelWorker()
+	go worker.Start(workerCtx)
 
 	myServer := server.NewServer(
 		logger,
@@ -95,6 +96,10 @@ func Run(
 	close(done)
 
 	<-done
+
+	cancelWorker()
+	worker.Wait()
+
 	logger.L.Info("Graceful shutdown copmplete")
 	return nil
 }

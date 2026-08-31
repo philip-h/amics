@@ -34,12 +34,12 @@ func handleStudentCoursesGet(store *storage.Storage) http.Handler {
 		var courses []*storage.Course
 		var err error
 		if role == "teacher" {
-			courses, err = store.Courses.GetByTeacherId(personId)
+			courses, err = store.Courses.GetByTeacherId(r.Context(), personId)
 			if err != nil {
 				return fmt.Errorf("[student.courses.get] Could not get courses by teacher id: %w", err)
 			}
 		} else {
-			courses, err = store.Courses.GetByStudentId(personId)
+			courses, err = store.Courses.GetByStudentId(r.Context(), personId)
 			if err != nil {
 				return fmt.Errorf("[student.courses.get] Could not get courses by student id: %w", err)
 			}
@@ -66,7 +66,7 @@ func handleStudentDashboardGet(store *storage.Storage) http.Handler {
 			return httpe.ServerError(fmt.Errorf("[student.dashboard.get] Could not convert course ID to int: %w", err), http.StatusBadRequest)
 		}
 
-		assignments, err := store.Assignments.GetWithGrade(personId, courseIdInt)
+		assignments, err := store.Assignments.GetWithGrade(r.Context(), personId, courseIdInt)
 		if err != nil {
 			return fmt.Errorf("[student.dashboard.get] Could not get assignments: %w", err)
 		}
@@ -122,7 +122,7 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[student.assignment.get] Could not convert assignment ID to int: %w", err)
 		}
 
-		aws, err := store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(assignmentId, studentId)
+		aws, err := store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(r.Context(), assignmentId, studentId)
 		if err != nil {
 			return fmt.Errorf("[student.assignment.get] Could not get assignment: %w", err)
 		}
@@ -209,7 +209,7 @@ func handleStudentAssignmentPost(store *storage.Storage) http.Handler {
 		}
 		// Status is set to 'grading' by deault
 		// all 'grading' statuses will be picked up byeeorker started in main function
-		err = store.Submissions.Create(assignmentId, studentId, fileContentStr)
+		err = store.Submissions.Create(r.Context(), assignmentId, studentId, fileContentStr)
 		if err != nil {
 			return fmt.Errorf("[student.assignment.post] Could not create submission: %w", err)
 		}
@@ -229,7 +229,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[student.assignment.poll] Could not convert assignment ID to int: %w", err)
 		}
 
-		aws, err := store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(assignmentId, studentId)
+		aws, err := store.Assignments.GetWithSubmissionByAssignmentAndStudentIds(r.Context(), assignmentId, studentId)
 		if err != nil {
 			return fmt.Errorf("[student.assignment.poll] Could not get assignment with submission: %w", err)
 		}
@@ -274,7 +274,7 @@ func handleViewSubmissionCode(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[student.viewcode] Could not convert assignment ID to int: %w", err)
 		}
 
-		submission, err := store.Submissions.GetByAssignmentAndStudentIds(assignmentId, studentId)
+		submission, err := store.Submissions.GetByAssignmentAndStudentIds(r.Context(), assignmentId, studentId)
 		if err != nil {
 			return fmt.Errorf("[student.viewcode] Could not get submission: %w", err)
 		}

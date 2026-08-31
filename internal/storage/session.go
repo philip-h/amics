@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
@@ -26,7 +27,7 @@ func generateSessionId() (string, error) {
 	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-func (s *SessionStore) Create(personId int, rememberMe bool) (string, error) {
+func (s *SessionStore) Create(ctx context.Context, personId int, rememberMe bool) (string, error) {
 	sessionId, err := generateSessionId()
 	if err != nil {
 		return "", err
@@ -41,7 +42,7 @@ func (s *SessionStore) Create(personId int, rememberMe bool) (string, error) {
 		expiresAt = time.Now().Add(2 * time.Hour)
 	}
 
-	_, err = s.db.Exec(`
+	_, err = s.db.ExecContext(ctx, `
   INSERT INTO sessions (id, person_id, expires_at)
   VALUES ($1, $2, $3)`,
 		sessionId,
@@ -55,10 +56,10 @@ func (s *SessionStore) Create(personId int, rememberMe bool) (string, error) {
 	return sessionId, nil
 }
 
-func (s *SessionStore) GetById(id string) (*Session, error) {
+func (s *SessionStore) GetById(ctx context.Context, id string) (*Session, error) {
 	session := &Session{}
 
-	err := s.db.QueryRow(`
+	err := s.db.QueryRowContext(ctx, `
   SELECT id, person_id, created_at, expires_at
   FROM sessions
   WHERE id = $1 AND expires_at > NOW()`, id).Scan(
@@ -77,8 +78,8 @@ func (s *SessionStore) GetById(id string) (*Session, error) {
 	return session, err
 }
 
-func (s *SessionStore) Delete(id string) error {
-	_, err := s.db.Exec(`
+func (s *SessionStore) Delete(ctx context.Context, id string) error {
+	_, err := s.db.ExecContext(ctx, `
   DELETE FROM sessions
   WHERE id = $1`, id)
 	return err

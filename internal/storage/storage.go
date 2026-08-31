@@ -1,57 +1,60 @@
 package storage
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type Storage struct {
 	Teachers interface {
-		GetByUsername(string) (*Teacher, error)
+		GetByUsername(context.Context, string) (*Teacher, error)
 	}
 
 	People interface {
-		Create(*Person, int) error
-		GetById(int) (*Person, error)
-		GetByUsername(string) (*Person, error)
-		GetByCourseId(int) ([]*Person, error)
-		ChangePassword(int, string) error
+		Create(context.Context, *Person, int) error
+		GetById(context.Context, int) (*Person, error)
+		GetByUsername(context.Context, string) (*Person, error)
+		GetByCourseId(context.Context, int) ([]*Person, error)
+		ChangePassword(context.Context, int, string) error
 		CompareHashAndPassword(string, string) bool
 	}
 
 	Courses interface {
-		Create(*Course, int) error
-		GetById(int) (*Course, error)
-		GetByJoinCode(string) (*Course, error)
-		GetByStudentId(int) ([]*Course, error)
-		GetByTeacherId(int) ([]*Course, error)
-		Update(*Course) error
+		Create(context.Context, *Course, int) error
+		GetById(context.Context, int) (*Course, error)
+		GetByJoinCode(context.Context, string) (*Course, error)
+		GetByStudentId(context.Context, int) ([]*Course, error)
+		GetByTeacherId(context.Context, int) ([]*Course, error)
+		Update(context.Context, *Course) error
 	}
 
 	Assignments interface {
-		Create(*Assignment) error
-		GetWithGrade(int, int) ([]*AssignmentWithGrade, error)
-		GetWithSubmissionByAssignmentAndStudentIds(int, int) (*AssignmentSubmission, error)
-		GetAllWithSubmissionByCourseAndStudentIds(int, int) ([]*AssignmentSubmission, error)
+		Create(context.Context, *Assignment) error
+		GetWithGrade(context.Context, int, int) ([]*AssignmentWithGrade, error)
+		GetWithSubmissionByAssignmentAndStudentIds(context.Context, int, int) (*AssignmentSubmission, error)
+		GetAllWithSubmissionByCourseAndStudentIds(context.Context, int, int) ([]*AssignmentSubmission, error)
 
-		GetById(int) (*Assignment, error)
-		GetByCourseId(int) ([]*Assignment, error)
-		Update(*Assignment) error
+		GetById(context.Context, int) (*Assignment, error)
+		GetByCourseId(context.Context, int) ([]*Assignment, error)
+		Update(context.Context, *Assignment) error
 
-		GetUnitNamesByCourseId(int) ([]string, error)
+		GetUnitNamesByCourseId(context.Context, int) ([]string, error)
 	}
 
 	Submissions interface {
-		Create(int, int, string) error
-		GetByAssignmentAndStudentIds(int, int) (*Submission, error)
-		ListByAssignmentId(int) ([]*Submission, error)
-		GetNextPendingSubmission() (*Submission, error)
-		Update(*Submission) error
-		UpdateAll([]*SubmissionImport) error
-		ListByCourseId(int) ([]*SubmissionExport, error)
+		Create(context.Context, int, int, string) error
+		GetByAssignmentAndStudentIds(context.Context, int, int) (*Submission, error)
+		ListByAssignmentId(context.Context, int) ([]*Submission, error)
+		GetNextPendingSubmission(context.Context) (*Submission, error)
+		Update(context.Context, *Submission) error
+		UpdateAll(context.Context, []*SubmissionImport) error
+		ListByCourseId(context.Context, int) ([]*SubmissionExport, error)
 	}
 
 	Sessions interface {
-		Create(int, bool) (string, error)
-		GetById(string) (*Session, error)
-		Delete(string) error
+		Create(context.Context, int, bool) (string, error)
+		GetById(context.Context, string) (*Session, error)
+		Delete(context.Context, string) error
 	}
 }
 

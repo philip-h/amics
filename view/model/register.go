@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/philip-h/amics/internal/storage"
@@ -17,6 +18,7 @@ type RegisterForm struct {
 
 	ServerError string
 
+	ctx   context.Context
 	store *storage.Storage
 }
 
@@ -27,6 +29,7 @@ func NewRegisterFormGet() *RegisterForm {
 }
 
 func NewRegisterFormPost(
+	ctx context.Context,
 	store *storage.Storage,
 	firstName string,
 	studentNumber string,
@@ -41,6 +44,7 @@ func NewRegisterFormPost(
 		Username:      username,
 		Password:      password,
 		JoinCode:      joinCode,
+		ctx:           ctx,
 		store:         store,
 	}
 }
@@ -89,7 +93,7 @@ func (f *RegisterForm) UsernameProblem() string {
 		}
 		return "Username needs " + minCharsLeft + " more " + chars
 	} else {
-		student, err := f.store.People.GetByUsername(f.Username)
+		student, err := f.store.People.GetByUsername(f.ctx, f.Username)
 		if err != nil {
 			f.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
 			return ""
@@ -126,7 +130,7 @@ func (f *RegisterForm) JoinCodeProblem() string {
 	if f.JoinCode == "" {
 		return "Join code is required"
 	} else {
-		course, err := f.store.Courses.GetByJoinCode(f.JoinCode)
+		course, err := f.store.Courses.GetByJoinCode(f.ctx, f.JoinCode)
 		if err != nil || course == nil {
 			return "I could not find a course with that code"
 		}

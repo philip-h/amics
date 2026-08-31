@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -19,20 +20,20 @@ type PersonStore struct {
 	db *sql.DB
 }
 
-func (s *PersonStore) Create(student *Person, courseId int) error {
+func (s *PersonStore) Create(ctx context.Context, student *Person, courseId int) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(student.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("db(person.create) %w", err)
 	}
 	student.Password = string(hashedPassword)
 
-	tx, err := s.db.Begin()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db(person.create) %w", err)
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec(`
+	_, err = tx.ExecContext(ctx, `
   INSERT INTO person (id, first_name, username, password) 
   VALUES ($1, $2, $3, $4)`,
 		student.Id,
@@ -44,7 +45,7 @@ func (s *PersonStore) Create(student *Person, courseId int) error {
 		return fmt.Errorf("db(person.create) %w", err)
 	}
 
-	_, err = tx.Exec(`
+	_, err = tx.ExecContext(ctx, `
   INSERT INTO student_course (student_id, course_id)
   VALUES ($1, $2)`,
 		student.Id, courseId,
@@ -56,9 +57,9 @@ func (s *PersonStore) Create(student *Person, courseId int) error {
 	return tx.Commit()
 }
 
-func (s *PersonStore) GetById(id int) (*Person, error) {
+func (s *PersonStore) GetById(ctx context.Context, id int) (*Person, error) {
 	person := &Person{}
-	err := s.db.QueryRow(
+	err := s.db.QueryRowContext(ctx,
 		`SELECT id, first_name, username, password, role
     FROM person
     WHERE id = $1`, id,
@@ -73,9 +74,9 @@ func (s *PersonStore) GetById(id int) (*Person, error) {
 	return person, nil
 }
 
-func (s *PersonStore) GetByUsername(username string) (*Person, error) {
+func (s *PersonStore) GetByUsername(ctx context.Context, username string) (*Person, error) {
 	student := &Person{}
-	err := s.db.QueryRow(`SELECT id, first_name, username, password, role
+	err := s.db.QueryRowContext(ctx, `SELECT id, first_name, username, password, role
   FROM person
   WHERE username = $1`, username).Scan(
 		&student.Id,
@@ -92,8 +93,8 @@ func (s *PersonStore) GetByUsername(username string) (*Person, error) {
 	return student, nil
 }
 
-func (s *PersonStore) GetByCourseId(courseId int) ([]*Person, error) {
-	rows, err := s.db.Query(`SELECT id, first_name, username, password, role
+func (s *PersonStore) GetByCourseId(ctx context.Context, courseId int) ([]*Person, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT id, first_name, username, password, role
 	FROM person
   JOIN student_course ON student_course.student_id = person.id
 	WHERE student_course.course_id = $1`, courseId)
@@ -125,12 +126,12 @@ func (s *PersonStore) CompareHashAndPassword(hash, pass string) bool {
 	return err == nil
 }
 
-func (s *PersonStore) ChangePassword(studentId int, newPassword string) error {
+func (s *PersonStore) ChangePassword(ctx context.Context, studentId int, newPassword string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("db(person.changePassword) %w", err)
 	}
-	_, err = s.db.Exec(`UPDATE person
+	_, err = s.db.ExecContext(ctx, `UPDATE person
   SET password=$1
   WHERE id=$2`, string(hashedPassword), studentId)
 

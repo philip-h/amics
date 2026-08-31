@@ -2,9 +2,11 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -192,7 +194,7 @@ func TestHandleStudentAssignmentPost(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if string(bb) != "Content of test.txt is empty\n" {
+		if !strings.Contains(string(bb), "test.txt") || !strings.Contains(string(bb), "empty") {
 			t.Errorf("Expected error message about empty content, got %s", string(bb))
 		}
 
@@ -232,7 +234,7 @@ func TestHandleStudentAssignmentPost(t *testing.T) {
 		}
 		defer res.Body.Close()
 
-		submission, err := testStore.Submissions.GetByAssignmentAndStudentIds(1, 22222)
+		submission, err := testStore.Submissions.GetByAssignmentAndStudentIds(context.Background(), 1, 22222)
 		if err != nil {
 			t.Fatal(err)
 		}

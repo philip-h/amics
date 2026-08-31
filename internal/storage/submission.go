@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -37,8 +38,8 @@ type SubmissionStore struct {
 	db *sql.DB
 }
 
-func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error {
-	tx, err := s.db.Begin()
+func (s *SubmissionStore) Create(ctx context.Context, assignmentId, studentId int, code string) error {
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db(submission.create) %w", err)
 	}
@@ -46,7 +47,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 
 	// Check if a submission already exists for this student and assignment
 	var submissionId int
-	err = tx.QueryRow(
+	err = tx.QueryRowContext(ctx,
 		`SELECT id 
     FROM submission 
     WHERE student_id = $1 AND assignment_id = $2`,
@@ -57,7 +58,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 
 	if submissionId > 0 {
 		// Update existing submission
-		_, err = tx.Exec(
+		_, err = tx.ExecContext(ctx,
 			`UPDATE submission
       SET code=$1, status='grading', comments='Working on it...', submitted_on = NOW()
       WHERE id = $2`, code, submissionId)
@@ -66,7 +67,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 		}
 	} else {
 		// Insert new submission
-		_, err = tx.Exec(
+		_, err = tx.ExecContext(ctx,
 			`INSERT INTO submission (student_id, assignment_id, code, grade, comments, status)
       VALUES ($1, $2, $3, 0, 'Working on it...', 'grading')`,
 			studentId,
@@ -83,9 +84,9 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 	return nil
 }
 
-func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
+func (s *SubmissionStore) GetNextPendingSubmission(ctx context.Context) (*Submission, error) {
 	submission := &Submission{}
-	err := s.db.QueryRow(
+	err := s.db.QueryRowContext(ctx,
 		`SELECT id, student_id, assignment_id, code, grade, comments, status, submitted_on, graded_on
     FROM submission
     WHERE status='grading'
@@ -112,10 +113,10 @@ func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
 	return submission, nil
 }
 
-func (s *SubmissionStore) GetByAssignmentAndStudentIds(assignmentId, studentId int) (*Submission, error) {
+func (s *SubmissionStore) GetByAssignmentAndStudentIds(ctx context.Context, assignmentId, studentId int) (*Submission, error) {
 	submission := &Submission{}
 
-	err := s.db.QueryRow(`SELECT 
+	err := s.db.QueryRowContext(ctx, `SELECT 
 		id, 
     student_id,
     assignment_id,
@@ -145,8 +146,8 @@ func (s *SubmissionStore) GetByAssignmentAndStudentIds(assignmentId, studentId i
 	return submission, nil
 }
 
-func (s *SubmissionStore) ListByAssignmentId(assignmentId int) ([]*Submission, error) {
-	rows, err := s.db.Query(`
+func (s *SubmissionStore) ListByAssignmentId(ctx context.Context, assignmentId int) ([]*Submission, error) {
+	rows, err := s.db.QueryContext(ctx, `
   SELECT id, student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on
   FROM submission
   WHERE assignment_id = $1`, assignmentId)
@@ -181,23 +182,23 @@ func (s *SubmissionStore) ListByAssignmentId(assignmentId int) ([]*Submission, e
 	return submissions, nil
 }
 
-func (s *SubmissionStore) Update(submission *Submission) error {
-	_, err := s.db.Exec(`UPDATE submission
+func (s *SubmissionStore) Update(ctx context.Context, submission *Submission) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE submission
   SET grade = $1, comments = $2, status = $3, graded_on = NOW() 
   WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
 	return fmt.Errorf("db(submission.Update) %w", err)
 }
 
-func (s *SubmissionStore) UpdateAll(submissions []*SubmissionImport) error {
-	tx, err := s.db.Begin()
+func (s *SubmissionStore) UpdateAll(ctx context.Context, submissions []*SubmissionImport) error {
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("db(submission.UpdateAll) %w", err)
 	}
 	defer tx.Rollback()
 
 	for _, submission := range submissions {
-		_, err := tx.Exec(`INSERT INTO submission (student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on)
+		_, err := tx.ExecContext(ctx, `INSERT INTO submission (student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on)
 		VALUES ($1, $2, 'Graded by Mr. Habib', $3, NOW(), $4, 'completed', NOW())
 		ON CONFLICT (student_id, assignment_id)
 		DO UPDATE SET
@@ -219,8 +220,8 @@ func (s *SubmissionStore) UpdateAll(submissions []*SubmissionImport) error {
 	return tx.Commit()
 }
 
-func (s *SubmissionStore) ListByCourseId(courseId int) ([]*SubmissionExport, error) {
-	rows, err := s.db.Query(`SELECT person.id, person.first_name, assignment.name, submission.grade, submission.comments
+func (s *SubmissionStore) ListByCourseId(ctx context.Context, courseId int) ([]*SubmissionExport, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT person.id, person.first_name, assignment.name, submission.grade, submission.comments
   FROM assignment
   JOIN student_course on student_course.course_id = assignment.course_id
   JOIN person on student_course.student_id = person.id

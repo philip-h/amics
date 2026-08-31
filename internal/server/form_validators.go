@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/philip-h/amics/internal/storage"
@@ -26,7 +27,7 @@ func validateLoginReq(username, password string) (problems map[string]string) {
 	return
 }
 
-func validateRegisterReq(store *storage.Storage, studentNumber, firstName, username, password, joinCode string) (problems map[string]string) {
+func validateRegisterReq(ctx context.Context, store *storage.Storage, studentNumber, firstName, username, password, joinCode string) (problems map[string]string) {
 	problems = make(map[string]string)
 
 	if studentNumber == "" {
@@ -51,7 +52,7 @@ func validateRegisterReq(store *storage.Storage, studentNumber, firstName, usern
 		minCharsLeft := strconv.Itoa(4 - len(username))
 		problems["username"] = "You need at least " + minCharsLeft + " more chars in your username."
 	} else {
-		student, err := store.People.GetByUsername(username)
+		student, err := store.People.GetByUsername(ctx, username)
 		if err != nil {
 			problems["server"] = "Sorry, something went seriously wrong on our end. Please try again in a sec."
 		} else if student != nil {
@@ -69,7 +70,7 @@ func validateRegisterReq(store *storage.Storage, studentNumber, firstName, usern
 	if joinCode == "" {
 		problems["join_code"] = "Join code is required"
 	} else {
-		course, err := store.Courses.GetByJoinCode(joinCode)
+		course, err := store.Courses.GetByJoinCode(ctx, joinCode)
 		if err != nil || course == nil {
 			problems["join_code"] = "I could not find a course with that code"
 		}
