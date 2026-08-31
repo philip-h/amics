@@ -33,8 +33,8 @@ func TestHandleGuestGet(t *testing.T) {
 
 		body, _ := io.ReadAll(res.Body)
 
-		if !strings.Contains(string(body), "Welcome to AMICS") {
-			t.Error("Expected body to contain 'Welcome to AMICS'")
+		if !strings.Contains(strings.ToLower(string(body)), "welcome to amics") {
+			t.Error("Expected body to contain 'welcome to amics'")
 		}
 
 		if res.StatusCode != http.StatusOK {
@@ -43,4 +43,3 @@ func TestHandleGuestGet(t *testing.T) {
 	})
 
 }
-

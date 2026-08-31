@@ -55,7 +55,7 @@ func requiresTeacher(h http.Handler) http.Handler {
 
 func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
+		cookie, err := r.Cookie("amics-cookie")
 		if err == http.ErrNoCookie {
 			h.ServeHTTP(w, r)
 			return
@@ -63,22 +63,12 @@ func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler)
 
 		session, err := store.Sessions.GetById(cookie.Value)
 		if err != nil {
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_id",
-				Value:    "",
-				HttpOnly: true,
-				MaxAge:   -1,
-			})
+			http.SetCookie(w, logoutCookie())
 			h.ServeHTTP(w, r)
 			return
 		}
 		if session == nil {
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_id",
-				Value:    "",
-				HttpOnly: true,
-				MaxAge:   -1,
-			})
+			http.SetCookie(w, logoutCookie())
 			h.ServeHTTP(w, r)
 			return
 		}
@@ -86,22 +76,12 @@ func checkAuthMiddlewear(logger *Logger, store *storage.Storage, h http.Handler)
 		person, err := store.People.GetById(session.PersonId)
 		if err != nil {
 			logger.L.Error("Could not get person by id", "err", err)
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_id",
-				Value:    "",
-				HttpOnly: true,
-				MaxAge:   -1,
-			})
+			http.SetCookie(w, logoutCookie())
 			h.ServeHTTP(w, r)
 			return
 		}
 		if person == nil {
-			http.SetCookie(w, &http.Cookie{
-				Name:     "session_id",
-				Value:    "",
-				HttpOnly: true,
-				MaxAge:   -1,
-			})
+			http.SetCookie(w, logoutCookie())
 			h.ServeHTTP(w, r)
 			return
 		}

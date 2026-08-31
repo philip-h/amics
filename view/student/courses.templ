@@ -1,0 +1,49 @@
+package student
+
+import (
+	"github.com/philip-h/amics/internal/storage"
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/layout"
+	"strconv"
+)
+
+templ Courses(courses []*storage.Course, studentId string, isTeacher bool) {
+	@layout.Base("/amics/0x" + studentId) {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{
+					Href: "",
+					Text: "0x" + studentId,
+				},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<div class=" min-h-160">
+			<main class="p-4 sm:p-6 lg:p-8">
+				<p class="mb-2 font-mono text-xs text-lime-700">$ courses --all</p>
+				<h1 class="text-2xl font-semibold tracking-tight">Which course are you working on?</h1>
+				<h3 class="text-stone-600">You can switch at any time from the top bar.</h3>
+				if isTeacher {
+					<div class="mb-6 flex justify-end">
+						<a href="/teacher" class="text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800">Teacher view</a>
+					</div>
+				}
+				<div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+					for _, course := range courses {
+						<a href={ "/c/" + strconv.Itoa(course.Id) } class="rounded-xl border border-stone-200 bg-white p4 sm:p-6 transition hover:bg-stone-50 hover:shadow-md">
+							<h2 class="text-lg font-semibold text-stone-900">{ course.Name }</h2>
+							<p class="mt-1 text-sm text-stone-500">{ course.Year } ⋅ Semester { course.Semester }</p>
+						</a>
+					}
+				</div>
+			</main>
+		</div>
+	}
+}

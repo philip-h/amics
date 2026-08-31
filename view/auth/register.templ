@@ -1,0 +1,139 @@
+package auth
+
+import (
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/layout"
+	"github.com/philip-h/amics/view/model"
+)
+
+templ Register(vm *model.RegisterForm) {
+	@layout.Base("~/register") {
+		@component.Header(
+			"/",
+			[]component.NavLink{
+				component.NavLink{
+					Href: "",
+					Text: "register",
+				},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"href": "/register",
+				},
+				Text: "Register",
+			},
+		)
+		<main class="mx-auto flex w-full max-w-7xl items-center justify-center px-4 py-14 sm:px-6 lg:px-12">
+			<section class="w-full max-w-2xl rounded-2xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
+				<div class="mb-6">
+					<p class="mb-2 font-mono text-xs text-lime-700">$ create account</p>
+					<h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Join <span class="text-purple-700">am</span><span class="text-lime-700">ics</span></h1>
+				</div>
+				@RegisterFormErrors(vm)
+				if vm.ServerError != "" {
+					<div class="text-sm text-red-700 mb-2">
+						{ vm.ServerError }
+					</div>
+				}
+				<form class="grid gap-5 sm:grid-cols-2" hx-post="/register" hx-push-url="true" hx-target="body">
+					<div class="sm:col-span-1">
+						@component.TextFormControl(templ.Attributes{
+							"placeholder": "e.g. Alice",
+							"value":       vm.FirstName,
+							"autofocus":   true,
+							"hx-post":     "/register/validate",
+							"hx-trigger":  "change, keyup delay:200ms changed",
+						}, "first-name", "First name", "First name required", vm.FirstNameProblem())
+					</div>
+					<div class="sm:col-span-1">
+						@component.TextFormControl(templ.Attributes{
+							"placeholder":  "e.g. 01100110",
+							"value":        vm.StudentNumber,
+							"autocomplete": "username",
+							"hx-post":      "/register/validate",
+							"hx-trigger":   "change, keyup delay:200ms changed",
+						}, "student-number", "Student number", "Student number must be 5 to 7 numbers", vm.StudentNumberProblem())
+					</div>
+					<div class="sm:col-span-2">
+						@component.TextFormControl(templ.Attributes{
+							"placeholder": "e.g. codeking123",
+							"value":       vm.Username,
+							"hx-post":     "/register/validate",
+							"hx-trigger":  "change, keyup delay:200ms changed",
+						}, "username", "Username", "Username must be at least 4 characters", vm.UsernameProblem())
+					</div>
+					<div class="sm:col-span-2">
+						@component.PasswordFormControl(templ.Attributes{
+							"value":        vm.Password,
+							"autocomplete": "new-password",
+							"hx-post":      "/register/validate",
+							"hx-trigger":   "change, keyup delay:200ms changed",
+						})
+					</div>
+					<div class="sm:col-span-2">
+						@component.TextFormControl(templ.Attributes{
+							"placeholder": "e.g. EIEIO",
+							"value":       vm.JoinCode,
+							"hx-post":     "/register/validate",
+							"hx-trigger":  "change",
+						}, "join-code", "Join Code", "Ask your teacher for the join code", vm.JoinCodeProblem())
+					</div>
+					<div class="sm:col-span-2 flex flex-wrap items-center gap-3 pt-1">
+						<button type="submit" class="inline-flex items-center rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer">Create account</button>
+					</div>
+				</form>
+				<div class="my-4 flex items-center gap-3">
+					<div class="h-px flex-1 bg-stone-200"></div>
+					<span class="text-xs text-stone-400">or</span>
+					<div class="h-px flex-1 bg-stone-200"></div>
+				</div>
+				<p class="text-center text-xs">
+					Already have an account?
+					<a href="/" class="font-medium text-purple-700 hover:underline">Go back and log in</a>
+				</p>
+			</section>
+		</main>
+	}
+}
+
+
+templ RegisterFormErrors(vm *model.RegisterForm) {
+	if vm.Initial {
+		{{ return }}
+	}
+	if vm.FirstName != "" {
+		if len(vm.FirstNameProblem()) == 0 {
+			@component.ValidationInputConstraint("first-name", "First name required", false)
+		} else {
+			@component.ValidationInputConstraint("first-name", vm.FirstNameProblem(), true)
+		}
+	}
+	if vm.StudentNumber != "" {
+		if len(vm.StudentNumberProblem()) == 0 {
+			@component.ValidationInputConstraint("student-number", "Student number must be 5 to 7 numbers", false)
+		} else {
+			@component.ValidationInputConstraint("student-number", vm.StudentNumberProblem(), true)
+		}
+	}
+	if vm.Username != "" {
+		if len(vm.UsernameProblem()) == 0 {
+			@component.ValidationInputConstraint("username", "Username must be at least 4 characters", false)
+		} else {
+			@component.ValidationInputConstraint("username", vm.UsernameProblem(), true)
+		}
+	}
+	if vm.Password != "" {
+		if len(vm.PasswordProblem()) == 0 {
+			@component.ValidationInputConstraint("password", "Password must be at least 10 characters", false)
+		} else {
+			@component.ValidationInputConstraint("password", vm.PasswordProblem(), true)
+		}
+	}
+	if vm.JoinCode != "" {
+		if len(vm.JoinCodeProblem()) == 0 {
+			@component.ValidationInputConstraint("join-code", "Join code is required", false)
+		} else {
+			@component.ValidationInputConstraint("join-code", vm.JoinCodeProblem(), true)
+		}
+	}
+}

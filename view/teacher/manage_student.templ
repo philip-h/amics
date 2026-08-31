@@ -1,0 +1,138 @@
+package teacher
+
+import (
+	"fmt"
+	"github.com/philip-h/amics/internal/storage"
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/layout"
+	"github.com/philip-h/amics/view/model"
+	"strconv"
+)
+
+templ ManageStudent(vm *model.StudentData, courseId string) {
+	{{ fmt.Printf("%v\n", vm.Student) }}
+	@layout.Base("/amics/teacher/" + vm.Student.FirstName) {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{Href: "/teacher", Text: "teacher"},
+				component.NavLink{Href: "", Text: vm.Student.FirstName},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<main class="p-4 sm:p-6 lg:p-8">
+			<p class="mb-2 font-mono text-xs text-lime-700">$ admin --view-student</p>
+			<h1 class="mb-6 text-2xl font-semibold tracking-tight">Instructor dashboard</h1>
+			<div class="flex justify-between rounded-xl border border-stone-200 bg-white mb-8 p-6 sm:p-8">
+				<div class="">
+					<h2 class="text-lg">{ vm.Student.FirstName }</h2>
+					<p class="mt-1 text-sm text-stone-500">{ "@" } { vm.Student.Username }</p>
+					<p class="text-xs text-stone-500"># { vm.Student.Id } </p>
+				</div>
+				<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+					<span class="text-sm text-stone-500">Average</span>
+					<span class="text-purple-700">{ vm.StudentAverage }%</span>
+				</div>
+			</div>
+			<div class="mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white">
+				<div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5">
+					<h2 class="text-sm font-medium">Assignments</h2>
+				</div>
+				<div class="overflow-x-auto">
+					<table class="w-full text-left text-sm">
+						<thead class="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+							<tr>
+								<th class="px-4 py-2.5 sm:px-5">Name</th>
+								<th class="px-4 py-2.5">Unit</th>
+								<th class="px-4 py-2.5">Due</th>
+								<th class="px-4 py-2.5">Grade</th>
+							</tr>
+						</thead>
+						<tbody>
+							if len(vm.Assignments) == 0 {
+								<tr>
+									<td class="px-4 py-4 text-stone-500 sm:px-5" colspan="6">No assignments yet.</td>
+								</tr>
+							} else {
+								for _, assignment := range vm.Assignments {
+									<tr
+										class="border-t border-stone-100 align-middle hover:bg-stone-50 hover:cursor-pointer"
+										hx-get={ "/teacher/courses/" + courseId + "/students/" + strconv.Itoa(vm.Student.Id) + "/submissions/" + strconv.Itoa(assignment.Id) }
+										hx-target="#submission-details"
+										_="on click
+											remove .bg-stone-50 from <tr.bg-stone-50/>
+											add .bg-stone-50 to me"
+									>
+										<td class="px-4 py-3 sm:px-5">
+											{ assignment.Name }
+										</td>
+										<td class="px-4 py-3 text-xs text-stone-500">{ assignment.UnitName }</td>
+										<td class="px-4 py-3 font-mono text-xs text-stone-500">{ assignment.DueDate.Format("Mon Jan 2") }</td>
+										<td class="px-4 py-3 text-xs text-stone-500">
+											if assignment.Grade.Valid {
+												{ assignment.Grade.Int64 } / { assignment.Points }
+											} else {
+												- / { assignment.Points }
+											}
+										</td>
+									</tr>
+								}
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+			@StudentSubmissionDetails(nil)
+		</main>
+	}
+}
+
+templ StudentSubmissionDetails(submission *storage.Submission) {
+	<div id="submission-details" class="rounded-xl border border-stone-200 bg-white">
+		<div class="flex items-center justify-between gap-3 border-b border-stone-200 p-2">
+			<p class="text-xs text-stone-700 uppercase">Submission Details</p>
+			if submission != nil {
+				<p class="text-xs text-stone-500">{ submission.SubmittedOn.Format("Mon Jan 2, 2006 @ 15:04") }</p>
+			}
+		</div>
+		<div class="p-2">
+			if submission == nil {
+				<p class="text-sm text-stone-500">No submission found.</p>
+				{{ return }}
+			}
+			<div class="grid grid-cols-3 gap-4 mb-4">
+				<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+					<span class="text-sm text-stone-500">Score</span>
+					<span class="text-purple-700">{ submission.Grade }</span>
+				</div>
+				<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+					<span class="text-sm text-stone-500">Submitted on</span>
+					<span class="text-purple-700">{ submission.SubmittedOn.Format("Mon Jan 2, 2006 @ 15:04") }</span>
+				</div>
+			</div>
+			<pre class="mb-4">
+				if submission.Comments.Valid {
+					@templ.Raw(submission.Comments.String)
+				} else {
+					No comments provided.
+				}
+			</pre>
+			<div class="my-4 flex items-center gap-3">
+				<div class="h-px flex-1 bg-stone-200"></div>
+				<span class="text-xs text-stone-400">submitted code</span>
+				<div class="h-px flex-1 bg-stone-200"></div>
+			</div>
+			<pre>
+				<code class="language-python">
+					{ submission.Code }
+				</code>
+			</pre>
+		</div>
+	</div>
+}

@@ -68,14 +68,14 @@ func TestHandleAuthLogin(t *testing.T) {
 		})
 	}
 
-	t.Run("GET /login with valid session reidirects to /app", func(t *testing.T) {
+	t.Run("GET /login with valid session redirects to /c/1", func(t *testing.T) {
 		t.Parallel()
 
 		req, err := http.NewRequest(http.MethodGet, s.URL+"/login", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		req.AddCookie(&http.Cookie{Name: "session_id", Value: "valid_session_id"})
+		req.AddCookie(&http.Cookie{Name: "amics-cookie", Value: "valid_session_id"})
 
 		jar, _ := cookiejar.New(nil)
 		client := &http.Client{
@@ -93,8 +93,8 @@ func TestHandleAuthLogin(t *testing.T) {
 		}
 
 		currentPath := res.Request.URL.Path
-		if currentPath != "/app" {
-			t.Errorf("Expected to be redirected to /app, but was redirected to %s", currentPath)
+		if currentPath != "/c/1" {
+			t.Errorf("Expected to be redirected to /c/1, but was redirected to %s", currentPath)
 		}
 	})
 
@@ -108,7 +108,7 @@ func TestHandleAuthLogin(t *testing.T) {
 		jar, _ := cookiejar.New(nil)
 		client := &http.Client{Jar: jar}
 
-		req.AddCookie(&http.Cookie{Name: "session_id", Value: "expired_session_id"})
+		req.AddCookie(&http.Cookie{Name: "amics-cookie", Value: "expired_session_id"})
 
 		res, err := client.Do(req)
 		if err != nil {
@@ -151,8 +151,8 @@ func TestHandleAuthLogin(t *testing.T) {
 			t.Fatal("Expected a session cookie to be set, but got none")
 		}
 
-		if cookies[0].Name != "session_id" {
-			t.Errorf("Expected cookie name to be session_id, got %s", cookies[0].Name)
+		if cookies[0].Name != "amics-cookie" {
+			t.Errorf("Expected cookie name to be amics-cookie, got %s", cookies[0].Name)
 		}
 
 		session, err := testStore.Sessions.GetById(cookies[0].Value)
@@ -168,8 +168,8 @@ func TestHandleAuthLogin(t *testing.T) {
 		}
 
 		currentPath := res.Request.URL.Path
-		if currentPath != "/app" {
-			t.Errorf("Expected to be redirected to /app, but was redirected to %s", currentPath)
+		if currentPath != "/c/1" {
+			t.Errorf("Expected to be redirected to /c/1, but was redirected to %s", currentPath)
 		}
 	})
 }
@@ -364,14 +364,14 @@ func TestHandleAuthRegister(t *testing.T) {
 		})
 	}
 
-	t.Run("GET /register with valid session reidirects to /app", func(t *testing.T) {
+	t.Run("GET /register with valid session redirects to /c/1", func(t *testing.T) {
 		t.Parallel()
 
 		req, err := http.NewRequest(http.MethodGet, s.URL+"/register", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
-		req.AddCookie(&http.Cookie{Name: "session_id", Value: "valid_session_id"})
+		req.AddCookie(&http.Cookie{Name: "amics-cookie", Value: "valid_session_id"})
 
 		jar, _ := cookiejar.New(nil)
 		client := &http.Client{Jar: jar}
@@ -382,8 +382,8 @@ func TestHandleAuthRegister(t *testing.T) {
 		defer res.Body.Close()
 
 		currentPath := res.Request.URL.Path
-		if currentPath != "/app" {
-			t.Errorf("Expected to be redirected to /app, but was redirected to %s", currentPath)
+		if currentPath != "/c/1" {
+			t.Errorf("Expected to be redirected to /c/1, but was redirected to %s", currentPath)
 		}
 	})
 
@@ -394,7 +394,7 @@ func TestHandleAuthRegister(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		req.AddCookie(&http.Cookie{Name: "session_id", Value: "expired_session_id"})
+		req.AddCookie(&http.Cookie{Name: "amics-cookie", Value: "expired_session_id"})
 
 		jar, _ := cookiejar.New(nil)
 		client := &http.Client{Jar: jar}
@@ -436,8 +436,8 @@ func TestHandleAuthRegister(t *testing.T) {
 			t.Fatalf("Expected a session cookie to be set, but got none")
 		}
 
-		if cookies[0].Name != "session_id" {
-			t.Errorf("Expected cookie name to be session_id, got %s", cookies[0].Name)
+		if cookies[0].Name != "amics-cookie" {
+			t.Errorf("Expected cookie name to be amics-cookie, got %s", cookies[0].Name)
 		}
 
 		session, err := testStore.Sessions.GetById(cookies[0].Value)

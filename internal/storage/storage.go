@@ -20,28 +20,32 @@ type Storage struct {
 		Create(*Course, int) error
 		GetById(int) (*Course, error)
 		GetByJoinCode(string) (*Course, error)
+		GetByStudentId(int) ([]*Course, error)
 		GetByTeacherId(int) ([]*Course, error)
-    Update(*Course) error
+		Update(*Course) error
 	}
 
 	Assignments interface {
 		Create(*Assignment) error
-		GetWithGrade(int) ([]*AssignmentWithGrade, error)
+		GetWithGrade(int, int) ([]*AssignmentWithGrade, error)
 		GetWithSubmissionByAssignmentAndStudentIds(int, int) (*AssignmentSubmission, error)
+		GetAllWithSubmissionByCourseAndStudentIds(int, int) ([]*AssignmentSubmission, error)
 
 		GetById(int) (*Assignment, error)
 		GetByCourseId(int) ([]*Assignment, error)
 		Update(*Assignment) error
-		UpdateAll(int, [][]string) error
+
+		GetUnitNamesByCourseId(int) ([]string, error)
 	}
 
 	Submissions interface {
 		Create(int, int, string) error
 		GetByAssignmentAndStudentIds(int, int) (*Submission, error)
-		GetByAssignmentId(int) ([]*Submission, error)
+		ListByAssignmentId(int) ([]*Submission, error)
 		GetNextPendingSubmission() (*Submission, error)
 		Update(*Submission) error
-		GetAllByCourseId(int) ([]*SubmissionExport, error)
+		UpdateAll([]*SubmissionImport) error
+		ListByCourseId(int) ([]*SubmissionExport, error)
 	}
 
 	Sessions interface {

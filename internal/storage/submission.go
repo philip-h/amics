@@ -23,6 +23,14 @@ type SubmissionExport struct {
 	FirstName      string
 	AssignmentName string
 	Grade          sql.NullInt16
+	Comments       sql.NullString
+}
+
+type SubmissionImport struct {
+	StudentNumber string
+	AssignmentId  string
+	Grade         sql.NullInt16
+	Comments      sql.NullString
 }
 
 type SubmissionStore struct {
@@ -32,7 +40,7 @@ type SubmissionStore struct {
 func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error {
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("db(submission.create) %w", err)
 	}
 	defer tx.Rollback()
 
@@ -44,7 +52,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
     WHERE student_id = $1 AND assignment_id = $2`,
 		studentId, assignmentId).Scan(&submissionId)
 	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("Could not select id from submission: %w", err)
+		return fmt.Errorf("db(submission.create) %w", err)
 	}
 
 	if submissionId > 0 {
@@ -54,7 +62,7 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
       SET code=$1, status='grading', comments='Working on it...', submitted_on = NOW()
       WHERE id = $2`, code, submissionId)
 		if err != nil {
-			return fmt.Errorf("Could not update submission: %w", err)
+			return fmt.Errorf("db(submission.create) %w", err)
 		}
 	} else {
 		// Insert new submission
@@ -65,12 +73,12 @@ func (s *SubmissionStore) Create(assignmentId, studentId int, code string) error
 			assignmentId,
 			code)
 		if err != nil {
-			return fmt.Errorf("Could not insert into submission: %w", err)
+			return fmt.Errorf("db(submission.create)  %w", err)
 		}
 	}
 	err = tx.Commit()
 	if err != nil {
-		return fmt.Errorf("Could not commit tx: %w", err)
+		return fmt.Errorf("db(submission.create)  %w", err)
 	}
 	return nil
 }
@@ -98,7 +106,7 @@ func (s *SubmissionStore) GetNextPendingSubmission() (*Submission, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(submission.GetNextPendingSubmission) %w", err)
 	}
 
 	return submission, nil
@@ -132,19 +140,19 @@ func (s *SubmissionStore) GetByAssignmentAndStudentIds(assignmentId, studentId i
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(submission.GetByAssignmentAndStudentIds) %w", err)
 	}
 	return submission, nil
 }
 
-func (s *SubmissionStore) GetByAssignmentId(assignmentId int) ([]*Submission, error) {
+func (s *SubmissionStore) ListByAssignmentId(assignmentId int) ([]*Submission, error) {
 	rows, err := s.db.Query(`
   SELECT id, student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on
   FROM submission
   WHERE assignment_id = $1`, assignmentId)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(submission.ListByAssignmentId) %w", err)
 	}
 	defer rows.Close()
 
@@ -162,13 +170,13 @@ func (s *SubmissionStore) GetByAssignmentId(assignmentId int) ([]*Submission, er
 			&submission.Status,
 			&submission.GradedOn)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("db(submission.ListByAssignmentId) %w", err)
 		}
 		submissions = append(submissions, submission)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(submission.ListByAssignmentId) %w", err)
 	}
 	return submissions, nil
 }
@@ -178,11 +186,41 @@ func (s *SubmissionStore) Update(submission *Submission) error {
   SET grade = $1, comments = $2, status = $3, graded_on = NOW() 
   WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
-	return err
+	return fmt.Errorf("db(submission.Update) %w", err)
 }
 
-func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, error) {
-	rows, err := s.db.Query(`SELECT person.id, person.first_name, assignment.name, submission.grade
+func (s *SubmissionStore) UpdateAll(submissions []*SubmissionImport) error {
+	tx, err := s.db.Begin()
+	if err != nil {
+		return fmt.Errorf("db(submission.UpdateAll) %w", err)
+	}
+	defer tx.Rollback()
+
+	for _, submission := range submissions {
+		_, err := tx.Exec(`INSERT INTO submission (student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on)
+		VALUES ($1, $2, 'Graded by Mr. Habib', $3, NOW(), $4, 'completed', NOW())
+		ON CONFLICT (student_id, assignment_id)
+		DO UPDATE SET
+			code = EXCLUDED.code,
+			grade = EXCLUDED.grade,
+			submitted_on = EXCLUDED.submitted_on,
+			comments = EXCLUDED.comments,
+			status = EXCLUDED.status,
+			graded_on = EXCLUDED.graded_on`,
+			submission.StudentNumber,
+			submission.AssignmentId,
+			submission.Grade,
+			submission.Comments)
+		if err != nil {
+			return fmt.Errorf("db(submission.UpdateAll) %w", err)
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (s *SubmissionStore) ListByCourseId(courseId int) ([]*SubmissionExport, error) {
+	rows, err := s.db.Query(`SELECT person.id, person.first_name, assignment.name, submission.grade, submission.comments
   FROM assignment
   JOIN student_course on student_course.course_id = assignment.course_id
   JOIN person on student_course.student_id = person.id
@@ -193,14 +231,14 @@ func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, e
   ORDER BY person.id`, courseId)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(submission.ListByCourseId) %w", err)
 	}
 	defer rows.Close()
 
 	submissionExport := []*SubmissionExport{}
 	for rows.Next() {
 		export := &SubmissionExport{}
-		err := rows.Scan(&export.StudentNumber, &export.FirstName, &export.AssignmentName, &export.Grade)
+		err := rows.Scan(&export.StudentNumber, &export.FirstName, &export.AssignmentName, &export.Grade, &export.Comments)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +246,7 @@ func (s *SubmissionStore) GetAllByCourseId(courseId int) ([]*SubmissionExport, e
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(submission.ListByCourseId) %w", err)
 	}
 	return submissionExport, nil
 }

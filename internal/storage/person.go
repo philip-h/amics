@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -21,26 +22,26 @@ type PersonStore struct {
 func (s *PersonStore) Create(student *Person, courseId int) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(student.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("db(person.create) %w", err)
 	}
 	student.Password = string(hashedPassword)
 
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("db(person.create) %w", err)
 	}
 	defer tx.Rollback()
 
 	_, err = tx.Exec(`
   INSERT INTO person (id, first_name, username, password) 
   VALUES ($1, $2, $3, $4)`,
-	student.Id,
-	student.FirstName,
-	student.Username,
-	student.Password)
+		student.Id,
+		student.FirstName,
+		student.Username,
+		student.Password)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("db(person.create) %w", err)
 	}
 
 	_, err = tx.Exec(`
@@ -49,7 +50,7 @@ func (s *PersonStore) Create(student *Person, courseId int) error {
 		student.Id, courseId,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("db(person.create) %w", err)
 	}
 
 	return tx.Commit()
@@ -67,7 +68,7 @@ func (s *PersonStore) GetById(id int) (*Person, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(person.getById): %w", err)
 	}
 	return person, nil
 }
@@ -86,7 +87,7 @@ func (s *PersonStore) GetByUsername(username string) (*Person, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(person.getByUsername): %w", err)
 	}
 	return student, nil
 }
@@ -98,7 +99,7 @@ func (s *PersonStore) GetByCourseId(courseId int) ([]*Person, error) {
 	WHERE student_course.course_id = $1`, courseId)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(person.getByCourseId): %w", err)
 	}
 	defer rows.Close()
 
@@ -108,13 +109,13 @@ func (s *PersonStore) GetByCourseId(courseId int) ([]*Person, error) {
 
 		err := rows.Scan(&person.Id, &person.FirstName, &person.Username, &person.Password, &person.Role)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("db(person.getByCourseId): %w", err)
 		}
 		people = append(people, person)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(person.getByCourseId): %w", err)
 	}
 	return people, nil
 }
@@ -127,11 +128,14 @@ func (s *PersonStore) CompareHashAndPassword(hash, pass string) bool {
 func (s *PersonStore) ChangePassword(studentId int, newPassword string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return fmt.Errorf("db(person.changePassword) %w", err)
 	}
 	_, err = s.db.Exec(`UPDATE person
   SET password=$1
   WHERE id=$2`, string(hashedPassword), studentId)
 
-	return err
+	if err != nil {
+		return fmt.Errorf("db(person.changePassword) %w", err)
+	}
+	return nil
 }

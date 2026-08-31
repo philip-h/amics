@@ -2,6 +2,7 @@ package storage
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 )
 
@@ -27,7 +28,6 @@ type AssignmentStore struct {
 	db *sql.DB
 }
 
-
 func (s *AssignmentStore) Create(assignment *Assignment) error {
 	_, err := s.db.Exec(
 		`INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id)
@@ -42,20 +42,24 @@ func (s *AssignmentStore) Create(assignment *Assignment) error {
 		assignment.Visible,
 		assignment.CourseId)
 
-	return err
+	return fmt.Errorf("db(assignment.create): %w", err)
 }
 
 func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentId int, studentId int) (*AssignmentSubmission, error) {
 	aws := &AssignmentSubmission{}
 
 	// Dealing with the potential of nil values
-	var subId sql.NullInt64
-	var subUserId sql.NullInt64
-	var subAssignmentId sql.NullInt64
-	var subCode sql.NullString
-	var subGrade sql.NullInt64
-	var subComments sql.NullString
-	var subStatus sql.NullString
+	var (
+		subId           sql.NullInt64
+		subUserId       sql.NullInt64
+		subAssignmentId sql.NullInt64
+		subCode         sql.NullString
+		subGrade        sql.NullInt64
+		subSubmittedOn  sql.NullTime
+		subComments     sql.NullString
+		subStatus       sql.NullString
+		subGradedOn     sql.NullTime
+	)
 
 	err := s.db.QueryRow(`SELECT 
 		a.id, 
@@ -63,7 +67,7 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		a.name, 
 		a.description, 
 		a.required_filename, 
-    a.pytest_code,
+		a.pytest_code,
 		a.points, 
 		a.due_date, 
 		a.visible, 
@@ -73,8 +77,10 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		s.assignment_id,
 		s.code,
 		s.grade,
+		s.submitted_on,
 		s.comments,
-    s.status
+		s.status,
+		s.graded_on
 	FROM assignment a
 	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = $1
 	WHERE a.id = $2`, studentId, assignmentId).Scan(
@@ -93,13 +99,15 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 		&subAssignmentId,
 		&subCode,
 		&subGrade,
+		&subSubmittedOn,
 		&subComments,
-		&subStatus)
+		&subStatus,
+		&subGradedOn)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getWithSubmission): %w", err)
 	}
 
 	if !subId.Valid {
@@ -111,11 +119,106 @@ func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(assignmentI
 			AssignmentId: int(subAssignmentId.Int64),
 			Code:         subCode.String,
 			Grade:        int(subGrade.Int64),
+			SubmittedOn:  subSubmittedOn.Time,
 			Comments:     subComments,
 			Status:       subStatus.String,
+			GradedOn:     subGradedOn,
 		}
 	}
 	return aws, nil
+}
+
+func (s *AssignmentStore) GetAllWithSubmissionByCourseAndStudentIds(courseId, studentId int) ([]*AssignmentSubmission, error) {
+	rows, err := s.db.Query(`SELECT
+		a.id,
+		a.course_id,
+		a.unit_name,
+		a.name,
+		a.description,
+		a.required_filename,
+		a.points,
+		a.due_date,
+		a.visible,
+		s.id,
+		s.code, 		     
+		s.grade,          
+		s.submitted_on,
+		s.comments,		 
+		s.status,		 
+		s.graded_on      
+	FROM assignment a
+	LEFT JOIN submission s
+		ON s.assignment_id = a.id
+		AND s.student_id = $1
+	WHERE a.course_id = $2
+	ORDER BY a.unit_name, a.due_date;`, studentId, courseId)
+	if err != nil {
+		return nil, fmt.Errorf("db(assignment.getAllWithSubmission): %w", err)
+	}
+	defer rows.Close()
+
+	assignments := []*AssignmentSubmission{}
+	for rows.Next() {
+		var a Assignment
+
+		// sql.Null* for every submission column — they're NULL when not submitted
+		var (
+			submissionID sql.NullInt64
+			code         sql.NullString
+			grade        sql.NullInt64
+			submittedOn  sql.NullTime
+			comments     sql.NullString
+			status       sql.NullString
+			gradedOn     sql.NullTime
+		)
+
+		err := rows.Scan(
+			&a.Id,
+			&a.CourseId,
+			&a.UnitName,
+			&a.Name,
+			&a.Description,
+			&a.RequiredFilename,
+			&a.Points,
+			&a.DueDate,
+			&a.Visible,
+			&submissionID,
+			&code,
+			&grade,
+			&submittedOn,
+			&comments,
+			&status,
+			&gradedOn,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("db(assignment.getAllWithSubmission): %w", err)
+		}
+
+		aws := AssignmentSubmission{Assignment: a}
+
+		// only populate the submission if one exists
+		if submissionID.Valid {
+			aws.Submission = &Submission{
+				Id:           int(submissionID.Int64),
+				StudentId:    studentId,
+				AssignmentId: a.Id,
+				Code:         code.String,
+				Grade:        int(grade.Int64),
+				SubmittedOn:  submittedOn.Time,
+				Comments:     comments,
+				Status:       status.String,
+				GradedOn:     gradedOn,
+			}
+		}
+
+		assignments = append(assignments, &aws)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("db(assignment.getAllWithSubmission): %w", err)
+	}
+
+	return assignments, nil
 }
 
 type AssignmentWithGrade struct {
@@ -123,8 +226,8 @@ type AssignmentWithGrade struct {
 	Grade sql.NullInt64
 }
 
-func (s *AssignmentStore) GetWithGrade(studentId int) ([]*AssignmentWithGrade, error) {
-	// Get all assignments for the course the user is enrolled in, along with
+func (s *AssignmentStore) GetWithGrade(studentId, courseId int) ([]*AssignmentWithGrade, error) {
+	// Get all assignments for the given course, along with
 	// the user's submission grade for each assignment (if it exists)
 	rows, err := s.db.Query(`SELECT 
 		a.id, 
@@ -135,17 +238,17 @@ func (s *AssignmentStore) GetWithGrade(studentId int) ([]*AssignmentWithGrade, e
 		a.points, 
 		a.due_date, 
 		a.visible, 
-		a.course_id ,
+		a.course_id,
 		s.grade
 	FROM assignment a
-  JOIN student_course sc ON sc.course_id = a.course_id
-  JOIN person p ON sc.student_id = p.id
+	JOIN student_course sc ON sc.course_id = a.course_id
+	JOIN person p ON sc.student_id = p.id
 	LEFT JOIN submission s ON s.assignment_id = a.id AND s.student_id = p.id
-	WHERE p.id = $1
-  ORDER BY a.due_date`, studentId)
+	WHERE p.id = $1 AND a.course_id = $2
+  ORDER BY a.due_date DESC, a.unit_name DESC`, studentId, courseId)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getWithGrade): %w", err)
 	}
 	defer rows.Close()
 
@@ -154,13 +257,13 @@ func (s *AssignmentStore) GetWithGrade(studentId int) ([]*AssignmentWithGrade, e
 		assignment := &AssignmentWithGrade{}
 		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId, &assignment.Grade)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("db(getWithGrade): %w", err)
 		}
 		assignments = append(assignments, assignment)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getWithGrade): %w", err)
 	}
 	return assignments, nil
 }
@@ -195,20 +298,19 @@ func (s *AssignmentStore) GetById(assignmentId int) (*Assignment, error) {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getById): %w", err)
 	}
 	return assignment, nil
 }
 
 func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
-
 	rows, err := s.db.Query(`SELECT 
 		id, 
 		unit_name, 
 		name, 
 		description, 
 		required_filename, 
-    pytest_code,
+		pytest_code,
 		points, 
 		due_date, 
 		visible, 
@@ -218,7 +320,7 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
   ORDER BY due_date`, courseId)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getByCourseId): %w", err)
 	}
 	defer rows.Close()
 
@@ -228,13 +330,13 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 
 		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.PytestCode, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("db(assignment.getByCourseId): %w", err)
 		}
 		assignments = append(assignments, assignment)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("db(assignment.getByCourseId): %w", err)
 	}
 	return assignments, nil
 }
@@ -242,7 +344,7 @@ func (s *AssignmentStore) GetByCourseId(courseId int) ([]*Assignment, error) {
 func (s *AssignmentStore) Update(assignment *Assignment) error {
 	tx, err := s.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("db(assignment.update): %w", err)
 	}
 	defer tx.Rollback()
 
@@ -261,33 +363,31 @@ func (s *AssignmentStore) Update(assignment *Assignment) error {
 		assignment.Id)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("db(assignment.update): %w", err)
 	}
 
 	return tx.Commit()
 }
 
-func (s *AssignmentStore) UpdateAll(assignmentId int, grades [][]string) error {
-	tx, err := s.db.Begin()
+func (s *AssignmentStore) GetUnitNamesByCourseId(courseId int) ([]string, error) {
+	rows, err := s.db.Query(`SELECT DISTINCT unit_name FROM assignment WHERE course_id = $1`, courseId)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("db(assignment.getUnitNames): %w", err)
 	}
-	defer tx.Rollback()
+	defer rows.Close()
 
-	for _, row := range grades[1:] {
-		studentNumber := row[0]
-		grade := row[1]
-		comments := row[2]
-		_, err := tx.Exec(`INSERT INTO submission (student_id, assignment_id,code,grade,submitted_on,comments,status,graded_on)
-    VALUES ($1, $2, 'Graded by Mr. Habib', $3, NOW(), $4, 'completed', NOW())`,
-			studentNumber,
-			assignmentId,
-			grade,
-			comments)
+	unitNames := []string{}
+	for rows.Next() {
+		var unitName string
+		err := rows.Scan(&unitName)
 		if err != nil {
-			return err
+			return nil, fmt.Errorf("db(assignment.getUnitNames): %w", err)
 		}
+		unitNames = append(unitNames, unitName)
 	}
 
-	return tx.Commit()
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("db(assignment.getUnitNames): %w", err)
+	}
+	return unitNames, nil
 }

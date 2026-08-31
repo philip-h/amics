@@ -1,0 +1,13 @@
+package component
+
+templ StatusPill(valid bool, score, outOf int) {
+	if valid {
+		if score == outOf {
+			<span class="justify-self-start rounded-full bg-lime-100 px-2 py-1 font-mono text-xs font-medium text-lime-800 sm:justify-self-end">{ score } / { outOf }</span>
+		} else {
+			<span class="justify-self-start rounded-full bg-blue-100 px-2 py-1 font-mono text-xs font-medium text-lime-800 sm:justify-self-end">{ score } / { outOf }</span>
+		}
+	} else {
+		<span class="justify-self-start rounded-full bg-stone-200 px-2 py-1 font-mono text-xs font-medium text-stone-700 sm:justify-self-end">not started</span>
+	}
+}

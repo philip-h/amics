@@ -14,4 +14,5 @@ CREATE TABLE submission (
     comments TEXT,
     status status_type,
     graded_on TIMESTAMPTZ
+    UNIQUE (student_id, assignment_id)
 );

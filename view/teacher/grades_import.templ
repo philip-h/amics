@@ -1,0 +1,262 @@
+package teacher
+
+import (
+	"fmt"
+	"github.com/philip-h/amics/internal/storage"
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/component/svg"
+	"github.com/philip-h/amics/view/layout"
+	"strconv"
+)
+
+var scriptHandle = templ.NewOnceHandle()
+
+templ ImportGrades(
+	students []*storage.Person,
+	submissions map[int]*storage.Submission,
+	assignmentId, courseId string,
+	outOf int,
+) {
+	@layout.Base("/amics/teacher/import") {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{
+					Href: "/h",
+					Text: "teacher",
+				},
+				component.NavLink{
+					Href: "",
+					Text: "import_grades",
+				},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<main class="p-4 sm:p-6 lg:p-8 ">
+			{{
+				averageSum := 0
+				numGraded := 0
+			}}
+			<p class="mb-2 font-mono text-xs text-lime-700">$ assignment --import-grades { assignmentId }</p>
+			<h1 class="mb-6 text-2xl font-semibold tracking-tight">Import grades</h1>
+			<div class="flex flex-wrap gap-4">
+				<div class="flex-1 space-y-5">
+					if len(students) == 0 {
+						<p class="px-2">Cannot import grades for course with no students</p>
+					} else {
+						<div class="rounded-xl border border-stone-200 bg-white">
+							<div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5">
+								<h2 class="text-sm font-medium">Students</h2>
+							</div>
+							<form hx-post={ "/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import" }>
+								<table class="w-full text-left text-sm border-b border-stone-200">
+									<thead class="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+										<tr>
+											<th class="px-4 py-2.5 sm:px-5">#</th>
+											<th class="px-4 py-2.5">Name</th>
+											<th class="px-4 py-2.5">Grade</th>
+											<th class="px-4 py-2.5">Comments</th>
+										</tr>
+									</thead>
+									<tbody>
+										if len(students) == 0 {
+											<tr>
+												<td class="px-4 py-4 text-stone-500 sm:px-5" colspan="4">No students found.</td>
+											</tr>
+										} else {
+											for _, student := range students {
+												{{
+													// logic for possibly nil submissions
+													gradeValue := ""
+													commentsValue := ""
+													if submission, ok := submissions[student.Id]; ok {
+														averageSum += submission.Grade
+														gradeValue = strconv.Itoa(submission.Grade)
+														numGraded++
+														if submission.Comments.Valid {
+															commentsValue = submission.Comments.String
+														}
+													}
+												}}
+												<tr class="border-t border-stone-100 align-middle" data-student-id={ student.Id }>
+													<td class="px-4 py-3 sm:px-5">
+														<input type="hidden" name="student-id" value={ student.Id }/>
+														{ student.Id }
+													</td>
+													<td class="px-4 py-3 text-xs text-stone-500">{ student.FirstName }</td>
+													<td class="px-4 py-3 text-xs text-stone-500">
+														<input type="text" inputmode="numeric" name="grade" value={ gradeValue } _="on input call updateSummary()" class="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]"/>
+													</td>
+													<td class="px-4 py-3 text-xs text-stone-500">
+														<input type="text" inputmode="numeric" name="comments" value={ commentsValue } class="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]"/>
+													</td>
+												</tr>
+											}
+										}
+									</tbody>
+								</table>
+								<div class="flex justify-end px-4 py-3 sm:px-5">
+									<button type="submit" class="rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer">
+										Save Grades
+									</button>
+								</div>
+							</form>
+						</div>
+					}
+				</div>
+				<div class="flex flex-col gap-4 min-w-[350px]">
+					<div class="rounded-xl border border-stone-200 bg-white">
+						<div class="flex items-center border-b border-stone-200 p-4">
+							<p class="text-xs text-stone-700 uppercase">csv upload</p>
+						</div>
+						<div class="space-y-4 p-4">
+							@component.FileDropzoneFormControl(
+								templ.Attributes{
+									"accept": ".csv",
+									"_": `on gotfiles call parseCSV(first of my files)
+										on change 
+											if first of my files is not null
+												get <p[data-file-name/>
+												remove .invisible from it
+												set its innerText to first of my files's name
+												add @aria-has-file to #file-dropzone
+												call parseCSV(first of my files)
+											end`,
+								},
+								svg.CSVSVG(),
+								"file",
+								"Upload file",
+								"Please upload a CSV",
+								"",
+							)
+							<div class="flex flex-col justify-center py-4 px-4 bg-stone-200 rounded-md text-xs">
+								<div class="flex items-center justify-between mb-2">
+									<span>Expected Format</span>
+									<a
+										href={ "/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import/template" }
+										hx-boost="false"
+										class="text-purple-700 hover:underline"
+									>Download template</a>
+								</div>
+								<div>
+									<p>student_number,grade,comments</p>
+									<p><span class="text-lime-700">8675309,</span>4,Nice</p>
+									<p><span class="text-lime-700">1234456,</span>3,Needs work</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="rounded-xl border border-stone-200 bg-white">
+						<div class="flex items-center border-b border-stone-200 p-4">
+							<p class="text-xs text-stone-700 uppercase">summary</p>
+						</div>
+						<div class="grid grid-cols-2 gap-2 p-4">
+							<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+								<span class="text-sm text-stone-500">Graded</span>
+								<div class="flex gap-2">
+									<span class="text-4xl font-semibold text-purple-700" data-graded-num>{ numGraded }</span>
+									<span class="text-sm text-stone-500 self-end" data-graded-den={ len(students) }>/ { len(students) }</span>
+								</div>
+							</div>
+							<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+								<span class="text-sm text-stone-500">Average Score</span>
+								<span class="text-purple-700" data-average data-out-of={ outOf }>
+									if numGraded == 0 {
+										-
+									} else {
+										{ fmt.Sprintf("%.2f%%", (float64(averageSum)/float64(numGraded))*100/float64(outOf)) }
+									}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+		@scriptHandle.Once() {
+			<script>
+				const $dz = document.getElementById("file-dropzone");
+				const $dzConstraint = $dz.querySelector("p[data-file-constraint]");
+				const $dzHint = $dz.querySelector("p[data-file-hint]");
+				const $summaryGradedNum = document.querySelector("span[data-graded-num]");
+				const $summaryGradedDen = document.querySelector("span[data-graded-den]");
+				const $summaryAverage = document.querySelector("span[data-average]");
+
+				function parseCSV(csv) {
+					const reader = new FileReader();
+					reader.onload = e => {
+						const lines = e.target.result.trim().split('\n');
+						const header = lines[0].toLowerCase().replace(/\s/g,'');
+						if (!header.includes('student_number') || !header.includes('grade')) {
+							$dz.removeAttribute('aria-has-file');
+							$dz.setAttribute('aria-error', 'true');
+							$dzConstraint.textContent = 'Invalid format';
+							$dzHint.textContent = 'CSV must have student_number and grade columns.';
+							return;
+						}
+						let matched = 0;
+						lines.slice(1).forEach(line => {
+							const cols = line.split(',');
+							const snum = cols[0]?.trim();
+							const grade = cols[1]?.trim();
+							const comments = cols[2]?.trim() || '';
+
+							const $row = document.querySelector(
+								`tr[data-student-id="${snum}"]`
+							);
+
+							if ($row) {
+								matched++;
+								$row.querySelector(
+									`input[name="grade"]`
+								).value = grade;
+
+								$row.querySelector(
+									`input[name="comments"]`
+								).value = comments;
+							}
+						});
+
+						// update dropzone with file stats
+						$dz.setAttribute('aria-has-file', 'true');
+						$dz.removeAttribute('aria-error');
+						$dzConstraint.textContent = 'File loaded';
+						$dzHint.textContent = 'Matched ' + matched + ' students from CSV';
+
+						updateSummary();
+
+					}
+					reader.readAsText(csv);
+
+				}
+
+				function updateSummary() {
+					// calculate average and number of graded students
+					const $rows = document.querySelectorAll('tr[data-student-id]');
+					let numGraded = 0;
+					let averageSum = 0;
+					$rows.forEach($row => {
+						const grade = parseFloat($row.querySelector('input[name="grade"]').value);
+						if (!isNaN(grade)) {
+							numGraded++;
+							averageSum += grade;	
+						}
+					});
+					// update summary
+					const numStudents = $summaryGradedDen.getAttribute('data-graded-den');
+					const outOf = $summaryAverage.getAttribute('data-out-of');
+					const average = numStudents > 0 ? ((averageSum *100/ numStudents)/outOf).toFixed(2) : 0;
+					$summaryAverage.textContent = average;
+					$summaryGradedNum.textContent = numGraded;
+				}
+
+			</script>
+		}
+	}
+}

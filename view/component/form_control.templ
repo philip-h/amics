@@ -1,0 +1,172 @@
+package component
+
+import "strconv"
+
+templ TextFormControl(attributes templ.Attributes, id, label, constraint, problem string) {
+	<label for={ id } class="mb-1.5 block text-xs font-medium text-stone-700">{ label } </label>
+	<input
+		id={ id }
+		name={ id }
+		type="text"
+		{ attributes... }
+		required
+		aria-describedby={ id + "-constraints" }
+		hx-push-url="false"
+		hx-swap="none"
+		if problem != "" {
+			aria-invalid="true"
+		}
+		class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
+	/>
+	<small
+		id={ id + "-constraints" }
+		if problem != "" {
+			aria-invalid="true"
+		}
+		class="mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700"
+	>
+		if problem != "" {
+			{ problem }
+		} else {
+			{ constraint }
+		}
+	</small>
+}
+
+templ PasswordFormControl(attributes templ.Attributes) {
+	<div class="flex">
+		<input
+			id="password"
+			name="password"
+			type="password"
+			placeholder="e.g. correcthorsebatterystaple"
+			required
+			{ attributes... }
+			aria-describedby="password-constraints"
+			hx-push-url="false"
+			hx-swap="none"
+			type="password"
+			class="flex-grow w-full rounded-l-md border-l border-y border-stone-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700"
+		/>
+		<button
+			type="button"
+			id="toggle-password"
+			class="inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer"
+			_="on click
+			if #password's @type is 'password'
+				set #password's @type to 'text'
+				set my innerText to 'Hide'
+			else
+				set #password's @type to 'password'
+				set my innerText to 'Show'
+			end"
+		>Show</button>
+	</div>
+	<small id="password-constraints" class="mt-1.5 block text-xs text-stone-500">Password must be at least 10 characters</small>
+}
+
+templ DatetimeFormControl(attributes templ.Attributes, id, label, constraint, problem string) {
+	<label for={ id } class="mb-1.5 block text-xs font-medium text-stone-700">{ label } </label>
+	<input
+		id={ id }
+		name={ id }
+		type="datetime-local"
+		{ attributes... }
+		required
+		aria-describedby={ id + "-constraints" }
+		if problem != "" {
+			aria-invalid="true"
+		}
+		class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
+	/>
+	<small
+		id={ id + "-constraints" }
+		if problem != "" {
+			aria-invalid="true"
+		}
+		class="mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700"
+	>
+		if problem != "" {
+			{ problem }
+		} else {
+			{ constraint }
+		}
+	</small>
+}
+
+templ FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component, id, label, constraint, problem string) {
+	<label
+		id="file-dropzone"
+		class="flex flex-col items-center justify-center border border-dashed border-stone-300 rounded-md bg-stone-50 py-4 outline-none transition text-center focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] hover:cursor-pointer hover:border-purple-700 hover:bg-purple-50  aria-[has-file]:border-lime-700 aria-[has-file]:bg-lime-50 aria-[error]:border-red-700 aria-[error]:bg-red-50"
+		_="on dragover
+			halt the event's default
+			remove .border-stone-300 from me then add .border-purple-700 to me
+			remove .bg-stone-50 from me then add .bg-purple-50 to me
+		on dragleave 
+			remove .border-purple-700 from me then add .border-stone-300 to me
+			remove .bg-purple-50 from me then add .bg-stone-50 to me
+		on drop
+			halt the event's default
+			remove .border-purple-700 from me then add .border-stone-300 to me
+			remove .bg-purple-50 from me then add .bg-stone-50 to me
+			set droppedFiles to event.dataTransfer.files
+			if first of droppedFiles is not null
+				get <p[data-file-name]/> 
+				remove .invisible from it
+				set its innerText to first of droppedFiles's name
+				set #file-input's files to droppedFiles
+				send gotfiles to #file-input
+				add @aria-has-file to me
+			end
+			"
+	>
+		@icon
+		<p data-file-name class="mb-2 text-sm text-stone-500 invisible">x.py</p>
+		<p data-file-constraint class="text-sm text-stone-500 font-bold">{ constraint }</p>
+		<p data-file-hint class="text-sm text-stone-500">Drop code here, or click</p>
+		<input
+			type="file"
+			id="file-input"
+			class="hidden"
+			{ attributes... }
+		/>
+	</label>
+	// <label for={ id } class="mb-1.5 block text-xs font-medium text-stone-700">{ label } </label>
+	// <input
+	// 	id={ id }
+	// 	name={ id }
+	// 	type="file"
+	// 	{ attributes... }
+	// 	required
+	// 	aria-describedby={ id + "-constraints" }
+	// 	if problem != "" {
+	// 		aria-invalid="true"
+	// 	}
+	// 	class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
+	// />
+	// <small
+	// 	id={ id + "-constraints" }
+	// 	if problem != "" {
+	// 		aria-invalid="true"
+	// 	}
+	// 	class="mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700"
+	// >
+	// 	if problem != "" {
+	// 		{ problem }
+	// 	} else {
+	// 		{ constraint }
+	// 	}
+	// </small>
+}
+
+templ ValidationInputConstraint(inputId, constraint string, invalid bool) {
+	<small
+		id={ inputId + "-constraints" }
+		class="mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700"
+		hx-swap-oob="true"
+		aria-invalid={ strconv.FormatBool(invalid) }
+		_={ "on load set @aria-invalid of previous <input/> to " + strconv.FormatBool(invalid) }
+	>
+		{ constraint }
+	</small>
+}

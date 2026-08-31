@@ -15,20 +15,9 @@ import (
 	"github.com/philip-h/amics/internal/server"
 	"github.com/philip-h/amics/internal/services"
 	"github.com/philip-h/amics/internal/storage"
-	"github.com/philip-h/amics/templates"
 )
 
-// func getenv(key, preset string) string {
-// 	value, exists := os.LookupEnv(key)
-// 	if exists {
-// 		return value
-// 	} else {
-// 		return preset
-// 	}
-// }
-
-
-func run(
+func Run(
 	ctx context.Context,
 	getenv func(string) string,
 ) error {
@@ -66,12 +55,6 @@ func run(
 	defer db.Close()
 	store := storage.New(db)
 
-	// Templates Setup
-	templates, err := templates.LoadTemplates()
-	if err != nil {
-		return fmt.Errorf("Failed to load templates: %w", err)
-	}
-
 	// Grader worker
 	worker, err := services.NewWorker(db, logger)
 	if err != nil {
@@ -83,7 +66,6 @@ func run(
 	myServer := server.NewServer(
 		logger,
 		store,
-		templates,
 	)
 	server := &http.Server{
 		Addr:    cfg.Port,
@@ -119,7 +101,7 @@ func run(
 
 func main() {
 	ctx := context.Background()
-	if err := run(ctx, os.Getenv); err != nil {
+	if err := Run(ctx, os.Getenv); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

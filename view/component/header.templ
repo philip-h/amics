@@ -1,0 +1,39 @@
+package component
+
+type NavLink struct {
+	Href string
+	Text string
+}
+
+type NavButton struct {
+	Action templ.Attributes
+	Text   string
+}
+
+func MapHasKey(m map[string]any, key string) bool {
+	_, ok := m[key]
+	return ok
+}
+
+templ Header(rootHref string, navLinks []NavLink, buttonLink NavButton) {
+	<header class="bg-white border-b border-stone-200">
+		<nav class="mx-auto flex h-14 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+			<div class="space-x-1">
+				<a href={ rootHref } class="text-lg tracking-tight">/<span class="text-purple-700">am</span><span class="text-lime-700">ics</span></a>
+				for _, link := range navLinks {
+					<span>/</span>
+					if link.Href == "" {
+						<span>{ link.Text }</span>
+					} else {
+						<a href={ link.Href } class="text-purple-700 hover:underline">{ link.Text }</a>
+					}
+				}
+			</div>
+			if MapHasKey(buttonLink.Action, "href") {
+				<a { buttonLink.Action... } class="text-sm text-purple-700 border border-white rounded-md px-3 py-1 transition hover:border-purple-700">{ buttonLink.Text }</a>
+			} else {
+				<button { buttonLink.Action... } class="text-sm text-purple-700 border border-white rounded-md px-3 py-1 transition hover:border-purple-700 hover:cursor-pointer">{ buttonLink.Text }</button>
+			}
+		</nav>
+	</header>
+}

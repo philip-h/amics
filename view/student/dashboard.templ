@@ -1,0 +1,200 @@
+package student
+
+import (
+	"fmt"
+	"github.com/philip-h/amics/internal/storage"
+	"github.com/philip-h/amics/view"
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/component/svg"
+	"github.com/philip-h/amics/view/layout"
+	"strconv"
+	"strings"
+)
+
+templ Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []string, courseId string, studentAverage float64, studentId string, isTeacher bool) {
+	{{ totals := getAssignmentTotals(assignments) }}
+	@layout.Base("/amics/0x" + studentId) {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{
+					Href: "",
+					Text: "0x" + studentId,
+				},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<div class="grid min-h-160 grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)]">
+			<aside class="border-b border-stone-200 bg-white p-4 hidden lg:block lg:border-b-0 lg:border-r lg:p-5">
+				<div class="mb-6">
+					<p class="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-stone-400">Progress</p>
+				</div>
+				<div class="space-y-3 mb-6">
+					if len(keys) == 0 {
+						<p class="px-2 text-sm text-stone-500">No assignments yet</p>
+					} else {
+						for _, unit := range keys {
+							{{ progress := totals[unit] }}
+							@UnitSideItem(unit, progress)
+						}
+					}
+				</div>
+				<div class="mb-6">
+					<p class="mb-2 px-2 text-xs font-medium uppercase tracking-wider text-stone-400">Help</p>
+				</div>
+				<div class="space-y-3">
+					<a href="https://docs.python.org/3/library/index.html" target="_blank" class="block rounded-lg px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-100 hover:text-stone-900">Docs</a>
+				</div>
+			</aside>
+			<main class="p-4 sm:p-6 lg:p-8">
+				<p class="mb-2 font-mono text-xs text-lime-700">$ assignments --group-by unit</p>
+				if isTeacher {
+					<div class="mb-6">
+						<a href="/teacher" class="text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800">Teacher view</a>
+					</div>
+				}
+				<div class="flex justify-between items-center mb-6">
+					<h1 class="text-2xl font-semibold tracking-tight">Your assignments</h1>
+					{{ hyper := "on click if my @data-showing is 'true' then set my textContent to '</>%' then set my @data-showing to 'false' else set my textContent to " + strconv.FormatFloat(studentAverage, 'f', 2, 64) + "% then set my @data-showing to 'true'" }}
+					<span
+						data-showing="false"
+						class="user-select-none hover:cursor-pointer hover:text-stone-700"
+						_={ hyper }
+					>
+						&lt;/&gt;%
+					</span>
+				</div>
+				<div class="space-y-5">
+					if len(keys) == 0 {
+						<p class="px-2">No assignments yet</p>
+					} else {
+						for _, unit := range keys {
+							{{ unitAssignments := assignments[unit] }}
+							@UnitCard(unit, unitAssignments, courseId, totals[unit])
+						}
+					}
+				</div>
+			</main>
+		</div>
+	}
+}
+
+func getAssignmentTotals(assignments map[string][]*storage.AssignmentWithGrade) map[string]view.Frac {
+	totals := make(map[string]view.Frac)
+	for unit, unitAssignments := range assignments {
+		total := 0
+		completed := 0
+		for _, assignment := range unitAssignments {
+			total++
+			if assignment.Grade.Valid {
+				completed++
+			}
+		}
+		totals[unit] = view.NewFrac(completed, total)
+	}
+	return totals
+}
+
+templ UnitSideItem(name string, progress view.Frac) {
+	<div class="rounded-lg border border-stone-200 bg-stone-50 p-2.5">
+		<div class="mb-2 flex items-center gap-2">
+			<div class="h-2 w-2 rounded-full bg-purple-700"></div>
+			<p class="text-sm text-stone-700">{ name }</p>
+			<span class="ml-auto rounded-full bg-white px-2 py-0.5 text-xs text-stone-500">{ progress.String() }</span>
+		</div>
+		<div class="h-1.5 overflow-hidden rounded-full bg-stone-200">
+			<div class="h-full rounded-full bg-purple-700" style={ progressStyle(progress.Percent()) }></div>
+		</div>
+	</div>
+}
+
+templ UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId string, progress view.Frac) {
+	{{ total := len(assignments) }}
+	{{ completed := 0 }}
+	for _, assignment := range assignments {
+		if assignment.Grade.Valid {
+			{{ completed++ }}
+		}
+	}
+	{{ unitId := strings.ReplaceAll(strings.ToLower(name), " ", "-") }}
+	<div class="overflow-hidden rounded-xl border border-stone-200 bg-white transition hover:shadow-md">
+		<div class="flex items-start gap-3 border-b border-stone-200 px-4 py-4 sm:px-6">
+			<div class="h-10 w-1 rounded-full bg-purple-700"></div>
+			<div class="min-w-0 flex-1">
+				<p class="mb-1 text-sm sm:text-base">{ name }</p>
+				<div class="flex items-center gap-2">
+					<span class="text-xs text-stone-500">{ total } { view.Pluralize(total, "assignment", "assignments") } </span>
+				</div>
+			</div>
+			<div class="hidden justify-center items-center gap-2 sm:flex flex-col">
+				<div class="flex gap-2 items-center">
+					<div class="h-1.5 w-20 overflow-hidden rounded-full bg-stone-200">
+						<div class="h-full rounded-full bg-purple-700" style={ progressStyle(completed * 100 / total) }></div>
+					</div>
+					<span class="font-mono text-xs text-stone-500">{ completed } / { total }</span>
+				</div>
+				<button
+					class="flex items-center justify-center p-2 rounded-full transition hover:bg-stone-300 hover:cursor-pointer self-end transition-transform duration-300"
+					if completed != total {
+						style="transform: rotate(180deg);"
+					}
+					_={ fmt.Sprintf(`on click 
+						toggle .rotate-180 on me
+						toggle .collapsed on #assignments-list-%s`, unitId) }
+				>
+					@svg.DownArrow()
+				</button>
+			</div>
+		</div>
+		<div
+			id={ "assignments-list-" + unitId }
+			class={ "grid transition-[grid-template-rows] duration-300 grid-rows-[1fr] [&.collapsed]:grid-rows-[0fr]"+
+					func() string {
+						if completed == total {
+							return " collapsed"
+						}
+						return ""
+					}() }
+		>
+			<div
+				class="overflow-hidden"
+			>
+				for _, assignment := range assignments {
+					<a href={ "/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) + "/details" } class="grid grid-cols-1 gap-2 border-b border-stone-100 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4 sm:px-6 hover:cursor-pointer hover:bg-stone-50">
+						<div class="flex min-w-0 items-center gap-2.5">
+							@StatusDot(assignment.Grade.Valid)
+							<p class={ assignmentTitleClass(assignment.Grade.Valid) }>{ assignment.Name }</p>
+						</div>
+						<span class="font-mono text-xs text-stone-400">{ assignment.DueDate.Format("Mon Jan 02 @ 15:04") }</span>
+						@component.StatusPill(assignment.Grade.Valid, int(assignment.Grade.Int64), assignment.Points)
+					</a>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+templ StatusDot(done bool) {
+	if done {
+		<div class="flex h-4 w-4 items-center justify-center rounded-full border border-lime-300 bg-lime-100 text-xs text-lime-700" aria-hidden="true">&#10003;</div>
+	} else {
+		<div class="h-4 w-4 rounded-full border border-stone-300" aria-hidden="true"></div>
+	}
+}
+
+func progressStyle(progress int) string {
+	return "width:" + strconv.Itoa(progress) + "%"
+}
+
+func assignmentTitleClass(completed bool) string {
+	if completed {
+		return "truncate text-sm text-stone-500 line-through decoration-stone-300"
+	}
+	return "truncate text-sm"
+}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/philip-h/amics/internal/db"
 	"github.com/philip-h/amics/internal/storage"
-	"github.com/philip-h/amics/templates"
 )
 
 var (
@@ -45,16 +44,9 @@ func newTestServer(testStore *storage.Storage) (http.Handler, error) {
 		LogLvl: &slog.LevelVar{},
 	}
 
-	tmpls, err := templates.LoadTemplates()
-
-	if err != nil {
-		return nil, err
-	}
-
 	testServer := NewServer(
 		testLogger,
 		testStore,
-		tmpls,
 	)
 
 	return testServer, nil

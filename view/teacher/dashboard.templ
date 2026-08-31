@@ -1,0 +1,293 @@
+package teacher
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/philip-h/amics/internal/storage"
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/component/svg"
+	"github.com/philip-h/amics/view/layout"
+)
+
+func courseCardClass(active bool) string {
+	base := "rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50"
+	if active {
+		return base + " ring-1 ring-purple-200"
+	}
+	return base
+}
+
+func assignmentTagClass(language string) string {
+	switch strings.ToLower(language) {
+	case "python":
+		return "rounded-md bg-lime-100 px-2 py-0.5 font-mono text-[10px] text-lime-800"
+	case "c":
+		return "rounded-md bg-indigo-100 px-2 py-0.5 font-mono text-[10px] text-indigo-800"
+	case "javascript":
+		return "rounded-md bg-amber-100 px-2 py-0.5 font-mono text-[10px] text-amber-800"
+	case "sql":
+		return "rounded-md bg-sky-100 px-2 py-0.5 font-mono text-[10px] text-sky-800"
+	case "java":
+		return "rounded-md bg-rose-100 px-2 py-0.5 font-mono text-[10px] text-rose-800"
+	default:
+		return "rounded-md bg-stone-100 px-2 py-0.5 font-mono text-[10px] text-stone-700"
+	}
+}
+
+func statusPillClass(published bool) string {
+	if published {
+		return "rounded-full bg-lime-100 px-2.5 py-0.5 font-mono text-[10px] text-lime-800"
+	}
+	return "rounded-full bg-stone-100 px-2.5 py-0.5 font-mono text-[10px] text-stone-700"
+}
+
+func submissionClass(submitted, total int) string {
+	if total > 0 && submitted == total {
+		return "font-mono text-xs text-lime-700"
+	}
+	if submitted == 0 {
+		return "font-mono text-xs text-stone-400"
+	}
+	return "font-mono text-xs text-amber-700"
+}
+
+templ Dashboard(courses []*storage.Course) {
+	@layout.Base("/amics/teacher") {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{Href: "", Text: "teacher"},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<main class="p-4 sm:p-6 lg:p-8">
+			<p class="mb-2 font-mono text-xs text-lime-700">$ admin --dashboard</p>
+			<h1 class="mb-6 text-2xl font-semibold tracking-tight">Instructor dashboard</h1>
+			<div class="mb-8">
+				<div class="mb-3 flex items-center justify-between">
+					<h2 class="text-sm font-medium">Courses</h2>
+					<a class="rounded-md border border-purple-200 bg-white px-3 py-1.5 text-xs font-medium text-purple-700 transition hover:bg-purple-50" href="/teacher/courses/new">New course</a>
+				</div>
+				<div class="grid gap-3 sm:grid-cols-2">
+					if len(courses) == 0 {
+						<div class="rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-500">No courses yet. Create your first course to get started.</div>
+					} else {
+						for i, course := range courses {
+							<div
+								role="button"
+								hx-get={ "/teacher/courses/" + strconv.Itoa(course.Id) + "/details" }
+								if i == 0 {
+									hx-trigger="load, click"
+								} else {
+									hx-trigger="click"
+								}
+								hx-target="#courseDetails"
+								data-course-active={ i == 0 }
+								class="rounded-xl border border-stone-200 bg-white p-4 transition hover:bg-stone-50 data-[course-active='true']:ring-1 data-[course-active='true']:ring-purple-500"
+								_="on click get <div[data-course-active='true']/> then set it's @data-course-active to 'false' then set my @data-course-active to 'true'"
+							>
+								<div class="mb-2 flex items-center justify-between gap-2">
+									<span class="rounded-md bg-sky-100 px-2 py-0.5 font-mono text-xs text-sky-800">{ course.CourseCode } - { course.Section }</span>
+									<div class="flex gap-1">
+										<a href={ "/teacher/courses/" + strconv.Itoa(course.Id) + "/export" } hx-boost="false" class="rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer" title="Export grades.">
+											@svg.ExportSvg()
+										</a>
+										<a href={ "/teacher/courses/" + strconv.Itoa(course.Id) } class="rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer" title="Edit course details." hx-target="body" hx-push-url="true">
+											@svg.EditSvg()
+										</a>
+									</div>
+								</div>
+								<p class="mb-1 text-sm font-medium text-stone-900">{ course.Name }</p>
+								<div class="flex items-center justify-between text-xs">
+									<div class="text-stone-500">{ course.Year } / Semester { course.Semester }</div>
+									<button
+										class="flex items-center gap-1 rounded-md border-stone-200 bg-stone-100 p-2 text-xs hover:bg-stone-200 hover:cursor-pointer"
+										title="Copy course code."
+										_={ fmt.Sprintf(`
+                                            on click
+                                              writeText('%s') on navigator.clipboard
+                                              put 'Copied!' into innerText of <span/> in me
+                                              wait 1s
+                                              put '%s' into innerText of <span/> in me
+                                              end `, course.JoinCode, course.JoinCode) }
+									>
+										<span>{ course.JoinCode }</span> @svg.CopySvg()
+									</button>
+								</div>
+							</div>
+						}
+					}
+				</div>
+			</div>
+			@CourseAssignmentsAndStudents(nil, nil, nil, 1)
+		</main>
+	}
+}
+
+templ CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionCounts map[int]int, students []*storage.Person, courseId int) {
+	<div id="courseDetails">
+		<div class="mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white">
+			<div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5">
+				<h2 class="text-sm font-medium">Assignments</h2>
+				<a class="rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800" href={ "/teacher/courses/" + strconv.Itoa(courseId) + "/assignments/new" }>New assignment</a>
+			</div>
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm">
+					<thead class="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+						<tr>
+							<th class="px-4 py-2.5 sm:px-5">Title</th>
+							<th class="px-4 py-2.5">Unit</th>
+							<th class="px-4 py-2.5">Due</th>
+							<th class="px-4 py-2.5">Status</th>
+							<th class="px-4 py-2.5">Submissions</th>
+							<th class="px-4 py-2.5">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						if len(assignments) == 0 {
+							<tr>
+								<td class="px-4 py-4 text-stone-500 sm:px-5" colspan="6">No assignments yet.</td>
+							</tr>
+						} else {
+							for _, assignment := range assignments {
+								<tr class="border-t border-stone-100 align-middle">
+									<td class="px-4 py-3 sm:px-5">
+										{ assignment.Name }
+									</td>
+									<td class="px-4 py-3 text-xs text-stone-500">{ assignment.UnitName }</td>
+									<td class="px-4 py-3 font-mono text-xs text-stone-500">{ assignment.DueDate.Format("Mon Jan 2") }</td>
+									<td class="px-4 py-3"><span class={ statusPillClass(assignment.Visible) }>{ statusLabel(assignment.Visible) }</span></td>
+									<td class="px-4 py-3"><span class={ submissionClass(submissionCounts[assignment.Id], len(students)) }>{ submissionCounts[assignment.Id] } / { len(students) }</span></td>
+									<td class="px-4 py-3 flex items-center gap-2">
+										<a
+											href={ "/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) }
+											class="rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer"
+											title={ "Edit " + assignment.Name + " details." }
+											hx-target="body"
+											hx-push-url="true"
+										>
+											@svg.EditSvg()
+										</a>
+										<a
+											href={ "/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) + "/import" }
+											class="rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer"
+											title={ "Import " + assignment.Name + " grades." }
+											hx-target="body"
+											hx-push-url="true"
+										>
+											@svg.ImportSvg()
+										</a>
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white">
+			<div class="flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5">
+				<h2 class="text-sm font-medium">Students</h2>
+				<button
+					class="rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer"
+					_="on click
+                        set pass_col to <[data-showing-pass-col]/> in next <table/>
+                        if @data-showing-pass-col of pass_col[0] is 'false'
+                            set @data-showing-pass-col of pass_col to 'true'
+                        else
+                            set @data-showing-pass-col of pass_col to 'false'
+                        end
+                    "
+				>
+					Toggle changle password column
+				</button>
+			</div>
+			<div class="overflow-x-auto">
+				<table class="w-full text-left text-sm">
+					<thead class="bg-stone-50 text-xs uppercase tracking-wider text-stone-500">
+						<tr>
+							<th class="px-4 py-2.5 sm:px-5">Name</th>
+							<th class="px-4 py-2.5">Username</th>
+							<th class="px-4 py-2.5">Student #</th>
+							<th class="px-4 py-2.5">Actions</th>
+							<th
+								class="px-4 py-2.5 data-[showing-pass-col='false']:hidden"
+								data-showing-pass-col="false"
+							>
+								New Password
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						if len(students) == 0 {
+							<tr>
+								<td class="px-4 py-4 text-stone-500 sm:px-5" colspan="6">No students enrolled.</td>
+							</tr>
+						} else {
+							for _, student := range students {
+								<tr class="border-t border-stone-100 align-middle">
+									<td class="px-4 py-3 sm:px-5">
+										{ student.FirstName }
+									</td>
+									<td class="px-4 py-3 text-xs text-stone-500">{ student.Username } </td>
+									<td class="px-4 py-3 text-xs text-stone-500">{ student.Id }</td>
+									<td class="px-4 py-3 flex items-center gap-2">
+										<a
+											href={ "/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id) }
+											class="rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer"
+											title={ "View " + student.FirstName + "'s profile." }
+											hx-target="body"
+											hx-push-url="true"
+										>
+											@svg.ProfileSVG()
+										</a>
+									</td>
+									<td
+										class="px-4 py-3 text-xs text-stone-500 box-border data-[showing-pass-col='false']:hidden"
+										data-showing-pass-col="false"
+									>
+										<div class="flex max-w-64">
+											<input
+												id="new-password"
+												name="new-password"
+												type="text"
+												placeholder="eg. pass123"
+												required
+												class="flex-grow w-full max-w-64 rounded-l-md border-l border-y border-stone-300 bg-white px-2 py-1 text-xs outline-none transition placeholder:text-stone-400 focus:border-purple-300"
+											/>
+											<button
+												type="button"
+												id="submit-password"
+												class="inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-2 py-1 text-xs text-white transition hover:bg-purple-800 hover:cursor-pointer"
+												hx-post={ "/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id) + "/passwordreset" }
+												hx-push-url="true"
+												hx-target="body"
+												hx-include="previous <input/>"
+												hx-vals={ "{\"student-id\":\"" + strconv.Itoa(student.Id) + "\"}" }
+											>Ok</button>
+										</div>
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+}
+
+func statusLabel(visible bool) string {
+	if visible {
+		return "published"
+	}
+	return "draft"
+}
