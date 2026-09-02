@@ -53,12 +53,12 @@ templ Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []st
 				</div>
 			</aside>
 			<main class="p-4 sm:p-6 lg:p-8">
-				<p class="mb-2 font-mono text-xs text-lime-700">$ assignments --group-by unit</p>
 				if isTeacher {
-					<div class="mb-6">
+					<div class="mb-6 flex justify-end">
 						<a href="/teacher" class="text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800">Teacher view</a>
 					</div>
 				}
+				<p class="mb-2 font-mono text-xs text-lime-700">$ assignments --group-by unit</p>
 				<div class="flex justify-between items-center mb-6">
 					<h1 class="text-2xl font-semibold tracking-tight">Your assignments</h1>
 					{{ hyper := "on click if my @data-showing is 'true' then set my textContent to '</>%' then set my @data-showing to 'false' else set my textContent to " + strconv.FormatFloat(studentAverage, 'f', 2, 64) + "% then set my @data-showing to 'true'" }}

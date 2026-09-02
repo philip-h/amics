@@ -109,11 +109,11 @@ func addRoutes(
 		))
 	mux.Handle("POST /teacher/courses/{courseId}/assignments/{assignmentId}/import",
 		requiresTeacher(
-			handleTeacherGradesImportPost(logger, store),
+			handleTeacherGradesImportPost(store),
 		))
 	mux.Handle("GET /teacher/courses/{courseId}/export",
 		requiresTeacher(
-			handleTeacherCourseGradesExport(logger, store),
+			handleTeacherCourseGradesExport(store),
 		))
 	mux.Handle("GET /teacher/courses/{courseId}/assignments/{assignmentId}/export_code",
 		requiresTeacher(
@@ -123,7 +123,7 @@ func addRoutes(
 	// teacher student management
 	mux.Handle("POST /teacher/courses/{courseId}/students/{studentId}/passwordreset",
 		requiresTeacher(
-			handleTeacherStudentPasswordReset(logger, store),
+			handleTeacherStudentPasswordReset(store),
 		))
 
 	mux.Handle("GET /teacher/courses/{courseId}/students/{studentId}",
@@ -132,6 +132,6 @@ func addRoutes(
 		))
 	mux.Handle("GET /teacher/courses/{courseId}/students/{studentId}/submissions/{assignmentId}",
 		requiresTeacher(
-			handleTeacherStudentSubmissionGet(logger, store),
+			handleTeacherStudentSubmissionGet(store),
 		))
 }

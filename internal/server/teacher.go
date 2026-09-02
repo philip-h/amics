@@ -28,7 +28,18 @@ func handleTeacherDashboardGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.dashboard.get] Could not get courses: %w", err)
 		}
 
-		return teacher.Dashboard(courses).Render(r.Context(), w)
+		flash, err := getFlash(w, r)
+		if err != nil {
+			return fmt.Errorf("[teacher.dashboard.get] Could not get flash: %w", err)
+		}
+		if flash == nil {
+			flash = &Flash{
+				Message: "",
+				IsError: false,
+			}
+		}
+
+		return teacher.Dashboard(courses, flash.Message, flash.IsError).Render(r.Context(), w)
 	})
 }
 
@@ -137,6 +148,11 @@ func handleTeacherCoursePost(logger *Logger, store *storage.Storage) http.Handle
 
 		w.Header().Set("HX-Redirect", "/teacher")
 		w.Header().Set("HX-Push-Url", "/teacher")
+		flash := &Flash{
+			Message: "Successfully created " + course.Name,
+			IsError: false,
+		}
+		setFlash(w, flash)
 		return nil
 	})
 }
@@ -186,6 +202,11 @@ func handleTeacherCoursePut(logger *Logger, store *storage.Storage) http.Handler
 			reqBody.ServerError = "Sorry, something went seriously wrong on our end. Please try again in a sec."
 			return teacher.ManageCourse(reqBody).Render(r.Context(), w)
 		}
+		flash := &Flash{
+			Message: "Successfully updated " + course.Name,
+			IsError: false,
+		}
+		setFlash(w, flash)
 
 		w.Header().Set("HX-Redirect", "/teacher")
 		w.Header().Set("HX-Push-Url", "/teacher")
@@ -300,6 +321,11 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 		redirectUrl := "/teacher"
 		w.Header().Set("HX-Redirect", redirectUrl)
 		w.Header().Set("HX-Push-Url", redirectUrl)
+		flash := &Flash{
+			Message: "Successfully created " + assignment.Name,
+			IsError: false,
+		}
+		setFlash(w, flash)
 		return nil
 	})
 }
@@ -379,8 +405,13 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 		}
 
 		redirectUrl := "/teacher"
-		w.Header().Set("HX-Redirect", redirectUrl)
+		w.Header().Set("HX-Location", redirectUrl)
 		w.Header().Set("HX-Push-Url", redirectUrl)
+		flash := &Flash{
+			Message: "Successfully updated " + assignment.Name,
+			IsError: false,
+		}
+		setFlash(w, flash)
 		return nil
 	})
 }
@@ -463,7 +494,7 @@ func handleTeacherGradesImportTemplateGet(store *storage.Storage) http.Handler {
 	})
 }
 
-func handleTeacherGradesImportPost(logger *Logger, store *storage.Storage) http.Handler {
+func handleTeacherGradesImportPost(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		assignmentId := r.PathValue("assignmentId")
@@ -494,12 +525,17 @@ func handleTeacherGradesImportPost(logger *Logger, store *storage.Storage) http.
 		}
 
 		w.Header().Set("HX-Redirect", "/teacher")
+		flash := &Flash{
+			Message: "Successfully imported "+ strconv.Itoa(len(studentIds))+" grades for assignment with id" + assignmentId,
+			IsError: false,
+		}
+		setFlash(w, flash)
 
 		return nil
 	})
 }
 
-func handleTeacherCourseGradesExport(logger *Logger, store *storage.Storage) http.Handler {
+func handleTeacherCourseGradesExport(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		courseId, err := strconv.Atoi(r.PathValue("courseId"))
@@ -584,7 +620,7 @@ func handleTeacherCodeExport(store *storage.Storage) http.Handler {
 
 }
 
-func handleTeacherStudentPasswordReset(logger *Logger, store *storage.Storage) http.Handler {
+func handleTeacherStudentPasswordReset(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		// Read the request body from form values
@@ -605,6 +641,11 @@ func handleTeacherStudentPasswordReset(logger *Logger, store *storage.Storage) h
 		}
 
 		w.Header().Set("HX-Redirect", "/teacher/")
+		flash := &Flash{
+			Message: "Successfully reset password for student " + studentIdStr,
+			IsError: false,
+		}
+		setFlash(w, flash)
 		return nil
 
 	})
@@ -662,7 +703,7 @@ func handleTeacherStudentGet(store *storage.Storage) http.Handler {
 	})
 }
 
-func handleTeacherStudentSubmissionGet(logger *Logger, store *storage.Storage) http.Handler {
+func handleTeacherStudentSubmissionGet(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 
 		studentId, err := intPathValue(r, "studentId")

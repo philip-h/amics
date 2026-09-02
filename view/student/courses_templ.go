@@ -67,7 +67,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"min-h-160\"><main class=\"p-4 sm:p-6 lg:p-8\"><p class=\"mb-2 font-mono text-xs text-lime-700\">$ courses --all</p><h1 class=\"text-2xl font-semibold tracking-tight\">Which course are you working on?</h1><h3 class=\"text-stone-600\">You can switch at any time from the top bar.</h3>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, " <div class=\"min-h-160\"><main class=\"p-4 sm:p-6 lg:p-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -77,7 +77,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<p class=\"mb-2 font-mono text-xs text-lime-700\">$ courses --all</p><h1 class=\"text-2xl font-semibold tracking-tight\">Which course are you working on?</h1><div class=\"mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -89,7 +89,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 				var templ_7745c5c3_Var3 templ.SafeURL
 				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs("/c/" + strconv.Itoa(course.Id))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 40, Col: 47}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 39, Col: 47}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 				if templ_7745c5c3_Err != nil {
@@ -102,7 +102,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(course.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 41, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 40, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -115,7 +115,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 				var templ_7745c5c3_Var5 string
 				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(course.Year)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 42, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 41, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 				if templ_7745c5c3_Err != nil {
@@ -128,7 +128,7 @@ func Courses(courses []*storage.Course, studentId string, isTeacher bool) templ.
 				var templ_7745c5c3_Var6 string
 				templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(course.Semester)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 42, Col: 92}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/courses.templ`, Line: 41, Col: 92}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 				if templ_7745c5c3_Err != nil {

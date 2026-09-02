@@ -53,7 +53,7 @@ func submissionClass(submitted, total int) string {
 	return "font-mono text-xs text-amber-700"
 }
 
-templ Dashboard(courses []*storage.Course) {
+templ Dashboard(courses []*storage.Course, flash string, isFlashError bool) {
 	@layout.Base("/amics/teacher") {
 		@component.Header(
 			"/h",
@@ -68,7 +68,14 @@ templ Dashboard(courses []*storage.Course) {
 				Text: "Logout",
 			},
 		)
-		<main class="p-4 sm:p-6 lg:p-8">
+		<main class="p-4 sm:p-6 lg:p-8 relative">
+			if flash != "" {
+				if isFlashError {
+					<div class="px-4 py-2 bg-red-700 rounded-md text-white fixed top-16 left-16 z-100" _="on load wait 5s then remove me">{ flash }</div>
+				} else {
+					<div class="px-4 py-2 bg-lime-700 rounded-md text-white fixed top-16 left-16 z-100" _="on load wait 5s then remove me">{ flash }</div>
+				}
+			}
 			<p class="mb-2 font-mono text-xs text-lime-700">$ admin --dashboard</p>
 			<h1 class="mb-6 text-2xl font-semibold tracking-tight">Instructor dashboard</h1>
 			<div class="mb-8">

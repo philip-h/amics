@@ -90,17 +90,17 @@ func Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []str
 					}
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div class=\"mb-6\"><p class=\"mb-2 px-2 text-xs font-medium uppercase tracking-wider text-stone-400\">Help</p></div><div class=\"space-y-3\"><a href=\"https://docs.python.org/3/library/index.html\" target=\"_blank\" class=\"block rounded-lg px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-100 hover:text-stone-900\">Docs</a></div></aside><main class=\"p-4 sm:p-6 lg:p-8\"><p class=\"mb-2 font-mono text-xs text-lime-700\">$ assignments --group-by unit</p>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div><div class=\"mb-6\"><p class=\"mb-2 px-2 text-xs font-medium uppercase tracking-wider text-stone-400\">Help</p></div><div class=\"space-y-3\"><a href=\"https://docs.python.org/3/library/index.html\" target=\"_blank\" class=\"block rounded-lg px-4 py-2 text-sm text-stone-700 transition hover:bg-stone-100 hover:text-stone-900\">Docs</a></div></aside><main class=\"p-4 sm:p-6 lg:p-8\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if isTeacher {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"mb-6\"><a href=\"/teacher\" class=\"text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800\">Teacher view</a></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"mb-6 flex justify-end\"><a href=\"/teacher\" class=\"text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800\">Teacher view</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex justify-between items-center mb-6\"><h1 class=\"text-2xl font-semibold tracking-tight\">Your assignments</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<p class=\"mb-2 font-mono text-xs text-lime-700\">$ assignments --group-by unit</p><div class=\"flex justify-between items-center mb-6\"><h1 class=\"text-2xl font-semibold tracking-tight\">Your assignments</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
