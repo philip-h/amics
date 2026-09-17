@@ -116,7 +116,6 @@ templ FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component,
 				set its innerText to first of droppedFiles's name
 				set #file-input's files to droppedFiles
 				send gotfiles to #file-input
-				add @aria-has-file to me
 			end
 			"
 	>
@@ -128,35 +127,10 @@ templ FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component,
 			type="file"
 			id="file-input"
 			class="hidden"
+      name={ id }
 			{ attributes... }
 		/>
 	</label>
-	// <label for={ id } class="mb-1.5 block text-xs font-medium text-stone-700">{ label } </label>
-	// <input
-	// 	id={ id }
-	// 	name={ id }
-	// 	type="file"
-	// 	{ attributes... }
-	// 	required
-	// 	aria-describedby={ id + "-constraints" }
-	// 	if problem != "" {
-	// 		aria-invalid="true"
-	// 	}
-	// 	class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
-	// />
-	// <small
-	// 	id={ id + "-constraints" }
-	// 	if problem != "" {
-	// 		aria-invalid="true"
-	// 	}
-	// 	class="mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700"
-	// >
-	// 	if problem != "" {
-	// 		{ problem }
-	// 	} else {
-	// 		{ constraint }
-	// 	}
-	// </small>
 }
 
 templ ValidationInputConstraint(inputId, constraint string, invalid bool) {

@@ -388,7 +388,7 @@ func FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component, 
 			templ_7745c5c3_Var20 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<label id=\"file-dropzone\" class=\"flex flex-col items-center justify-center border border-dashed border-stone-300 rounded-md bg-stone-50 py-4 outline-none transition text-center focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] hover:cursor-pointer hover:border-purple-700 hover:bg-purple-50 aria-[has-file]:border-lime-700 aria-[has-file]:bg-lime-50 aria-[error]:border-red-700 aria-[error]:bg-red-50\" _=\"on dragover\n\t\t\thalt the event's default\n\t\t\tremove .border-stone-300 from me then add .border-purple-700 to me\n\t\t\tremove .bg-stone-50 from me then add .bg-purple-50 to me\n\t\ton dragleave \n\t\t\tremove .border-purple-700 from me then add .border-stone-300 to me\n\t\t\tremove .bg-purple-50 from me then add .bg-stone-50 to me\n\t\ton drop\n\t\t\thalt the event's default\n\t\t\tremove .border-purple-700 from me then add .border-stone-300 to me\n\t\t\tremove .bg-purple-50 from me then add .bg-stone-50 to me\n\t\t\tset droppedFiles to event.dataTransfer.files\n\t\t\tif first of droppedFiles is not null\n\t\t\t\tget <p[data-file-name]/> \n\t\t\t\tremove .invisible from it\n\t\t\t\tset its innerText to first of droppedFiles's name\n\t\t\t\tset #file-input's files to droppedFiles\n\t\t\t\tsend gotfiles to #file-input\n\t\t\t\tadd @aria-has-file to me\n\t\t\tend\n\t\t\t\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "<label id=\"file-dropzone\" class=\"flex flex-col items-center justify-center border border-dashed border-stone-300 rounded-md bg-stone-50 py-4 outline-none transition text-center focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] hover:cursor-pointer hover:border-purple-700 hover:bg-purple-50 aria-[has-file]:border-lime-700 aria-[has-file]:bg-lime-50 aria-[error]:border-red-700 aria-[error]:bg-red-50\" _=\"on dragover\n\t\t\thalt the event's default\n\t\t\tremove .border-stone-300 from me then add .border-purple-700 to me\n\t\t\tremove .bg-stone-50 from me then add .bg-purple-50 to me\n\t\ton dragleave \n\t\t\tremove .border-purple-700 from me then add .border-stone-300 to me\n\t\t\tremove .bg-purple-50 from me then add .bg-stone-50 to me\n\t\ton drop\n\t\t\thalt the event's default\n\t\t\tremove .border-purple-700 from me then add .border-stone-300 to me\n\t\t\tremove .bg-purple-50 from me then add .bg-stone-50 to me\n\t\t\tset droppedFiles to event.dataTransfer.files\n\t\t\tif first of droppedFiles is not null\n\t\t\t\tget <p[data-file-name]/> \n\t\t\t\tremove .invisible from it\n\t\t\t\tset its innerText to first of droppedFiles's name\n\t\t\t\tset #file-input's files to droppedFiles\n\t\t\t\tsend gotfiles to #file-input\n\t\t\tend\n\t\t\t\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -403,13 +403,26 @@ func FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component, 
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(constraint)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 125, Col: 79}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 124, Col: 79}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</p><p data-file-hint class=\"text-sm text-stone-500\">Drop code here, or click</p><input type=\"file\" id=\"file-input\" class=\"hidden\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "</p><p data-file-hint class=\"text-sm text-stone-500\">Drop code here, or click</p><input type=\"file\" id=\"file-input\" class=\"hidden\" name=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var22 string
+		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(id)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 130, Col: 15}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -417,7 +430,7 @@ func FileDropzoneFormControl(attributes templ.Attributes, icon templ.Component, 
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "></label>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "></label>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -441,64 +454,64 @@ func ValidationInputConstraint(inputId, constraint string, invalid bool) templ.C
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var22 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var22 == nil {
-			templ_7745c5c3_Var22 = templ.NopComponent
+		templ_7745c5c3_Var23 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var23 == nil {
+			templ_7745c5c3_Var23 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "<small id=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var23 string
-		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(inputId + "-constraints")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 164, Col: 31}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "\" class=\"mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700\" hx-swap-oob=\"true\" aria-invalid=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<small id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var24 string
-		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.FormatBool(invalid))
+		templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.ResolveAttributeValue(inputId + "-constraints")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 167, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 138, Col: 31}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var24)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" _=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "\" class=\"mt-1.5 block text-xs text-stone-500 aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700\" hx-swap-oob=\"true\" aria-invalid=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var25 string
-		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue("on load set @aria-invalid of previous <input/> to " + strconv.FormatBool(invalid))
+		templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.FormatBool(invalid))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 168, Col: 88}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 141, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\" _=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var26 string
-		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(constraint)
+		templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue("on load set @aria-invalid of previous <input/> to " + strconv.FormatBool(invalid))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 170, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 142, Col: 88}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</small>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var27 string
+		templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(constraint)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/component/form_control.templ`, Line: 144, Col: 14}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</small>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -43,7 +43,10 @@ func (s *AssignmentStore) Create(ctx context.Context, assignment *Assignment) er
 		assignment.Visible,
 		assignment.CourseId)
 
-	return fmt.Errorf("db(assignment.create): %w", err)
+  if err != nil {
+    return fmt.Errorf("db(assignment.create): %w", err)
+  }
+  return err
 }
 
 func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(ctx context.Context, assignmentId int, studentId int) (*AssignmentSubmission, error) {

@@ -29,7 +29,7 @@ func (s *CourseStore) Create(ctx context.Context, course *Course, teacherId int)
 
 	err = tx.QueryRowContext(ctx, `
   INSERT INTO course (course_code, section, name, year, semester, join_code)
-  VALUES ($1, $2, $3, $4)
+  VALUES ($1, $2, $3, $4, $5, $6)
   RETURNING id`,
 		course.CourseCode,
 		course.Section,
