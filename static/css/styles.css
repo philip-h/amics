@@ -268,9 +268,6 @@
   .top-16 {
     top: calc(var(--spacing) * 16);
   }
-  .right-16 {
-    right: calc(var(--spacing) * 16);
-  }
   .left-16 {
     left: calc(var(--spacing) * 16);
   }
@@ -764,6 +761,9 @@
   .block {
     display: block;
   }
+  .contents {
+    display: contents;
+  }
   .flex {
     display: flex;
   }
@@ -832,9 +832,6 @@
   }
   .w-full {
     width: 100%;
-  }
-  .w-max {
-    width: max-content;
   }
   .max-w-2xl {
     max-width: var(--container-2xl);
@@ -994,6 +991,9 @@
   .overflow-x-scroll {
     overflow-x: scroll;
   }
+  .rounded {
+    border-radius: 0.25rem;
+  }
   .rounded-2xl {
     border-radius: var(--radius-2xl);
   }
@@ -1092,9 +1092,6 @@
   }
   .bg-purple-700 {
     background-color: var(--color-purple-700);
-  }
-  .bg-red-300 {
-    background-color: var(--color-red-300);
   }
   .bg-red-700 {
     background-color: var(--color-red-700);
@@ -1308,9 +1305,6 @@
   .text-stone-500 {
     color: var(--color-stone-500);
   }
-  .text-stone-600 {
-    color: var(--color-stone-600);
-  }
   .text-stone-700 {
     color: var(--color-stone-700);
   }
@@ -1322,6 +1316,9 @@
   }
   .text-zinc-900 {
     color: var(--color-zinc-900);
+  }
+  .lowercase {
+    text-transform: lowercase;
   }
   .uppercase {
     text-transform: uppercase;

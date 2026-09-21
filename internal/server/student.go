@@ -14,7 +14,8 @@ import (
 	"github.com/philip-h/amics/internal/httpe"
 	"github.com/philip-h/amics/internal/storage"
 	"github.com/philip-h/amics/view/student"
-	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/v2/parser"
+	"github.com/yuin/goldmark/v2/renderer/html"
 )
 
 func setLocation(w http.ResponseWriter, r *http.Request, url string) {
@@ -129,7 +130,12 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 
 		var buf bytes.Buffer
 		var htmlDescription string
-		err = goldmark.Convert([]byte(aws.Description), &buf)
+    
+    mdParser := parser.New()
+    renderer := html.New()
+    doc := mdParser.Parse([]byte(aws.Description))
+
+    err = renderer.Render(&buf,[]byte(aws.Description), doc)
 		if err != nil {
 			htmlDescription = aws.Description
 		} else {
