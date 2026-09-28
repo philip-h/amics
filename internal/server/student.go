@@ -14,6 +14,7 @@ import (
 	"github.com/philip-h/amics/internal/httpe"
 	"github.com/philip-h/amics/internal/storage"
 	"github.com/philip-h/amics/view/student"
+	"github.com/yuin/goldmark/v2/extension"
 	"github.com/yuin/goldmark/v2/parser"
 	"github.com/yuin/goldmark/v2/renderer/html"
 )
@@ -131,8 +132,8 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 		var buf bytes.Buffer
 		var htmlDescription string
     
-    mdParser := parser.New()
-    renderer := html.New()
+    mdParser := parser.New(parser.WithExtensions(extension.TableParser))
+    renderer := html.New(html.WithExtensions(extension.TableHTMLRenderer))
     doc := mdParser.Parse([]byte(aws.Description))
 
     err = renderer.Render(&buf,[]byte(aws.Description), doc)
