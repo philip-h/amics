@@ -640,7 +640,7 @@ func handleTeacherStudentPasswordReset(store *storage.Storage) http.Handler {
 
 		}
 
-		w.Header().Set("HX-Redirect", "/teacher/")
+		w.Header().Set("HX-Redirect", "/teacher")
 		flash := &Flash{
 			Message: "Successfully reset password for student " + studentIdStr,
 			IsError: false,
