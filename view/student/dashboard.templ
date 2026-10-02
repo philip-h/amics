@@ -11,6 +11,13 @@ import (
 	"strings"
 )
 
+type AssignmentStatus int
+const (
+  AssignmentStatusNotStarted = iota
+  AssignmentStatusInProgress
+  AssignmentStatusComplete
+)
+
 templ Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []string, courseId string, studentAverage float64, studentId string, isTeacher bool) {
 	{{ totals := getAssignmentTotals(assignments) }}
 	@layout.Base("/amics/0x" + studentId) {
@@ -118,7 +125,7 @@ templ UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId
 	{{ total := len(assignments) }}
 	{{ completed := 0 }}
 	for _, assignment := range assignments {
-		if assignment.Grade.Valid {
+		if assignment.Grade.Valid && int(assignment.Grade.Int64) == assignment.Points {
 			{{ completed++ }}
 		}
 	}
@@ -168,8 +175,18 @@ templ UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId
 				for _, assignment := range assignments {
 					<a href={ "/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) + "/details" } class="grid grid-cols-1 gap-2 border-b border-stone-100 px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-4 sm:px-6 hover:cursor-pointer hover:bg-stone-50">
 						<div class="flex min-w-0 items-center gap-2.5">
-							@StatusDot(assignment.Grade.Valid)
-							<p class={ assignmentTitleClass(assignment.Grade.Valid) }>{ assignment.Name }</p>
+              {{ 
+                var status AssignmentStatus
+                if !assignment.Grade.Valid {
+                  status = AssignmentStatusNotStarted
+                } else if int(assignment.Grade.Int64) == assignment.Points {
+                  status = AssignmentStatusComplete
+                } else {
+                  status = AssignmentStatusInProgress
+                }
+              }}
+							@StatusDot(status)
+							<p class={ assignmentTitleClass(assignment.Grade.Valid && int(assignment.Grade.Int64) == assignment.Points) }>{ assignment.Name }</p>
 						</div>
 						<span class="font-mono text-xs text-stone-400">{ assignment.DueDate.Format("Mon Jan 02 @ 15:04") }</span>
 						@component.StatusPill(assignment.Grade.Valid, int(assignment.Grade.Int64), assignment.Points)
@@ -180,12 +197,16 @@ templ UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId
 	</div>
 }
 
-templ StatusDot(done bool) {
-	if done {
-		<div class="flex h-4 w-4 items-center justify-center rounded-full border border-lime-300 bg-lime-100 text-xs text-lime-700" aria-hidden="true">&#10003;</div>
-	} else {
-		<div class="h-4 w-4 rounded-full border border-stone-300" aria-hidden="true"></div>
-	}
+
+templ StatusDot(status AssignmentStatus) {
+  switch status {
+    case AssignmentStatusNotStarted:
+      <div class="h-4 w-4 rounded-full border border-stone-300" aria-hidden="true"></div>
+    case AssignmentStatusInProgress:
+      <div class="flex h-4 w-4 items-center justify-center rounded-full border border-blue-300 bg-blue-100 text-xs text-blue-700" aria-hidden="true">&#8211;</div>
+    case AssignmentStatusComplete:
+      <div class="flex h-4 w-4 items-center justify-center rounded-full border border-lime-300 bg-lime-100 text-xs text-lime-700" aria-hidden="true">&#10003;</div>
+  }
 }
 
 func progressStyle(progress int) string {

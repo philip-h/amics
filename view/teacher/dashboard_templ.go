@@ -705,7 +705,7 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</a></td><td class=\"px-4 py-3 text-xs text-stone-500 box-border data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\"><div class=\"flex max-w-64\"><input id=\"new-password\" name=\"new-password\" type=\"text\" placeholder=\"eg. pass123\" required class=\"flex-grow w-full max-w-64 rounded-l-md border-l border-y border-stone-300 bg-white px-2 py-1 text-xs outline-none transition placeholder:text-stone-400 focus:border-purple-300\"> <button type=\"button\" id=\"submit-password\" class=\"inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-2 py-1 text-xs text-white transition hover:bg-purple-800 hover:cursor-pointer\" hx-post=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</a></td><td class=\"px-4 py-3 text-xs text-stone-500 box-border data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\"><div class=\"flex max-w-64\"><input id=\"new-password\" name=\"new-password\" type=\"text\" placeholder=\"eg. pass123\" required class=\"grow w-full max-w-64 rounded-l-md border-l border-y border-stone-300 bg-white px-2 py-1 text-xs outline-none transition placeholder:text-stone-400 focus:border-purple-300\"> <button type=\"button\" id=\"submit-password\" class=\"inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-2 py-1 text-xs text-white transition hover:bg-purple-800 hover:cursor-pointer\" hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

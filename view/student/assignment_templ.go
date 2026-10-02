@@ -130,7 +130,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"mb-6 space-y-4\"><div class=\"prose max-w-none prose-code:bg-stone-200 prose-code:rounded-md prose-code:px-2 prose-code:py-1 prose-code:font-normal prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:bg-stone-200 prose-pre:text-stone-700 prose-stone\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"mb-6 space-y-4\"><div class=\"prose max-w-none prose-code:bg-stone-200 prose-pre:bg-stone-200 prose-pre:text-stone-700 prose-stone\" _=\"init \n              for code in (<pre/> in me)\n                add .relative to code\n                make a <button.copy-button/>\n                set its textContent to 'Copy Code'\n                set its @_ to \n                  `on click \n                    writeText(innerText of the previous <code/>) on navigator.clipboard\n                    put 'Copied' into me\n                    wait 1s\n                    put 'Copy Code' into me`\n                append it to code\n              end\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -167,7 +167,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 						var templ_7745c5c3_Var7 string
 						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.ResolveAttributeValue("/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) + "/poll")
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 54, Col: 87}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 69, Col: 87}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var7)
 						if templ_7745c5c3_Err != nil {
@@ -223,7 +223,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 							var templ_7745c5c3_Var10 string
 							templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(submission.Grade)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 68, Col: 84}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 83, Col: 84}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 							if templ_7745c5c3_Err != nil {
@@ -236,7 +236,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 							var templ_7745c5c3_Var11 string
 							templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.Points)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 69, Col: 80}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 84, Col: 80}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 							if templ_7745c5c3_Err != nil {
@@ -249,7 +249,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 							var templ_7745c5c3_Var12 string
 							templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(submission.GradedOn.Time.Format("Mon Jan 2, 2006 @ 15:04"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 74, Col: 102}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 89, Col: 102}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 							if templ_7745c5c3_Err != nil {
@@ -262,7 +262,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 							var templ_7745c5c3_Var13 templ.SafeURL
 							templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs("/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) + "/code")
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 78, Col: 83}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 93, Col: 83}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 							if templ_7745c5c3_Err != nil {
@@ -275,7 +275,7 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 							var templ_7745c5c3_Var14 string
 							templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.RequiredFilename)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 82, Col: 71}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 97, Col: 71}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 							if templ_7745c5c3_Err != nil {
@@ -357,13 +357,13 @@ func Assignment(assignment *storage.Assignment, submission *storage.Submission, 
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue("/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 102, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 117, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" hx-encoding=\"multipart/form-data\" hx-target=\"body\" hx-push-url=\"true\"><!-- <label for=\"file\" class=\"text-slate-900 text-sm font-medium mb-2 block\">\n\t\t\t\t\t\t\t\tUpload file\n\t\t\t\t\t\t\t</label>\n\t\t\t\t\t\t\t<input\n\t\t\t\t\t\t\t\ttype=\"file\"\n\t\t\t\t\t\t\t\tname=\"file\"\n\t\t\t\t\t\t\t\tid=\"file\"\n\t\t\t\t\t\t\t\taccept=\".py\"\n\t\t\t\t\t\t\t\taria-describedby=\"file-constraints\"\n\t\t\t\t\t\t\t\tclass=\"w-full text-slate-600 font-medium text-sm border border-slate-200 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 file:cursor-pointer file:border-0 file:py-2 file:px-3 file:mr-4 file:bg-gray-100 hover:file:bg-gray-200 file:text-slate-500 aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700\"\n\t\t\t\t\t\t\t\trequired\n\t\t\t\t\t\t\t\t_={ fmt.Sprintf(`init set my value to '' then get next <button/> then add @disabled to it\n\t\t\t\t\t\t\t\t\ton change\n\t\t\t\t\t\t\t\t\t\tset rfn to '%s'\n\t\t\t\t\t\t\t\t\t\tif my.files[0] is null\n\t\t\t\t\t\t\t\t\t\tget next <button/> then add @disabled to it\n\t\t\t\t\t\t\t\t\t\texit\n\t\t\t\t\t\t\t\t\tend\n\t\t\t\t\t\t\t\t\tif my.files[0].name is not rfn\n\t\t\t\t\t\t\t\t\t\tset my @aria-invalid to 'true'\n\t\t\t\t\t\t\t\t\t\tget #file-constraints then set it's @aria-invalid to 'true'\n\t\t\t\t\t\t\t\t\t\tset my value to ''\n\t\t\t\t\t\t\t\t\t\tget next <button/> then add @disabled to it\n\t\t\t\t\t\t\t\t\telse\n\t\t\t\t\t\t\t\t\t\tset my @aria-invalid to 'false'\n\t\t\t\t\t\t\t\t\t\tget #file-constraints then set it's @aria-invalid to 'false'\n\t\t\t\t\t\t\t\t\t\tget next <button/> then remove @disabled from it\n\t\t\t\t\t\t\t\t\tend`, assignment.RequiredFilename) }\n\t\t\t\t\t\t\t/>\n\t\t\t\t\t\t\t<small id=\"file-constraints\" class=\"block text-xs aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700\">Please upload { assignment.RequiredFilename }</small>\n\t\t\t\t\t\t\t-->")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" hx-encoding=\"multipart/form-data\" hx-target=\"body\" hx-push-url=\"true\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -490,7 +490,7 @@ func Card(heading, subheading string) templ.Component {
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(heading)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 205, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 189, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
@@ -508,7 +508,7 @@ func Card(heading, subheading string) templ.Component {
 			var templ_7745c5c3_Var20 string
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(subheading)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 207, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/assignment.templ`, Line: 191, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {

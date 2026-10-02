@@ -43,7 +43,22 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 					}
 				</div>
 				<div class="mb-6 space-y-4">
-					<div class="prose max-w-none prose-code:bg-stone-200 prose-code:rounded-md prose-code:px-2 prose-code:py-1 prose-code:font-normal prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:bg-stone-200  prose-pre:text-stone-700 prose-stone">
+					<div 
+            class="prose max-w-none prose-code:bg-stone-200 prose-pre:bg-stone-200  prose-pre:text-stone-700 prose-stone"
+            _="init 
+              for code in (<pre/> in me)
+                add .relative to code
+                make a <button.copy-button/>
+                set its textContent to 'Copy Code'
+                set its @_ to 
+                  `on click 
+                    writeText(innerText of the previous <code/>) on navigator.clipboard
+                    put 'Copied' into me
+                    wait 1s
+                    put 'Copy Code' into me`
+                append it to code
+              end"
+              >
 						@templ.Raw(description)
 					</div>
 					<hr class="h-px flex-1 bg-stone-200"/>
@@ -100,37 +115,6 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 					}
 					@Card(buttonText, assignment.RequiredFilename) {
 						<form class="space-y-2" hx-post={ "/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) } hx-encoding="multipart/form-data" hx-target="body" hx-push-url="true">
-							<!-- <label for="file" class="text-slate-900 text-sm font-medium mb-2 block">
-								Upload file
-							</label>
-							<input
-								type="file"
-								name="file"
-								id="file"
-								accept=".py"
-								aria-describedby="file-constraints"
-								class="w-full text-slate-600 font-medium text-sm border border-slate-200 rounded-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 file:cursor-pointer file:border-0 file:py-2 file:px-3 file:mr-4 file:bg-gray-100 hover:file:bg-gray-200 file:text-slate-500 aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700"
-								required
-								_={ fmt.Sprintf(`init set my value to '' then get next <button/> then add @disabled to it
-									on change
-										set rfn to '%s'
-										if my.files[0] is null
-										get next <button/> then add @disabled to it
-										exit
-									end
-									if my.files[0].name is not rfn
-										set my @aria-invalid to 'true'
-										get #file-constraints then set it's @aria-invalid to 'true'
-										set my value to ''
-										get next <button/> then add @disabled to it
-									else
-										set my @aria-invalid to 'false'
-										get #file-constraints then set it's @aria-invalid to 'false'
-										get next <button/> then remove @disabled from it
-									end`, assignment.RequiredFilename) }
-							/>
-							<small id="file-constraints" class="block text-xs aria-[invalid=true]:text-red-700 aria-[invalid=false]:text-lime-700">Please upload { assignment.RequiredFilename }</small>
-							-->
 							@component.FileDropzoneFormControl(templ.Attributes{
 								"accept":                 ".py",
 								"data-required-filename": assignment.RequiredFilename,
