@@ -6,3 +6,7 @@
   --font-sans: 'JetBrains Mono', monospace;
   --font-mono: 'JetBrains Mono', monospace;
 }
+
+.copy-button {
+  @apply absolute top-2 right-2 p-2 bg-purple-700 text-white rounded-md hover:cursor-pointer hover:bg-purple-800;
+}
