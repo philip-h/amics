@@ -19,14 +19,6 @@ import (
 	"github.com/yuin/goldmark/v2/renderer/html"
 )
 
-func setLocation(w http.ResponseWriter, r *http.Request, url string) {
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Location", url)
-	} else {
-		http.Redirect(w, r, url, http.StatusSeeOther)
-	}
-}
-
 func handleStudentCoursesGet(store *storage.Storage) http.Handler {
 	return httpe.HandlerFunc(func(w http.ResponseWriter, r *http.Request) error {
 		personId := r.Context().Value(personKey).(int)
@@ -48,7 +40,7 @@ func handleStudentCoursesGet(store *storage.Storage) http.Handler {
 		}
 
 		if len(courses) == 1 {
-			setLocation(w, r, "/c/"+strconv.Itoa(courses[0].Id))
+			redirect(w, r, "/c/"+strconv.Itoa(courses[0].Id))
 			return nil
 		}
 
@@ -131,12 +123,12 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 
 		var buf bytes.Buffer
 		var htmlDescription string
-    
-    mdParser := parser.New(parser.WithExtensions(extension.TableParser))
-    renderer := html.New(html.WithExtensions(extension.TableHTMLRenderer))
-    doc := mdParser.Parse([]byte(aws.Description))
 
-    err = renderer.Render(&buf,[]byte(aws.Description), doc)
+		mdParser := parser.New(parser.WithExtensions(extension.TableParser))
+		renderer := html.New(html.WithExtensions(extension.TableHTMLRenderer))
+		doc := mdParser.Parse([]byte(aws.Description))
+
+		err = renderer.Render(&buf, []byte(aws.Description), doc)
 		if err != nil {
 			htmlDescription = aws.Description
 		} else {
@@ -221,7 +213,7 @@ func handleStudentAssignmentPost(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[student.assignment.post] Could not create submission: %w", err)
 		}
 
-		setLocation(w, r, "/c/"+strconv.Itoa(courseId)+"/a/"+strconv.Itoa(assignmentId)+"/details")
+		redirect(w, r, "/c/"+strconv.Itoa(courseId)+"/a/"+strconv.Itoa(assignmentId)+"/details")
 		return nil
 	})
 }

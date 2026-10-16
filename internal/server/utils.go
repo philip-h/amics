@@ -12,6 +12,16 @@ import (
 	"github.com/philip-h/amics/internal/httpe"
 )
 
+
+
+func redirect(w http.ResponseWriter, r *http.Request, url string) {
+	if r.Header.Get("HX-Request") == "true" {
+		w.Header().Set("HX-Redirect", url)
+	} else {
+		http.Redirect(w, r, url, http.StatusSeeOther)
+	}
+}
+
 func intPathValue(r *http.Request, name string) (int, error) {
 	value := r.PathValue(name)
 	if value == "" {

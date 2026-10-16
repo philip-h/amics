@@ -12,14 +12,6 @@ import (
 	"github.com/philip-h/amics/view/model"
 )
 
-func redirect(w http.ResponseWriter, r *http.Request, url string) {
-	if r.Header.Get("HX-Request") == "true" {
-		w.Header().Set("HX-Redirect", url)
-	} else {
-		http.Redirect(w, r, url, http.StatusSeeOther)
-	}
-}
-
 // ============================================================================
 // Login
 // ============================================================================
