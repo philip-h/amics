@@ -109,6 +109,8 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 
 		studentId := r.Context().Value(personKey).(int)
 		studentIdHex := strconv.FormatInt(int64(studentId), 16)
+		role := r.Context().Value(roleKey).(string)
+
 		courseId := r.PathValue("courseId")
 
 		assignmentId, err := intPathValue(r, "assignmentId")
@@ -162,6 +164,7 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 			htmlDescription,
 			studentIdHex,
 			courseId,
+      role == "teacher",
 		).Render(r.Context(), w)
 	})
 }
@@ -238,9 +241,12 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 			lines := strings.SplitSeq(strings.ReplaceAll(aws.Submission.Comments.String, "\r\n", "\n"), "\n")
 
 			for line := range lines {
-				if strings.HasPrefix(line, "E") || strings.HasPrefix(line, ">") {
-					htmlComments.WriteString("<span class='text-red-700'")
-					htmlComments.WriteString(">")
+				if strings.HasPrefix(line, "E") || strings.HasPrefix(line, ">") || strings.HasPrefix(line, "✘") {
+					htmlComments.WriteString("<span class='text-red-700'>")
+					htmlComments.WriteString(line)
+					htmlComments.WriteString("</span>")
+				} else if strings.HasPrefix(line, "✔") {
+					htmlComments.WriteString("<span class='text-green-700'>")
 					htmlComments.WriteString(line)
 					htmlComments.WriteString("</span>")
 				} else {
@@ -248,7 +254,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 				}
 				htmlComments.WriteString("\n")
 			}
-		}
+    }
 
 		return templ.RenderFragments(r.Context(), w,
 			student.Assignment(
@@ -258,6 +264,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 				"",
 				"",
 				courseId,
+        false,
 			),
 			"submission-overview",
 		)

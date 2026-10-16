@@ -8,7 +8,8 @@ import (
 	"strconv"
 )
 
-templ Assignment(assignment *storage.Assignment, submission *storage.Submission, comments, description, studentId, courseId string) {
+templ Assignment(assignment *storage.Assignment, submission *storage.Submission, comments, description, studentId,
+	courseId string, isTeacher bool) {
 	@layout.Base("/amics/0x" + studentId) {
 		@component.Header(
 			"/h",
@@ -25,6 +26,13 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 		)
 		<div class="min-h-160 max-w-7xl mx-auto">
 			<main class="p-4 sm:p-6 lg:p-8">
+				if isTeacher {
+					<div class="mb-6 flex justify-end">
+						<a href={"/teacher/courses/"+courseId+"/assignments/"+strconv.Itoa(assignment.Id)} class="text-sm rounded-md bg-purple-700 px-3 py-1 text-white transition hover:bg-purple-800">
+              Edit Assignment
+            </a>
+					</div>
+				}
 				<p class="mb-2 font-mono text-xs text-lime-700">$ assignments --view</p>
 				if assignment == nil {
 					<p class="text-sm text-stone-500">Assignment not found.</p>
@@ -43,9 +51,9 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 					}
 				</div>
 				<div class="mb-6 space-y-4">
-					<div 
-            class="prose max-w-none prose-code:bg-stone-200 prose-pre:bg-stone-200  prose-pre:text-stone-700 prose-stone"
-            _="init 
+					<div
+						class="prose max-w-none prose-code:bg-stone-200 prose-pre:bg-stone-200  prose-pre:text-stone-700 prose-stone"
+						_="init 
               for code in (<pre:has(> code.language-python, > code.language-cpp)/> in me)
                 add .relative to code
                 make a <button.copy-button/>
@@ -58,7 +66,7 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
                     put 'Copy Code' into me`
                 append it to code
               end"
-              >
+					>
 						@templ.Raw(description)
 					</div>
 					<hr class="h-px flex-1 bg-stone-200"/>
@@ -70,7 +78,50 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 										@Card("Submission", "Just Now") {
 											<div class="text-sm text-stone-500 flex items-center">
 												<span>Grading assignment</span>
-												<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" style="color: rgb(74, 85, 101); opacity: 1; transform: rotate(0deg);" width="64" height="64" viewBox="0 0 24 24"><circle cx="18" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin=".67" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"></animate></circle><circle cx="12" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin=".33" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"></animate></circle><circle cx="6" cy="12" r="0" fill="currentColor"><animate attributeName="r" begin="0" calcMode="spline" dur="1.5s" keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8" repeatCount="indefinite" values="0;2;0;0"></animate></circle></svg>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													xmlns:xlink="http://www.w3.org/1999/xlink"
+													aria-hidden="true"
+													role="img"
+													style="color: rgb(74, 85, 101); opacity: 1; transform: rotate(0deg);"
+													width="64"
+													height="64"
+													viewBox="0 0 24 24"
+												>
+													<circle cx="18" cy="12" r="0" fill="currentColor">
+														<animate
+															attributeName="r"
+															begin=".67"
+															calcMode="spline"
+															dur="1.5s"
+															keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+															repeatCount="indefinite"
+															values="0;2;0;0"
+														></animate>
+													</circle>
+													<circle cx="12" cy="12" r="0" fill="currentColor">
+														<animate
+															attributeName="r"
+															begin=".33"
+															calcMode="spline"
+															dur="1.5s"
+															keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+															repeatCount="indefinite"
+															values="0;2;0;0"
+														></animate>
+													</circle>
+													<circle cx="6" cy="12" r="0" fill="currentColor">
+														<animate
+															attributeName="r"
+															begin="0"
+															calcMode="spline"
+															dur="1.5s"
+															keySplines="0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8;0.2 0.2 0.4 0.8"
+															repeatCount="indefinite"
+															values="0;2;0;0"
+														></animate>
+													</circle>
+												</svg>
 											</div>
 										}
 									</div>
@@ -114,53 +165,59 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 						{{ buttonText = "Re-Submit" }}
 					}
 					@Card(buttonText, assignment.RequiredFilename) {
-						<form class="space-y-2" hx-post={ "/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) } hx-encoding="multipart/form-data" hx-target="body" hx-push-url="true">
+						<form
+							class="space-y-2"
+							hx-post={ "/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) }
+							hx-encoding="multipart/form-data"
+							hx-target="body"
+							hx-push-url="true"
+						>
 							@component.FileDropzoneFormControl(templ.Attributes{
 								"accept":                 ".py",
 								"data-required-filename": assignment.RequiredFilename,
 								"_": `
-								def validFile(constraint, hint)
-									set my @aria-invalid to 'false'
-									get #file-dropzone then remove @aria-error from it then add @aria-has-file to it
-									get <p[data-file-constraint]/> then set it's innerText to constraint 
-									get <p[data-file-hint]/> then set it's innerText to hint
-									get next <button/> then remove @disabled from it
-								end
+        def validFile(constraint, hint)
+        set my @aria-invalid to 'false'
+        get #file-dropzone then remove @aria-error from it then add @aria-has-file to it
+        get <p[data-file-constraint] /> then set it's innerText to constraint
+        get <p[data-file-hint] /> then set it's innerText to hint
+        get next <button /> then remove @disabled from it
+        end
 
-								def invalidFile(constraint, hint)
-									set my @aria-invalid to 'true'
-									get #file-dropzone then remove @aria-has-file from it then add @aria-error to it
-									get <p[data-file-constraint]/> then set it's innerText to constraint 
-									get <p[data-file-hint]/> then set it's innerText to hint
-									get next <button/> then add @disabled to it
-								end
+        def invalidFile(constraint, hint)
+        set my @aria-invalid to 'true'
+        get #file-dropzone then remove @aria-has-file from it then add @aria-error to it
+        get <p[data-file-constraint] /> then set it's innerText to constraint
+        get <p[data-file-hint] /> then set it's innerText to hint
+        get next <button /> then add @disabled to it
+        end
 
-								def validate(file)
-									set rfn to my @data-required-filename
-									if file is null
-										exit
-									end
+        def validate(file)
+        set rfn to my @data-required-filename
+        if file is null
+        exit
+        end
 
-									get <p[data-file-name/>
-									remove .invisible from it
-									set its innerText to file's name
-									if file's name is not rfn
-										invalidFile('Please upload ' + rfn, 'File name does not match expected filename')
-									else
-										-- ensure file is not blank (happens if students forget to save)
-										make a FileReader called reader
-										call reader.readAsText(file)
-										wait for a load from reader
-										if reader.result.trim() is ''
-											invalidFile(rfn + ' is empty', 'Please ensure you have saved your code before submitting')
-										else
-											validFile(rfn + 'sucessfully loaded', 'Go ahead and Grade assignment')
-										end
-									end
-								end
-								init set my value to '' then get next <button/> then add @disabled to it
-								on gotfiles call validate(first of my files)
-								on change call validate(first of my files)`,
+        get <p[data-file-name />
+        remove .invisible from it
+        set its innerText to file's name
+        if file's name is not rfn
+        invalidFile('Please upload ' + rfn, 'File name does not match expected filename')
+        else
+        -- ensure file is not blank (happens if students forget to save)
+        make a FileReader called reader
+        call reader.readAsText(file)
+        wait for a load from reader
+        if reader.result.trim() is ''
+        invalidFile(rfn + ' is empty', 'Please ensure you have saved your code before submitting')
+        else
+        validFile(rfn + 'sucessfully loaded', 'Go ahead and Grade assignment')
+        end
+        end
+        end
+        init set my value to '' then get next <button /> then add @disabled to it
+        on gotfiles call validate(first of my files)
+        on change call validate(first of my files)`,
 							},
 								svg.PythonSVG(),
 								"file",
@@ -168,7 +225,10 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 								"Please upload "+assignment.RequiredFilename,
 								"",
 							)
-							<button type="submit" class="block rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer disabled:opacity-50 disabled:hover:bg-purple-700 disabled:hover:cursor-not-allowed">
+							<button
+								type="submit"
+								class="block rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer disabled:opacity-50 disabled:hover:bg-purple-700 disabled:hover:cursor-not-allowed"
+							>
 								if submission == nil {
 									Grade Assignment
 								} else {

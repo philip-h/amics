@@ -187,7 +187,10 @@ func (s *SubmissionStore) Update(ctx context.Context, submission *Submission) er
   SET grade = $1, comments = $2, status = $3, graded_on = NOW() 
   WHERE id=$4`, submission.Grade, submission.Comments, submission.Status, submission.Id)
 
-	return fmt.Errorf("db(submission.Update) %w", err)
+  if err != nil {
+    return fmt.Errorf("db(submission.Update) %w", err)
+  }
+  return nil
 }
 
 func (s *SubmissionStore) UpdateAll(ctx context.Context, submissions []*SubmissionImport) error {
@@ -217,7 +220,11 @@ func (s *SubmissionStore) UpdateAll(ctx context.Context, submissions []*Submissi
 		}
 	}
 
-	return tx.Commit()
+  err = tx.Commit()
+  if err != nil {
+			return fmt.Errorf("db(submission.UpdateAll) %w", err)
+  }
+  return nil
 }
 
 func (s *SubmissionStore) ListByCourseId(ctx context.Context, courseId int) ([]*SubmissionExport, error) {

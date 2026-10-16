@@ -104,6 +104,7 @@ func (w *Worker) processNextSubmission(ctx context.Context) {
 		if err != nil {
 			w.logger.Error("Could not update submission "+strconv.Itoa(submission.Id)+" with grader failure status", slog.String("msg", err.Error()))
 		}
+    return
 	}
 
 	submission.Grade = result.Grade
