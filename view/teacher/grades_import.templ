@@ -94,7 +94,15 @@ templ ImportGrades(
 														<input type="text" inputmode="numeric" name="grade" value={ gradeValue } _="on input call updateSummary()" class="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]"/>
 													</td>
 													<td class="px-4 py-3 text-xs text-stone-500">
-														<input type="text" inputmode="numeric" name="comments" value={ commentsValue } class="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]"/>
+                            <textarea
+                              id="comments"
+                              name="comments"
+                              placeholder="Assignment comments"
+                              rows="10"
+                              class="w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
+                            >
+                              { commentsValue }
+                            </textarea>
 													</td>
 												</tr>
 											}

@@ -209,20 +209,20 @@ func ImportGrades(
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" _=\"on input call updateSummary()\" class=\"rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]\"></td><td class=\"px-4 py-3 text-xs text-stone-500\"><input type=\"text\" inputmode=\"numeric\" name=\"comments\" value=\"")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" _=\"on input call updateSummary()\" class=\"rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]\"></td><td class=\"px-4 py-3 text-xs text-stone-500\"><textarea id=\"comments\" name=\"comments\" placeholder=\"Assignment comments\" rows=\"10\" class=\"w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var10 string
-						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(commentsValue)
+						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(commentsValue)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 97, Col: 90}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 104, Col: 45}
 						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
+						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]\"></td></tr>")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</textarea></td></tr>")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -266,7 +266,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var11 templ.SafeURL
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import/template")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 142, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 150, Col: 101}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -279,7 +279,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(numGraded)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 163, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 171, Col: 89}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -292,7 +292,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(len(students))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 164, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 172, Col: 86}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -305,7 +305,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(len(students))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 164, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 172, Col: 106}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -318,7 +318,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(outOf)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 169, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 177, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
@@ -337,7 +337,7 @@ func ImportGrades(
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", (float64(averageSum)/float64(numGraded))*100/float64(outOf)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 173, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 181, Col: 94}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
