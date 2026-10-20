@@ -1,0 +1,117 @@
+package teacher
+
+import (
+	"github.com/philip-h/amics/view/component"
+	"github.com/philip-h/amics/view/layout"
+	"github.com/philip-h/amics/view/model"
+	"strconv"
+)
+
+templ ManageCategories(vm *model.CategoriesForm) {
+	@layout.Base("/amics/teacher/categories") {
+		@component.Header(
+			"/h",
+			[]component.NavLink{
+				component.NavLink{Href: "/teacher", Text: "teacher"},
+				component.NavLink{Href: "", Text: "categories"},
+			},
+			component.NavButton{
+				Action: templ.Attributes{
+					"hx-post":    "/logout",
+					"hx-confirm": "Are you sure you want to logout?",
+				},
+				Text: "Logout",
+			},
+		)
+		<main class="mx-auto flex flex-col w-full max-w-7xl items-center justify-center px-4 py-14 sm:px-6 lg:px-12">
+			<div class="mb-6 w-full max-w-2xl">
+				<p class="mb-2 font-mono text-xs text-lime-700">$ categories --edit</p>
+				<h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Grade categories</h1>
+				<p class="mt-2 text-sm text-stone-500">Weights must add up to 100. Only assignments placed in a category count toward the overall grade.</p>
+			</div>
+			<form
+				hx-put={ "/teacher/courses/" + vm.CourseId + "/categories" }
+				hx-target="body"
+				class="w-full max-w-2xl"
+			>
+				<section class="flex flex-col gap-4 w-full rounded-2xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8 mb-6">
+					if vm.ServerError != "" {
+						<div class="text-sm text-red-700">{ vm.ServerError }</div>
+					}
+					for _, problem := range vm.Validate() {
+						<div class="text-sm text-red-700">{ problem }</div>
+					}
+					<div id="category-rows" class="flex flex-col gap-3">
+						for _, row := range vm.Rows {
+							@categoryRow(row)
+						}
+					</div>
+					<template id="category-row-template">
+						@categoryRow(model.CategoryRow{})
+					</template>
+					<div class="flex items-center justify-between">
+						<button
+							type="button"
+							class="rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium hover:bg-stone-100 hover:cursor-pointer"
+							_="on click
+								set row to (#category-row-template).content.cloneNode(true)
+								put row at the end of #category-rows
+								call updateCategoryTotal()"
+						>
+							Add category
+						</button>
+						<p class="text-sm">
+							Total:
+							<span id="category-total" class="font-semibold">{ strconv.Itoa(vm.Total()) }</span>
+							/ 100
+						</p>
+					</div>
+				</section>
+				<button type="submit" class="inline-flex items-center rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer">
+					Save categories
+				</button>
+			</form>
+			<script>
+				function updateCategoryTotal() {
+					let total = 0;
+					document.querySelectorAll('input[name="category-weight"]').forEach((el) => {
+						total += parseInt(el.value, 10) || 0;
+					});
+					document.getElementById('category-total').textContent = total;
+				}
+			</script>
+		</main>
+	}
+}
+
+templ categoryRow(row model.CategoryRow) {
+	<div class="category-row grid grid-cols-[minmax(0,1fr)_6rem_auto] items-center gap-3">
+		<input type="hidden" name="category-id" value={ row.Id }/>
+		<input
+			type="text"
+			name="category-name"
+			value={ row.Name }
+			placeholder="e.g. Tests"
+			required
+			class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-purple-300"
+		/>
+		<input
+			type="text"
+			inputmode="numeric"
+			name="category-weight"
+			value={ row.Weight }
+			placeholder="%"
+			required
+			oninput="updateCategoryTotal()"
+			class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-purple-300"
+		/>
+		<button
+			type="button"
+			title="Remove category"
+			class="rounded-md border border-stone-200 px-2 py-1 text-sm hover:bg-stone-100 hover:cursor-pointer"
+			_="on click remove closest .category-row then call updateCategoryTotal()"
+		>
+			&times;
+		</button>
+	</div>
+}

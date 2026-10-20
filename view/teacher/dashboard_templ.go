@@ -401,179 +401,192 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 			templ_7745c5c3_Var16 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div id=\"courseDetails\"><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Assignments</h2><a class=\"rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800\" href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 28, "<div id=\"courseDetails\"><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Assignments</h2><div class=\"flex items-center gap-2\"><a class=\"rounded-md border border-stone-300 px-3 py-1.5 text-xs font-medium transition hover:bg-stone-100\" href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 templ.SafeURL
-		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(courseId) + "/assignments/new")
+		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(courseId) + "/categories")
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 147, Col: 186}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 148, Col: 180}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\">New assignment</a></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Title</th><th class=\"px-4 py-2.5\">Unit</th><th class=\"px-4 py-2.5\">Due</th><th class=\"px-4 py-2.5\">Status</th><th class=\"px-4 py-2.5\">Submissions</th><th class=\"px-4 py-2.5\">Actions</th></tr></thead> <tbody>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 29, "\" hx-target=\"body\" hx-push-url=\"true\">Grade categories</a> <a class=\"rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800\" href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var18 templ.SafeURL
+		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(courseId) + "/assignments/new")
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 149, Col: 187}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "\">New assignment</a></div></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Title</th><th class=\"px-4 py-2.5\">Unit</th><th class=\"px-4 py-2.5\">Due</th><th class=\"px-4 py-2.5\">Status</th><th class=\"px-4 py-2.5\">Submissions</th><th class=\"px-4 py-2.5\">Actions</th></tr></thead> <tbody>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(assignments) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 30, "<tr><td class=\"px-4 py-4 text-stone-500 sm:px-5\" colspan=\"6\">No assignments yet.</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<tr><td class=\"px-4 py-4 text-stone-500 sm:px-5\" colspan=\"6\">No assignments yet.</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
 			for _, assignment := range assignments {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 31, "<tr class=\"border-t border-stone-100 align-middle\"><td class=\"px-4 py-3 sm:px-5\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.Name)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 170, Col: 27}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "</td><td class=\"px-4 py-3 text-xs text-stone-500\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 32, "<tr class=\"border-t border-stone-100 align-middle\"><td class=\"px-4 py-3 sm:px-5\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.UnitName)
+				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.Name)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 172, Col: 75}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 173, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</td><td class=\"px-4 py-3 font-mono text-xs text-stone-500\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</td><td class=\"px-4 py-3 text-xs text-stone-500\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var20 string
-				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.DueDate.Format("Mon Jan 2"))
+				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.UnitName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 173, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 175, Col: 75}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</td><td class=\"px-4 py-3\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "</td><td class=\"px-4 py-3 font-mono text-xs text-stone-500\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var21 = []any{statusPillClass(assignment.Visible)}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var21...)
+				var templ_7745c5c3_Var21 string
+				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.DueDate.Format("Mon Jan 2"))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 176, Col: 104}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<span class=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</td><td class=\"px-4 py-3\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var22 string
-				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var21).String())
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 1, Col: 0}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var22)
+				var templ_7745c5c3_Var22 = []any{statusPillClass(assignment.Visible)}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var22...)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<span class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var23 string
-				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(statusLabel(assignment.Visible))
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 174, Col: 116}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "</span></td><td class=\"px-4 py-3\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var24 = []any{submissionClass(submissionCounts[assignment.Id], len(students))}
-				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var24...)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "<span class=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var25 string
-				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var24).String())
+				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var22).String())
 				if templ_7745c5c3_Err != nil {
 					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 1, Col: 0}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var25)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var23)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var24 string
+				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(statusLabel(assignment.Visible))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 177, Col: 116}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 38, "</span></td><td class=\"px-4 py-3\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var25 = []any{submissionClass(submissionCounts[assignment.Id], len(students))}
+				templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var25...)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 39, "<span class=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var26 string
-				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(submissionCounts[assignment.Id])
+				templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var25).String())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 175, Col: 144}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 1, Col: 0}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var26)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, " / ")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 40, "\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var27 string
-				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(len(students))
+				templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(submissionCounts[assignment.Id])
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 175, Col: 164}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 178, Col: 144}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, "</span></td><td class=\"px-4 py-3 flex items-center gap-2\"><a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 41, " / ")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var28 templ.SafeURL
-				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id))
+				var templ_7745c5c3_Var28 string
+				templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(len(students))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 178, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 178, Col: 164}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 42, "</span></td><td class=\"px-4 py-3 flex items-center gap-2\"><a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var29 string
-				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.ResolveAttributeValue("Edit " + assignment.Name + " details.")
+				var templ_7745c5c3_Var29 templ.SafeURL
+				templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 180, Col: 58}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 181, Col: 121}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var29)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" hx-target=\"body\" hx-push-url=\"true\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 43, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var30 string
+				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue("Edit " + assignment.Name + " details.")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 183, Col: 58}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "\" hx-target=\"body\" hx-push-url=\"true\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -581,33 +594,33 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 44, "</a> <a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "</a> <a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var30 templ.SafeURL
-				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) + "/import")
+				var templ_7745c5c3_Var31 templ.SafeURL
+				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) + "/import")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 187, Col: 133}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 190, Col: 133}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 45, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var31 string
-				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue("Import " + assignment.Name + " grades.")
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 189, Col: 59}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 46, "\" hx-target=\"body\" hx-push-url=\"true\">")
+				var templ_7745c5c3_Var32 string
+				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.ResolveAttributeValue("Import " + assignment.Name + " grades.")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 192, Col: 59}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var32)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "\" hx-target=\"body\" hx-push-url=\"true\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -615,33 +628,33 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 47, "</a> <a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "</a> <a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var32 templ.SafeURL
-				templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) + "/export_code")
+				var templ_7745c5c3_Var33 templ.SafeURL
+				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(assignment.CourseId) + "/assignments/" + strconv.Itoa(assignment.Id) + "/export_code")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 196, Col: 138}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 199, Col: 138}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 48, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var33 string
-				templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.ResolveAttributeValue("Export " + assignment.Name + " code.")
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 198, Col: 57}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var33)
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 49, "\" hx-boost=\"false\">")
+				var templ_7745c5c3_Var34 string
+				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.ResolveAttributeValue("Export " + assignment.Name + " code.")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 201, Col: 57}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var34)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "\" hx-boost=\"false\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -649,44 +662,31 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 50, "</a></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</a></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 51, "</tbody></table></div></div><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Students</h2><button class=\"rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer\" _=\"on click\n                        set pass_col to <[data-showing-pass-col]/> in next <table/>\n                        if @data-showing-pass-col of pass_col[0] is 'false'\n                            set @data-showing-pass-col of pass_col to 'true'\n                        else\n                            set @data-showing-pass-col of pass_col to 'false'\n                        end\n                    \">Toggle changle password column</button></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Name</th><th class=\"px-4 py-2.5\">Username</th><th class=\"px-4 py-2.5\">Student #</th><th class=\"px-4 py-2.5\">Actions</th><th class=\"px-4 py-2.5 data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\">New Password</th></tr></thead> <tbody>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "</tbody></table></div></div><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Students</h2><button class=\"rounded-md bg-purple-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer\" _=\"on click\n                        set pass_col to <[data-showing-pass-col]/> in next <table/>\n                        if @data-showing-pass-col of pass_col[0] is 'false'\n                            set @data-showing-pass-col of pass_col to 'true'\n                        else\n                            set @data-showing-pass-col of pass_col to 'false'\n                        end\n                    \">Toggle changle password column</button></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Name</th><th class=\"px-4 py-2.5\">Username</th><th class=\"px-4 py-2.5\">Student #</th><th class=\"px-4 py-2.5\">Actions</th><th class=\"px-4 py-2.5 data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\">New Password</th></tr></thead> <tbody>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if len(students) == 0 {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 52, "<tr><td class=\"px-4 py-4 text-stone-500 sm:px-5\" colspan=\"6\">No students enrolled.</td></tr>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<tr><td class=\"px-4 py-4 text-stone-500 sm:px-5\" colspan=\"6\">No students enrolled.</td></tr>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
 			for _, student := range students {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 53, "<tr class=\"border-t border-stone-100 align-middle\"><td class=\"px-4 py-3 sm:px-5\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var34 string
-				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(student.FirstName)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 253, Col: 29}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "</td><td class=\"px-4 py-3 text-xs text-stone-500\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 54, "<tr class=\"border-t border-stone-100 align-middle\"><td class=\"px-4 py-3 sm:px-5\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var35 string
-				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(student.Username)
+				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(student.FirstName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 255, Col: 72}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 256, Col: 29}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -697,41 +697,54 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var36 string
-				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(student.Id)
+				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(student.Username)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 256, Col: 66}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 258, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</td><td class=\"px-4 py-3 flex items-center gap-2\"><a href=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 56, "</td><td class=\"px-4 py-3 text-xs text-stone-500\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var37 templ.SafeURL
-				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id))
+				var templ_7745c5c3_Var37 string
+				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(student.Id)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 259, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 259, Col: 66}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 57, "</td><td class=\"px-4 py-3 flex items-center gap-2\"><a href=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var38 string
-				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.ResolveAttributeValue("View " + student.FirstName + "'s profile.")
+				var templ_7745c5c3_Var38 templ.SafeURL
+				templ_7745c5c3_Var38, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 261, Col: 62}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 262, Col: 104}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var38)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var38))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" hx-target=\"body\" hx-push-url=\"true\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 58, "\" class=\"rounded-md border border-stone-200 p-1 hover:bg-stone-100 hover:cursor-pointer\" title=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var39 string
+				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue("View " + student.FirstName + "'s profile.")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 264, Col: 62}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "\" hx-target=\"body\" hx-push-url=\"true\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -739,39 +752,39 @@ func CourseAssignmentsAndStudents(assignments []*storage.Assignment, submissionC
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 59, "</a></td><td class=\"px-4 py-3 text-xs text-stone-500 box-border data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\"><div class=\"flex max-w-64\"><input id=\"new-password\" name=\"new-password\" type=\"text\" placeholder=\"eg. pass123\" required class=\"grow w-full max-w-64 rounded-l-md border-l border-y border-stone-300 bg-white px-2 py-1 text-xs outline-none transition placeholder:text-stone-400 focus:border-purple-300\"> <button type=\"button\" id=\"submit-password\" class=\"inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-2 py-1 text-xs text-white transition hover:bg-purple-800 hover:cursor-pointer\" hx-post=\"")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var39 string
-				templ_7745c5c3_Var39, templ_7745c5c3_Err = templ.ResolveAttributeValue("/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id) + "/passwordreset")
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 285, Col: 127}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var39)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "\" hx-push-url=\"true\" hx-target=\"body\" hx-include=\"previous <input/>\" hx-vals=\"")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 60, "</a></td><td class=\"px-4 py-3 text-xs text-stone-500 box-border data-[showing-pass-col='false']:hidden\" data-showing-pass-col=\"false\"><div class=\"flex max-w-64\"><input id=\"new-password\" name=\"new-password\" type=\"text\" placeholder=\"eg. pass123\" required class=\"grow w-full max-w-64 rounded-l-md border-l border-y border-stone-300 bg-white px-2 py-1 text-xs outline-none transition placeholder:text-stone-400 focus:border-purple-300\"> <button type=\"button\" id=\"submit-password\" class=\"inline-flex items-center rounded-r-md border-r border-y border-stone-300 bg-purple-700 px-2 py-1 text-xs text-white transition hover:bg-purple-800 hover:cursor-pointer\" hx-post=\"")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var40 string
-				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue("{\"student-id\":\"" + strconv.Itoa(student.Id) + "\"}")
+				templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.ResolveAttributeValue("/teacher/courses/" + strconv.Itoa(courseId) + "/students/" + strconv.Itoa(student.Id) + "/passwordreset")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 289, Col: 77}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 288, Col: 127}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var40)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\">Ok</button></div></td></tr>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 61, "\" hx-push-url=\"true\" hx-target=\"body\" hx-include=\"previous <input/>\" hx-vals=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var41 string
+				templ_7745c5c3_Var41, templ_7745c5c3_Err = templ.ResolveAttributeValue("{\"student-id\":\"" + strconv.Itoa(student.Id) + "\"}")
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/dashboard.templ`, Line: 292, Col: 77}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var41)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "\">Ok</button></div></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 62, "</tbody></table></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 63, "</tbody></table></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

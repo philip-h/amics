@@ -18,6 +18,7 @@ type Assignment struct {
 	DueDate          time.Time
 	Visible          bool
 	CourseId         int
+	CategoryId       sql.NullInt64
 }
 
 type AssignmentSubmission struct {
@@ -31,8 +32,8 @@ type AssignmentStore struct {
 
 func (s *AssignmentStore) Create(ctx context.Context, assignment *Assignment) error {
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		`INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id, category_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		assignment.UnitName,
 		assignment.Name,
 		assignment.Description,
@@ -41,12 +42,13 @@ func (s *AssignmentStore) Create(ctx context.Context, assignment *Assignment) er
 		assignment.Points,
 		assignment.DueDate,
 		assignment.Visible,
-		assignment.CourseId)
+		assignment.CourseId,
+		assignment.CategoryId)
 
-  if err != nil {
-    return fmt.Errorf("db(assignment.create): %w", err)
-  }
-  return err
+	if err != nil {
+		return fmt.Errorf("db(assignment.create): %w", err)
+	}
+	return err
 }
 
 func (s *AssignmentStore) GetWithSubmissionByAssignmentAndStudentIds(ctx context.Context, assignmentId int, studentId int) (*AssignmentSubmission, error) {
@@ -243,6 +245,7 @@ func (s *AssignmentStore) GetWithGrade(ctx context.Context, studentId, courseId 
 		a.due_date, 
 		a.visible, 
 		a.course_id,
+		a.category_id,
 		s.grade
 	FROM assignment a
 	JOIN student_course sc ON sc.course_id = a.course_id
@@ -259,7 +262,7 @@ func (s *AssignmentStore) GetWithGrade(ctx context.Context, studentId, courseId 
 	assignments := []*AssignmentWithGrade{}
 	for rows.Next() {
 		assignment := &AssignmentWithGrade{}
-		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId, &assignment.Grade)
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId, &assignment.CategoryId, &assignment.Grade)
 		if err != nil {
 			return nil, fmt.Errorf("db(getWithGrade): %w", err)
 		}
@@ -285,7 +288,8 @@ func (s *AssignmentStore) GetById(ctx context.Context, assignmentId int) (*Assig
 		points, 
 		due_date, 
 		visible, 
-		course_id
+		course_id,
+		category_id
 	FROM assignment
 	WHERE id = $1`, assignmentId).Scan(
 		&assignment.Id,
@@ -297,7 +301,8 @@ func (s *AssignmentStore) GetById(ctx context.Context, assignmentId int) (*Assig
 		&assignment.Points,
 		&assignment.DueDate,
 		&assignment.Visible,
-		&assignment.CourseId)
+		&assignment.CourseId,
+		&assignment.CategoryId)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -318,7 +323,8 @@ func (s *AssignmentStore) GetByCourseId(ctx context.Context, courseId int) ([]*A
 		points, 
 		due_date, 
 		visible, 
-		course_id
+		course_id,
+		category_id
 	FROM assignment
 	WHERE course_id = $1
   ORDER BY due_date`, courseId)
@@ -332,7 +338,7 @@ func (s *AssignmentStore) GetByCourseId(ctx context.Context, courseId int) ([]*A
 	for rows.Next() {
 		assignment := &Assignment{}
 
-		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.PytestCode, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId)
+		err := rows.Scan(&assignment.Id, &assignment.UnitName, &assignment.Name, &assignment.Description, &assignment.RequiredFilename, &assignment.PytestCode, &assignment.Points, &assignment.DueDate, &assignment.Visible, &assignment.CourseId, &assignment.CategoryId)
 		if err != nil {
 			return nil, fmt.Errorf("db(assignment.getByCourseId): %w", err)
 		}
@@ -353,8 +359,8 @@ func (s *AssignmentStore) Update(ctx context.Context, assignment *Assignment) er
 	defer tx.Rollback()
 
 	_, err = tx.ExecContext(ctx, `UPDATE assignment 
-  SET unit_name=$1, name=$2, description=$3, required_filename=$4, points=$5, pytest_code=$6, due_date=$7, visible=$8, course_id=$9
-  WHERE id=$10`,
+  SET unit_name=$1, name=$2, description=$3, required_filename=$4, points=$5, pytest_code=$6, due_date=$7, visible=$8, course_id=$9, category_id=$10
+  WHERE id=$11`,
 		assignment.UnitName,
 		assignment.Name,
 		assignment.Description,
@@ -364,6 +370,7 @@ func (s *AssignmentStore) Update(ctx context.Context, assignment *Assignment) er
 		assignment.DueDate,
 		assignment.Visible,
 		assignment.CourseId,
+		assignment.CategoryId,
 		assignment.Id)
 
 	if err != nil {

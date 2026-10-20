@@ -27,7 +27,7 @@ const (
 	AssignmentStatusComplete
 )
 
-func Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []string, courseId string, studentAverage float64, studentId string, isTeacher bool) templ.Component {
+func Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []string, courseId string, studentAverage string, studentId string, isTeacher bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -112,7 +112,7 @@ func Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []str
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			hyper := "on click if my @data-showing is 'true' then set my textContent to '</>%' then set my @data-showing to 'false' else set my textContent to " + strconv.FormatFloat(studentAverage, 'f', 2, 64) + "% then set my @data-showing to 'true'"
+			hyper := "on click if my @data-showing is 'true' then set my textContent to '</>%' then set my @data-showing to 'false' else set my textContent to '" + studentAverage + "' then set my @data-showing to 'true'"
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<span data-showing=\"false\" class=\"user-select-none hover:cursor-pointer hover:text-stone-700\" _=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -120,7 +120,7 @@ func Dashboard(assignments map[string][]*storage.AssignmentWithGrade, keys []str
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(hyper)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 75, Col: 15}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 76, Col: 15}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -202,7 +202,7 @@ func UnitSideItem(name string, progress view.Frac) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 115, Col: 43}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 116, Col: 43}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -215,7 +215,7 @@ func UnitSideItem(name string, progress view.Frac) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(progress.String())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 116, Col: 101}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 117, Col: 101}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -228,7 +228,7 @@ func UnitSideItem(name string, progress view.Frac) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(progressStyle(progress.Percent()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 119, Col: 91}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 120, Col: 91}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -278,7 +278,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 137, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 138, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -291,7 +291,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(total)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 139, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 140, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -304,7 +304,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(view.Pluralize(total, "assignment", "assignments"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 139, Col: 104}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 140, Col: 104}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -317,7 +317,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(progressStyle(completed * 100 / total))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 145, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 146, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
@@ -330,7 +330,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(completed)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 147, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 148, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -343,7 +343,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(total)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 147, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 148, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
@@ -368,7 +368,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 						toggle .rotate-180 on me
 						toggle .collapsed on #assignments-list-%s`, unitId))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 156, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 157, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 		if templ_7745c5c3_Err != nil {
@@ -404,7 +404,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue("assignments-list-" + unitId)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 163, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 164, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 		if templ_7745c5c3_Err != nil {
@@ -435,7 +435,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 			var templ_7745c5c3_Var19 templ.SafeURL
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinURLErrs("/c/" + courseId + "/a/" + strconv.Itoa(assignment.Id) + "/details")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 176, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 177, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -482,7 +482,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 189, Col: 134}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 190, Col: 134}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -495,7 +495,7 @@ func UnitCard(name string, assignments []*storage.AssignmentWithGrade, courseId 
 			var templ_7745c5c3_Var23 string
 			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(assignment.DueDate.Format("Mon Jan 02 @ 15:04"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 191, Col: 102}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/student/dashboard.templ`, Line: 192, Col: 102}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 			if templ_7745c5c3_Err != nil {

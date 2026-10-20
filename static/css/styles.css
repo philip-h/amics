@@ -714,6 +714,9 @@
   .mt-1\.5 {
     margin-top: calc(var(--spacing) * 1.5);
   }
+  .mt-2 {
+    margin-top: calc(var(--spacing) * 2);
+  }
   .mt-6 {
     margin-top: calc(var(--spacing) * 6);
   }
@@ -872,6 +875,9 @@
   }
   .grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .grid-cols-\[minmax\(0\,1fr\)_6rem_auto\] {
+    grid-template-columns: minmax(0,1fr) 6rem auto;
   }
   .grid-rows-\[1fr\] {
     grid-template-rows: 1fr;

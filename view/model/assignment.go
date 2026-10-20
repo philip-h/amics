@@ -20,7 +20,9 @@ type AssignmentForm struct {
 	DueDate          string
 	Visible          bool
 	CourseId         string
+	CategoryId       string
 
+	Categories  []*storage.Category
 	ServerError string
 }
 
@@ -58,7 +60,12 @@ func NewAssignmentFormPost(
 }
 
 func NewFromAssignment(assignment *storage.Assignment) *AssignmentForm {
+	categoryId := ""
+	if assignment.CategoryId.Valid {
+		categoryId = strconv.FormatInt(assignment.CategoryId.Int64, 10)
+	}
 	return &AssignmentForm{
+		CategoryId:       categoryId,
 		Initial:          false,
 		Id:               strconv.Itoa(assignment.Id),
 		UnitName:         assignment.UnitName,

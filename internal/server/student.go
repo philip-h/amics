@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/a-h/templ"
+	"github.com/philip-h/amics/internal/grading"
 	"github.com/philip-h/amics/internal/httpe"
 	"github.com/philip-h/amics/internal/storage"
 	"github.com/philip-h/amics/view/student"
@@ -69,9 +70,6 @@ func handleStudentDashboardGet(store *storage.Storage) http.Handler {
 		byUnit := make(map[string][]*storage.AssignmentWithGrade)
 		// maps are not ordered, so this keys slice will preserve the order of the sql query
 		keys := []string{}
-		// And also calculate student average
-		var studentAvgNum float64
-		var studentAvgDenom float64
 
 		for _, ass := range assignments {
 			if ass.Visible {
@@ -79,19 +77,14 @@ func handleStudentDashboardGet(store *storage.Storage) http.Handler {
 				if !slices.Contains(keys, ass.UnitName) {
 					keys = append(keys, ass.UnitName)
 				}
-				if ass.Grade.Valid {
-					studentAvgNum += float64(ass.Grade.Int64)
-				}
-				studentAvgDenom += float64(ass.Points)
 			}
 		}
 
-		var studentAverage float64
-		if studentAvgDenom == 0 {
-			studentAverage = 0
-		} else {
-			studentAverage = math.Round((studentAvgNum / studentAvgDenom) * 100)
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseIdInt)
+		if err != nil {
+			return fmt.Errorf("[student.dashboard.get] Could not get categories: %w", err)
 		}
+		studentAverage := grading.Format(grading.WeightedAverage(assignments, categories, time.Now()))
 
 		return student.Dashboard(
 			byUnit,
@@ -164,7 +157,7 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 			htmlDescription,
 			studentIdHex,
 			courseId,
-      role == "teacher",
+			role == "teacher",
 		).Render(r.Context(), w)
 	})
 }
@@ -254,7 +247,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 				}
 				htmlComments.WriteString("\n")
 			}
-    }
+		}
 
 		return templ.RenderFragments(r.Context(), w,
 			student.Assignment(
@@ -264,7 +257,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 				"",
 				"",
 				courseId,
-        false,
+				false,
 			),
 			"submission-overview",
 		)

@@ -94,6 +94,13 @@ VALUES (22222, 1)`)
 	}
 
 	_, err = tx.Exec(`
+INSERT INTO assignment_category (course_id, name, weight)
+VALUES (1, 'Test Category', 100)`)
+	if err != nil {
+		return fmt.Errorf("[seed] Cannot insert category data: %w", err)
+	}
+
+	_, err = tx.Exec(`
 INSERT INTO assignment (unit_name, name, description, required_filename, pytest_code, points, due_date, visible, course_id) 
 VALUES ('Unit 1', 'Test Assignment', 'This is a test assignment', 'solution.py', '#todo no test', 100, NOW() + INTERVAL '7 days', true, 1)`)
 	if err != nil {

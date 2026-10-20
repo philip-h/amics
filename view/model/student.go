@@ -7,10 +7,10 @@ type StudentData struct {
 
 	Assignments []*storage.AssignmentWithGrade
 
-	StudentAverage float64
+	StudentAverage string
 }
 
-func NewStudentData(student *storage.Person, assignments []*storage.AssignmentWithGrade, studentAverage float64) *StudentData {
+func NewStudentData(student *storage.Person, assignments []*storage.AssignmentWithGrade, studentAverage string) *StudentData {
 	return &StudentData{
 		Student:        student,
 		Assignments:    assignments,

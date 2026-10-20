@@ -84,6 +84,16 @@ func addRoutes(
 			handleTeacherCoursePut(logger, store),
 		))
 
+	// teacher grade categories
+	mux.Handle("GET /teacher/courses/{courseId}/categories",
+		requiresTeacher(
+			handleTeacherCategoriesGet(store),
+		))
+	mux.Handle("PUT /teacher/courses/{courseId}/categories",
+		requiresTeacher(
+			handleTeacherCategoriesPut(logger, store),
+		))
+
 	// teacher assignments
 	mux.Handle("GET /teacher/courses/{courseId}/assignments/{assignmentId}",
 		requiresTeacher(

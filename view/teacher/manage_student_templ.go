@@ -133,7 +133,7 @@ func ManageStudent(vm *model.StudentData, courseId string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "%</span></div></div><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Assignments</h2></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Name</th><th class=\"px-4 py-2.5\">Unit</th><th class=\"px-4 py-2.5\">Due</th><th class=\"px-4 py-2.5\">Grade</th></tr></thead> <tbody>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span></div></div><div class=\"mb-8 overflow-hidden rounded-xl border border-stone-200 bg-white\"><div class=\"flex flex-wrap items-center justify-between gap-2 border-b border-stone-200 px-4 py-3 sm:px-5\"><h2 class=\"text-sm font-medium\">Assignments</h2></div><div class=\"overflow-x-auto\"><table class=\"w-full text-left text-sm\"><thead class=\"bg-stone-50 text-xs uppercase tracking-wider text-stone-500\"><tr><th class=\"px-4 py-2.5 sm:px-5\">Name</th><th class=\"px-4 py-2.5\">Unit</th><th class=\"px-4 py-2.5\">Due</th><th class=\"px-4 py-2.5\">Grade</th></tr></thead> <tbody>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

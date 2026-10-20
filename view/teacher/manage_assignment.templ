@@ -4,6 +4,7 @@ import (
 	"github.com/philip-h/amics/view/component"
 	"github.com/philip-h/amics/view/layout"
 	"github.com/philip-h/amics/view/model"
+	"strconv"
 )
 
 templ ManageAssignment(vm *model.AssignmentForm, unitNames []string) {
@@ -126,6 +127,19 @@ templ ManageAssignment(vm *model.AssignmentForm, unitNames []string) {
 						@component.DatetimeFormControl(templ.Attributes{
 							"value": vm.DueDate,
 						}, "due-date", "Due Date", "Due date required", vm.DueDateProblem())
+					</div>
+					<div class="sm:col-span-3">
+						<label for="category" class="mb-1.5 block text-xs font-medium text-stone-700">Grade Category</label>
+						<select
+							id="category"
+							name="category"
+							class="w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-purple-300"
+						>
+							<option value="" selected?={ vm.CategoryId == "" }>Uncategorized (not counted in overall grade)</option>
+							for _, category := range vm.Categories {
+								<option value={ strconv.Itoa(category.Id) } selected?={ vm.CategoryId == strconv.Itoa(category.Id) }>{ category.Name } ({ strconv.Itoa(category.Weight) }%)</option>
+							}
+						</select>
 					</div>
 					<div class="sm:col-span-3">
 						<label class="inline-flex items-center cursor-pointer w-full">

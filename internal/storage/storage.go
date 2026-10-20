@@ -41,6 +41,11 @@ type Storage struct {
 		GetUnitNamesByCourseId(context.Context, int) ([]string, error)
 	}
 
+	Categories interface {
+		ListByCourseId(context.Context, int) ([]*Category, error)
+		ReplaceAll(context.Context, int, []*Category) error
+	}
+
 	Submissions interface {
 		Create(context.Context, int, int, string) error
 		GetByAssignmentAndStudentIds(context.Context, int, int) (*Submission, error)
@@ -64,6 +69,7 @@ func New(db *sql.DB) *Storage {
 		People:      &PersonStore{db},
 		Assignments: &AssignmentStore{db},
 		Courses:     &CourseStore{db},
+		Categories:  &CategoryStore{db},
 		Submissions: &SubmissionStore{db},
 		Sessions:    &SessionStore{db},
 	}

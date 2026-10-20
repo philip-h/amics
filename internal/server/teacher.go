@@ -7,13 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"math"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/philip-h/amics/internal/grading"
 	"github.com/philip-h/amics/internal/httpe"
 	"github.com/philip-h/amics/internal/storage"
 	"github.com/philip-h/amics/view/model"
@@ -227,10 +227,15 @@ func handleTeacherAssignmentGet(store *storage.Storage) http.Handler {
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.get] Could not get unit names: %w", err)
 		}
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseId)
+		if err != nil {
+			return fmt.Errorf("[teacher.assignment.get] Could not get categories: %w", err)
+		}
 
 		if assignmentIdStr == "new" {
 			formVm := model.NewAssignmentFormGet()
 			formVm.CourseId = strconv.Itoa(courseId)
+			formVm.Categories = categories
 			return teacher.ManageAssignment(formVm, unitNames).Render(r.Context(), w)
 		}
 
@@ -245,6 +250,7 @@ func handleTeacherAssignmentGet(store *storage.Storage) http.Handler {
 		}
 
 		formVm := model.NewFromAssignment(assignment)
+		formVm.Categories = categories
 
 		return teacher.ManageAssignment(formVm, unitNames).Render(r.Context(), w)
 	})
@@ -262,6 +268,10 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.post] Could not get unit names: %w", err)
 		}
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseIdInt)
+		if err != nil {
+			return fmt.Errorf("[teacher.assignment.post] Could not get categories: %w", err)
+		}
 
 		reqBody := model.NewAssignmentFormPost(
 			r.PostFormValue("id"),
@@ -275,6 +285,8 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 			r.PostFormValue("visible") == "on",
 			courseId,
 		)
+		reqBody.Categories = categories
+		reqBody.CategoryId = r.PostFormValue("category")
 
 		if len(reqBody.Validate()) > 0 {
 			logger.L.Debug("[teacher.assignment.post] Error in initial validation", "problems", reqBody.Validate())
@@ -283,6 +295,11 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 
 		// already validated
 		pointsInt, _ := strconv.Atoi(reqBody.Points)
+		categoryId, ok := categoryIdFromForm(reqBody.CategoryId, categories)
+		if !ok {
+			reqBody.ServerError = "Selected category does not belong to this course."
+			return teacher.ManageAssignment(reqBody, unitNames).Render(r.Context(), w)
+		}
 
 		loc, err := time.LoadLocation("America/Toronto")
 		if err != nil {
@@ -310,6 +327,7 @@ func handleTeacherAssignmentPost(logger *Logger, store *storage.Storage) http.Ha
 			DueDate:          dueDateTime,
 			Visible:          reqBody.Visible,
 			CourseId:         courseIdInt,
+			CategoryId:       categoryId,
 		}
 
 		err = store.Assignments.Create(r.Context(), assignment)
@@ -348,6 +366,10 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 		if err != nil {
 			return fmt.Errorf("[teacher.assignment.put] Could not get unit names: %w", err)
 		}
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseIdInt)
+		if err != nil {
+			return fmt.Errorf("[teacher.assignment.put] Could not get categories: %w", err)
+		}
 
 		reqBody := model.NewAssignmentFormPost(
 			r.PostFormValue("id"),
@@ -361,6 +383,8 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 			r.PostFormValue("visible") == "on",
 			courseId,
 		)
+		reqBody.Categories = categories
+		reqBody.CategoryId = r.PostFormValue("category")
 
 		if len(reqBody.Validate()) > 0 {
 			logger.L.Error("[teacher.assignment.put] Error in initial validation", "problems", reqBody.Validate())
@@ -369,6 +393,11 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 
 		// already validated
 		pointsInt, _ := strconv.Atoi(reqBody.Points)
+		categoryId, ok := categoryIdFromForm(reqBody.CategoryId, categories)
+		if !ok {
+			reqBody.ServerError = "Selected category does not belong to this course."
+			return teacher.ManageAssignment(reqBody, unitNames).Render(r.Context(), w)
+		}
 
 		loc, err := time.LoadLocation("America/Toronto")
 		if err != nil {
@@ -396,6 +425,7 @@ func handleTeacherAssignmentPut(logger *Logger, store *storage.Storage) http.Han
 			DueDate:          dueDateTime,
 			Visible:          reqBody.Visible,
 			CourseId:         courseIdInt,
+			CategoryId:       categoryId,
 		}
 
 		err = store.Assignments.Update(r.Context(), assignment)
@@ -680,24 +710,11 @@ func handleTeacherStudentGet(store *storage.Storage) http.Handler {
 			return fmt.Errorf("[teacher.student.get] Could not get assignments: %w", err)
 		}
 
-		// calculate student average
-		var studentAvgNum float64
-		var studentAvgDenom float64
-
-		for _, ass := range assignments {
-			if ass.Assignment.Visible {
-				if ass.Grade.Valid {
-					studentAvgNum += float64(ass.Grade.Int64)
-				}
-				studentAvgDenom += float64(ass.Points)
-			}
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseId)
+		if err != nil {
+			return fmt.Errorf("[teacher.student.get] Could not get categories: %w", err)
 		}
-		var studentAverage float64
-		if studentAvgDenom == 0 {
-			studentAverage = 0
-		} else {
-			studentAverage = math.Round((studentAvgNum / studentAvgDenom) * 100)
-		}
+		studentAverage := grading.Format(grading.WeightedAverage(assignments, categories, time.Now()))
 
 		return teacher.ManageStudent(model.NewStudentData(
 			student,
