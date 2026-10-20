@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"math"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -526,7 +527,7 @@ func handleTeacherGradesImportPost(store *storage.Storage) http.Handler {
 
 		w.Header().Set("HX-Redirect", "/teacher")
 		flash := &Flash{
-			Message: "Successfully imported "+ strconv.Itoa(len(studentIds))+" grades for assignment with id" + assignmentId,
+			Message: "Successfully imported " + strconv.Itoa(len(studentIds)) + " grades for assignment with id" + assignmentId,
 			IsError: false,
 		}
 		setFlash(w, flash)
@@ -595,9 +596,12 @@ func handleTeacherCodeExport(store *storage.Storage) http.Handler {
 		// prep the zip archive in w
 		zipWriter := zip.NewWriter(w)
 
+		// Zip entries use forward slashes; strip separators so the name stays a single folder.
+		folderName := strings.NewReplacer("/", "_", "\\", "_").Replace(assignment.Name)
+
 		for _, submission := range submissions {
 			student_number := strconv.Itoa(submission.StudentId)
-			fileName := student_number + "_" + assignment.RequiredFilename
+			fileName := path.Join(folderName, student_number+"_"+assignment.RequiredFilename)
 			f, err := zipWriter.Create(fileName)
 			if err != nil {
 				return fmt.Errorf("[teacher.course.code.export] Could not create file in zip: %w", err)
