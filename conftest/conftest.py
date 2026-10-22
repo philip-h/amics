@@ -31,14 +31,17 @@ def pytest_runtest_makereport(item, call):
             print(f"\n✘ {item.name} (0/{points}) - {feedback}")
 
 
-@pytest.fixture(autouse=True)
-def timeout():
-    """Handle possible infinite loops"""
+@pytest.fixture
+def mock_input(monkeypatch):
+    def install(*responses):
+        it = iter(responses)
 
-    def handler(signum, frame):
-        raise TimeoutError("Test ran for more than 5 seconds - possible infinite loop")
+        def fake_input(prompt=""):
+            try:
+                return next(it)
+            except StopIteration:
+                raise EOFError("test ran out of input")
 
-    signal.signal(signal.SIGALRM, handler)
-    signal.alarm(5)
-    yield
-    signal.alarm(0)
+        monkeypatch.setattr("builtins.input", fake_input)
+
+    return install

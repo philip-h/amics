@@ -69,8 +69,13 @@ func Run(
 		store,
 	)
 	server := &http.Server{
-		Addr:    cfg.Port,
-		Handler: myServer,
+		Addr:              cfg.Port,
+		Handler:           myServer,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+		MaxHeaderBytes:    1 << 16, // 64KB
 	}
 
 	done := make(chan bool)

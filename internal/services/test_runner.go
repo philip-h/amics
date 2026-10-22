@@ -40,23 +40,30 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 
 	// Create container
 	// pip install cmd
-	pytestRunCmd := "pip install pytest > /dev/null 2>&1 && python -m pytest --no-header --color=no"
+	pytestRunCmd := "python -m pytest --no-header --color=no -p no:cacheprovider --timeout=1"
 	resp, err := tr.dockerClient.ContainerCreate(
 		ctx,
 		client.ContainerCreateOptions{
 			Config: &container.Config{
-				Image: "python:3.11-slim",
+				Image: "amics-pytest:latest",
 				Cmd: []string{
 					"sh", "-c",
 					pytestRunCmd,
 				},
-				WorkingDir: "/app",
-				Tty:        true,
+				WorkingDir:      "/app",
+				Tty:             true,
+				NetworkDisabled: true,
+				User:            "nobody",
 			},
 			HostConfig: &container.HostConfig{
+				NetworkMode: "none",
+				Tmpfs:       map[string]string{"/tmp": "rw,size=16m"},
+				CapDrop:     []string{"ALL"},
+				SecurityOpt: []string{"no-new-privileges"},
 				Resources: container.Resources{
-					Memory:   128 * 1024 * 1024, // 128 MB
-					NanoCPUs: 1_000_000_000,     // 1 CPU
+					Memory:     128 * 1024 * 1024, // 128 MB
+					MemorySwap: 128 * 1024 * 1024, // 128 MB
+					NanoCPUs:   1_000_000_000,     // 1 CPU
 				},
 			},
 			NetworkingConfig: nil,
@@ -70,7 +77,12 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 	}
 
 	containerId := resp.ID
-	defer tr.cleanup(ctx, containerId)
+	// When ctx expires, ContainerWait returns, but tr.cleanup(ctx, ...) reuses the existing context so ContainerRemove fails and keeps the container running.
+	defer func() {
+		cctx, ccancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer ccancel()
+		tr.cleanup(cctx, containerId)
+	}()
 
 	if err := tr.copyFilesToContainer(ctx, containerId, filename, studentCode, testCode); err != nil {
 		return nil, err
