@@ -202,12 +202,10 @@ func (s *SubmissionStore) UpdateAll(ctx context.Context, submissions []*Submissi
 
 	for _, submission := range submissions {
 		_, err := tx.ExecContext(ctx, `INSERT INTO submission (student_id, assignment_id, code, grade, submitted_on, comments, status, graded_on)
-		VALUES ($1, $2, 'Graded by Mr. Habib', $3, NOW(), $4, 'completed', NOW())
+		VALUES ($1, $2, 'No code submitted.', $3, NOW(), $4, 'completed', NOW())
 		ON CONFLICT (student_id, assignment_id)
 		DO UPDATE SET
-			code = EXCLUDED.code,
 			grade = EXCLUDED.grade,
-			submitted_on = EXCLUDED.submitted_on,
 			comments = EXCLUDED.comments,
 			status = EXCLUDED.status,
 			graded_on = EXCLUDED.graded_on`,

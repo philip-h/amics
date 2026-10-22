@@ -630,8 +630,12 @@ func handleTeacherCodeExport(store *storage.Storage) http.Handler {
 		folderName := strings.NewReplacer("/", "_", "\\", "_").Replace(assignment.Name)
 
 		for _, submission := range submissions {
-			student_number := strconv.Itoa(submission.StudentId)
-			fileName := path.Join(folderName, student_number+"_"+assignment.RequiredFilename)
+			student, err := store.People.GetById(r.Context(), submission.StudentId)
+			if err != nil {
+				return fmt.Errorf("[teacher.course.code.export] Could not get student #%d: %w", submission.StudentId, err)
+			}
+			normalizedName := strings.ToLower(strings.ReplaceAll(student.FirstName, " ", "_"))
+			fileName := path.Join(folderName, normalizedName+"_"+assignment.RequiredFilename)
 			f, err := zipWriter.Create(fileName)
 			if err != nil {
 				return fmt.Errorf("[teacher.course.code.export] Could not create file in zip: %w", err)
