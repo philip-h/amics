@@ -45,9 +45,13 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 					<span>Due { assignment.DueDate.Format("Mon Jan 2, 2006 @ 15:04") }</span>
 					<span>⋅</span>
 					if submission != nil {
-						@component.StatusPill(true, submission.Grade, assignment.Points)
+						<span id="grade-pill">
+							@component.StatusPill(true, submission.Grade, assignment.Points)
+						</span>
 					} else {
-						@component.StatusPill(false, 0, assignment.Points)
+						<span id="grade-pill">
+							@component.StatusPill(false, 0, assignment.Points)
+						</span>
 					}
 				</div>
 				<div class="mb-6 space-y-4">
@@ -151,6 +155,10 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 										<pre class="text-stone-400">
 											@templ.Raw(comments)
 										</pre>
+										<!-- update status pill at top of page -->
+										<span id="grade-pill" hx-swap-oob="true">
+											@component.StatusPill(true, submission.Grade, assignment.Points)
+										</span>
 									}
 								}
 							} else {
