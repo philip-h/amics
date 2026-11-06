@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -34,7 +35,7 @@ func NewTestRunner() (*TestRunner, error) {
 	}, nil
 }
 
-func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResult, error) {
+func (tr *TestRunner) Pytest(filename, studentCode, testCode string, outOf int) (*TestResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -122,7 +123,7 @@ func (tr *TestRunner) Pytest(filename, studentCode, testCode string) (*TestResul
 	if err != nil {
 		return nil, err
 	}
-	return tr.parseTestResults(string(stdouterr)), nil
+	return tr.parseTestResults(string(stdouterr), outOf), nil
 }
 
 func (tr *TestRunner) writeToTar(tw *tar.Writer, name string, content []byte) error {
@@ -182,7 +183,7 @@ func (tr *TestRunner) copyFilesToContainer(ctx context.Context, containerID, fil
 	return err
 }
 
-func (tr *TestRunner) parseTestResults(output string) *TestResult {
+func (tr *TestRunner) parseTestResults(output string, outOf int) *TestResult {
 	// Parse pytest output for html
 
 	result := &TestResult{
@@ -190,26 +191,31 @@ func (tr *TestRunner) parseTestResults(output string) *TestResult {
 		Comments: output,
 	}
 
-	var passed, total int
-	// Parse pytest output
-	// Look for pattern like "1 passed, 2 failed"
-	re := regexp.MustCompile(`(\d+) passed`)
-	if matches := re.FindStringSubmatch(output); len(matches) > 1 {
-		passed, _ = strconv.Atoi(matches[1])
-	}
+	// Parse custom pytest output
+	re := regexp.MustCompile(`[✔✘] test_[\w_]+ \((\d+)/(\d+)\)`)
 
-	// Count total tests
-	reTotal := regexp.MustCompile(`(\d+) (passed|failed)`)
-	matches := reTotal.FindAllStringSubmatch(output, -1)
+	// Count total scores
+	matches := re.FindAllStringSubmatch(output, -1)
+	num := 0
+	denom := 0
 	for _, match := range matches {
-		count, _ := strconv.Atoi(match[1])
-		total += count
+		iNum, _ := strconv.Atoi(match[1])
+		iDenom, _ := strconv.Atoi(match[2])
+		num += iNum
+		denom += iDenom
 	}
 
-	if total == 0 {
+	if denom == 0 {
 		result.Grade = 0
 	} else {
-		result.Grade = (passed*4 + total/2) / total
+    grade := float64(num*outOf) / float64(denom)
+    rounded := math.Round(grade)
+
+    // round grades, but do not round to 100%
+    if rounded == float64(outOf) && grade != rounded {
+      rounded = math.Floor(grade)
+    }
+    result.Grade = int(rounded)
 	}
 
 	return result

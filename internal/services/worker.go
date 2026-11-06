@@ -93,7 +93,7 @@ func (w *Worker) processNextSubmission(ctx context.Context) {
 	}
 
 	// run tests
-	result, err := w.testRunner.Pytest(assignment.RequiredFilename, submission.Code, assignment.PytestCode)
+	result, err := w.testRunner.Pytest(assignment.RequiredFilename, submission.Code, assignment.PytestCode, assignment.Points)
 	if err != nil {
 		w.logger.Error("Error running pytest", slog.String("msg", err.Error()),
 			slog.Group("where",
