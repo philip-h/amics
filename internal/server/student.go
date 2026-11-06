@@ -158,6 +158,7 @@ func handleStudentAssignmentGet(store *storage.Storage) http.Handler {
 			studentIdHex,
 			courseId,
 			role == "teacher",
+      false,
 		).Render(r.Context(), w)
 	})
 }
@@ -258,6 +259,7 @@ func handleStudentAssignmentPoll(store *storage.Storage) http.Handler {
 				"",
 				courseId,
 				false,
+        true,
 			),
 			"submission-overview",
 		)

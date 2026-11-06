@@ -9,7 +9,7 @@ import (
 )
 
 templ Assignment(assignment *storage.Assignment, submission *storage.Submission, comments, description, studentId,
-	courseId string, isTeacher bool) {
+	courseId string, isTeacher bool, isFragment bool) {
 	@layout.Base("/amics/0x" + studentId) {
 		@component.Header(
 			"/h",
@@ -156,9 +156,11 @@ templ Assignment(assignment *storage.Assignment, submission *storage.Submission,
 											@templ.Raw(comments)
 										</pre>
 										<!-- update status pill at top of page -->
-										<span id="grade-pill" hx-swap-oob="true">
-											@component.StatusPill(true, submission.Grade, assignment.Points)
-										</span>
+										if isFragment {
+											<span id="grade-pill" hx-swap-oob="true">
+												@component.StatusPill(true, submission.Grade, assignment.Points)
+											</span>
+										}
 									}
 								}
 							} else {
