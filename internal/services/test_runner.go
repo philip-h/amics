@@ -192,30 +192,30 @@ func (tr *TestRunner) parseTestResults(output string, outOf int) *TestResult {
 	}
 
 	// Parse custom pytest output
-	re := regexp.MustCompile(`[✔✘] test_[\w_]+ \((\d+)/(\d+)\)`)
+	re := regexp.MustCompile(`[✔✘] test_[\w_]+ \((\d{1,2}(?:\.\d)?)/(\d{1,2}(?:\.\d)?)\)`)
 
 	// Count total scores
 	matches := re.FindAllStringSubmatch(output, -1)
-	num := 0
-	denom := 0
+	num := 0.0
+	denom := 0.0
 	for _, match := range matches {
-		iNum, _ := strconv.Atoi(match[1])
-		iDenom, _ := strconv.Atoi(match[2])
-		num += iNum
-		denom += iDenom
+		fNum, _ := strconv.ParseFloat(match[1], 64)
+		fDenom, _ := strconv.ParseFloat(match[2], 64)
+		num += fNum
+		denom += fDenom
 	}
 
 	if denom == 0 {
 		result.Grade = 0
 	} else {
-    grade := float64(num*outOf) / float64(denom)
-    rounded := math.Round(grade)
+		grade := num * float64(outOf) / denom
+		rounded := math.Round(grade)
 
-    // round grades, but do not round to 100%
-    if rounded == float64(outOf) && grade != rounded {
-      rounded = math.Floor(grade)
-    }
-    result.Grade = int(rounded)
+		// round grades, but do not round to 100%
+		if rounded == float64(outOf) && grade != rounded {
+			rounded = math.Floor(grade)
+		}
+		result.Grade = int(rounded)
 	}
 
 	return result
