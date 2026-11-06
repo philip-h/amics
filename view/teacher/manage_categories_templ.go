@@ -151,7 +151,7 @@ func ManageCategories(vm *model.CategoriesForm) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span> / 100</p></div></section><button type=\"submit\" class=\"inline-flex items-center rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer\">Save categories</button></form><script>\n\t\t\t\tfunction updateCategoryTotal() {\n\t\t\t\t\tlet total = 0;\n\t\t\t\t\tdocument.querySelectorAll('input[name=\"category-weight\"]').forEach((el) => {\n\t\t\t\t\t\ttotal += parseInt(el.value, 10) || 0;\n\t\t\t\t\t});\n\t\t\t\t\tdocument.getElementById('category-total').textContent = total;\n\t\t\t\t}\n\t\t\t</script></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</span> / 100</p></div></section><button type=\"submit\" class=\"inline-flex items-center rounded-md bg-purple-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-purple-800 hover:cursor-pointer\">Save categories</button></form><script>\n\t\t\t\tfunction updateCategoryTotal() {\n\t\t\t\t\tlet total = 0;\n\t\t\t\t\tdocument\n\t\t\t\t\t\t.querySelectorAll('input[name=\"category-weight\"]')\n\t\t\t\t\t\t.forEach((el) => {\n\t\t\t\t\t\t\ttotal += parseInt(el.value, 10) || 0;\n\t\t\t\t\t\t});\n\t\t\t\t\tdocument.getElementById(\"category-total\").textContent = total;\n\t\t\t\t}\n\t\t\t</script></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -193,7 +193,7 @@ func categoryRow(row model.CategoryRow) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.ResolveAttributeValue(row.Id)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 89, Col: 56}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 91, Col: 56}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var8)
 		if templ_7745c5c3_Err != nil {
@@ -206,7 +206,7 @@ func categoryRow(row model.CategoryRow) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(row.Name)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 93, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 95, Col: 19}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 		if templ_7745c5c3_Err != nil {
@@ -219,7 +219,7 @@ func categoryRow(row model.CategoryRow) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.ResolveAttributeValue(row.Weight)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 102, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/manage_categories.templ`, Line: 104, Col: 21}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var10)
 		if templ_7745c5c3_Err != nil {

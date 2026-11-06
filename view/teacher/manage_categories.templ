@@ -74,10 +74,12 @@ templ ManageCategories(vm *model.CategoriesForm) {
 			<script>
 				function updateCategoryTotal() {
 					let total = 0;
-					document.querySelectorAll('input[name="category-weight"]').forEach((el) => {
-						total += parseInt(el.value, 10) || 0;
-					});
-					document.getElementById('category-total').textContent = total;
+					document
+						.querySelectorAll('input[name="category-weight"]')
+						.forEach((el) => {
+							total += parseInt(el.value, 10) || 0;
+						});
+					document.getElementById("category-total").textContent = total;
 				}
 			</script>
 		</main>

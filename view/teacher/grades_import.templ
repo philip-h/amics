@@ -45,8 +45,9 @@ templ ImportGrades(
 			}}
 			<p class="mb-2 font-mono text-xs text-lime-700">$ assignment --import-grades { assignmentId }</p>
 			<h1 class="mb-6 text-2xl font-semibold tracking-tight">Import grades</h1>
-			<div class="flex flex-wrap gap-4">
-				<div class="flex-1 space-y-5">
+			<div class="grid grid-cols-4 gap-4">
+				<!-- Grades table -->
+				<div class="col-span-4 order-2 space-y-5">
 					if len(students) == 0 {
 						<p class="px-2">Cannot import grades for course with no students</p>
 					} else {
@@ -94,15 +95,15 @@ templ ImportGrades(
 														<input type="text" inputmode="numeric" name="grade" value={ gradeValue } _="on input call updateSummary()" class="rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]"/>
 													</td>
 													<td class="px-4 py-3 text-xs text-stone-500">
-                            <textarea
-                              id="comments"
-                              name="comments"
-                              placeholder="Assignment comments"
-                              rows="10"
-                              class="w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
-                            >
-                              { commentsValue }
-                            </textarea>
+														<textarea
+															id="comments"
+															name="comments"
+															placeholder="Assignment comments"
+															rows="10"
+															class="w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-invalid:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100"
+														>
+															{ commentsValue }
+														</textarea>
 													</td>
 												</tr>
 											}
@@ -118,16 +119,16 @@ templ ImportGrades(
 						</div>
 					}
 				</div>
-				<div class="flex flex-col gap-4 min-w-[350px]">
-					<div class="rounded-xl border border-stone-200 bg-white">
-						<div class="flex items-center border-b border-stone-200 p-4">
-							<p class="text-xs text-stone-700 uppercase">csv upload</p>
-						</div>
-						<div class="space-y-4 p-4">
-							@component.FileDropzoneFormControl(
-								templ.Attributes{
-									"accept": ".csv",
-									"_": `on gotfiles call parseCSV(first of my files)
+				<!-- CSV Import -->
+				<div class="order-3 col-span-4  rounded-xl border border-stone-200 bg-white">
+					<div class="flex items-center border-b border-stone-200 p-4">
+						<p class="text-xs text-stone-700 uppercase">csv upload</p>
+					</div>
+					<div class="space-y-4 p-4">
+						@component.FileDropzoneFormControl(
+							templ.Attributes{
+								"accept": ".csv",
+								"_": `on gotfiles call parseCSV(first of my files)
 										on change 
 											if first of my files is not null
 												get <p[data-file-name/>
@@ -136,52 +137,52 @@ templ ImportGrades(
 												add @aria-has-file to #file-dropzone
 												call parseCSV(first of my files)
 											end`,
-								},
-								svg.CSVSVG(),
-								"file",
-								"Upload file",
-								"Please upload a CSV",
-								"",
-							)
-							<div class="flex flex-col justify-center py-4 px-4 bg-stone-200 rounded-md text-xs">
-								<div class="flex items-center justify-between mb-2">
-									<span>Expected Format</span>
-									<a
-										href={ "/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import/template" }
-										hx-boost="false"
-										class="text-purple-700 hover:underline"
-									>Download template</a>
-								</div>
-								<div>
-									<p>student_number,grade,comments</p>
-									<p><span class="text-lime-700">8675309,</span>4,Nice</p>
-									<p><span class="text-lime-700">1234456,</span>3,Needs work</p>
-								</div>
+							},
+							svg.CSVSVG(),
+							"file",
+							"Upload file",
+							"Please upload a CSV",
+							"",
+						)
+						<div class="flex flex-col justify-center py-4 px-4 bg-stone-200 rounded-md text-xs">
+							<div class="flex items-center justify-between mb-2">
+								<span>Expected Format</span>
+								<a
+									href={ "/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import/template" }
+									hx-boost="false"
+									class="text-purple-700 hover:underline"
+								>Download template</a>
+							</div>
+							<div>
+								<p>student_number,grade,comments</p>
+								<p><span class="text-lime-700">8675309,</span>4,Nice</p>
+								<p><span class="text-lime-700">1234456,</span>3,Needs work</p>
 							</div>
 						</div>
 					</div>
-					<div class="rounded-xl border border-stone-200 bg-white">
-						<div class="flex items-center border-b border-stone-200 p-4">
-							<p class="text-xs text-stone-700 uppercase">summary</p>
+				</div>
+				<!-- Summary -->
+				<div class="col-span-1 col-start-4 order-1 rounded-xl border border-stone-200 bg-white">
+					<div class="flex items-center border-b border-stone-200 p-4">
+						<p class="text-xs text-stone-700 uppercase">summary</p>
+					</div>
+					<div class="grid grid-cols-2 gap-2 p-4">
+						<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+							<span class="text-sm text-stone-500">Graded</span>
+							<div class="flex gap-2">
+								<span class="text-4xl font-semibold text-purple-700" data-graded-num>{ numGraded }</span>
+								<span class="text-sm text-stone-500 self-end" data-graded-den={ len(students) }>/ { len(students) }</span>
+							</div>
 						</div>
-						<div class="grid grid-cols-2 gap-2 p-4">
-							<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
-								<span class="text-sm text-stone-500">Graded</span>
-								<div class="flex gap-2">
-									<span class="text-4xl font-semibold text-purple-700" data-graded-num>{ numGraded }</span>
-									<span class="text-sm text-stone-500 self-end" data-graded-den={ len(students) }>/ { len(students) }</span>
-								</div>
-							</div>
-							<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
-								<span class="text-sm text-stone-500">Average Score</span>
-								<span class="text-purple-700" data-average data-out-of={ outOf }>
-									if numGraded == 0 {
-										-
-									} else {
-										{ fmt.Sprintf("%.2f%%", (float64(averageSum)/float64(numGraded))*100/float64(outOf)) }
-									}
-								</span>
-							</div>
+						<div class="flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md">
+							<span class="text-sm text-stone-500">Average Score</span>
+							<span class="text-purple-700" data-average data-out-of={ outOf }>
+								if numGraded == 0 {
+									-
+								} else {
+									{ fmt.Sprintf("%.2f%%", (float64(averageSum)/float64(numGraded))*100/float64(outOf)) }
+								}
+							</span>
 						</div>
 					</div>
 				</div>
@@ -192,78 +193,84 @@ templ ImportGrades(
 				const $dz = document.getElementById("file-dropzone");
 				const $dzConstraint = $dz.querySelector("p[data-file-constraint]");
 				const $dzHint = $dz.querySelector("p[data-file-hint]");
-				const $summaryGradedNum = document.querySelector("span[data-graded-num]");
-				const $summaryGradedDen = document.querySelector("span[data-graded-den]");
+				const $summaryGradedNum = document.querySelector(
+					"span[data-graded-num]",
+				);
+				const $summaryGradedDen = document.querySelector(
+					"span[data-graded-den]",
+				);
 				const $summaryAverage = document.querySelector("span[data-average]");
 
 				function parseCSV(csv) {
 					const reader = new FileReader();
-					reader.onload = e => {
-						const lines = e.target.result.trim().split('\n');
-						const header = lines[0].toLowerCase().replace(/\s/g,'');
-						if (!header.includes('student_number') || !header.includes('grade')) {
-							$dz.removeAttribute('aria-has-file');
-							$dz.setAttribute('aria-error', 'true');
-							$dzConstraint.textContent = 'Invalid format';
-							$dzHint.textContent = 'CSV must have student_number and grade columns.';
+					reader.onload = (e) => {
+						const lines = e.target.result.trim().split("\n");
+						const header = lines[0].toLowerCase().replace(/\s/g, "");
+						if (
+							!header.includes("student_number") ||
+							!header.includes("grade")
+						) {
+							$dz.removeAttribute("aria-has-file");
+							$dz.setAttribute("aria-error", "true");
+							$dzConstraint.textContent = "Invalid format";
+							$dzHint.textContent =
+								"CSV must have student_number and grade columns.";
 							return;
 						}
 						let matched = 0;
-						lines.slice(1).forEach(line => {
-							const cols = line.split(',');
+						lines.slice(1).forEach((line) => {
+							const cols = line.split(",");
 							const snum = cols[0]?.trim();
 							const grade = cols[1]?.trim();
-							const comments = cols[2]?.trim() || '';
+							const comments = cols[2]?.trim() || "";
 
 							const $row = document.querySelector(
-								`tr[data-student-id="${snum}"]`
+								`tr[data-student-id="${snum}"]`,
 							);
 
 							if ($row) {
 								matched++;
-								$row.querySelector(
-									`input[name="grade"]`
-								).value = grade;
+								$row.querySelector(`input[name="grade"]`).value = grade;
 
-								$row.querySelector(
-									`input[name="comments"]`
-								).value = comments;
+								$row.querySelector(`input[name="comments"]`).value = comments;
 							}
 						});
 
 						// update dropzone with file stats
-						$dz.setAttribute('aria-has-file', 'true');
-						$dz.removeAttribute('aria-error');
-						$dzConstraint.textContent = 'File loaded';
-						$dzHint.textContent = 'Matched ' + matched + ' students from CSV';
+						$dz.setAttribute("aria-has-file", "true");
+						$dz.removeAttribute("aria-error");
+						$dzConstraint.textContent = "File loaded";
+						$dzHint.textContent = "Matched " + matched + " students from CSV";
 
 						updateSummary();
-
-					}
+					};
 					reader.readAsText(csv);
-
 				}
 
 				function updateSummary() {
 					// calculate average and number of graded students
-					const $rows = document.querySelectorAll('tr[data-student-id]');
+					const $rows = document.querySelectorAll("tr[data-student-id]");
 					let numGraded = 0;
 					let averageSum = 0;
-					$rows.forEach($row => {
-						const grade = parseFloat($row.querySelector('input[name="grade"]').value);
+					$rows.forEach(($row) => {
+						const grade = parseFloat(
+							$row.querySelector('input[name="grade"]').value,
+						);
 						if (!isNaN(grade)) {
 							numGraded++;
-							averageSum += grade;	
+							averageSum += grade;
 						}
 					});
 					// update summary
-					const numStudents = $summaryGradedDen.getAttribute('data-graded-den');
-					const outOf = $summaryAverage.getAttribute('data-out-of');
-					const average = numStudents > 0 ? ((averageSum *100/ numStudents)/outOf).toFixed(2) : 0;
+					const numStudents = $summaryGradedDen.getAttribute("data-graded-den");
+					const outOf = $summaryAverage.getAttribute("data-out-of");
+					const average =
+						numStudents > 0
+							? ((averageSum * 100) / numStudents / outOf).toFixed(2)
+							: 0;
 					$summaryAverage.textContent = average;
 					$summaryGradedNum.textContent = numGraded;
 				}
-
 			</script>
 		}
 	}

@@ -99,7 +99,7 @@ func ImportGrades(
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p><h1 class=\"mb-6 text-2xl font-semibold tracking-tight\">Import grades</h1><div class=\"flex flex-wrap gap-4\"><div class=\"flex-1 space-y-5\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</p><h1 class=\"mb-6 text-2xl font-semibold tracking-tight\">Import grades</h1><div class=\"grid grid-cols-4 gap-4\"><!-- Grades table --><div class=\"col-span-4 order-2 space-y-5\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -116,7 +116,7 @@ func ImportGrades(
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue("/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import")
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 57, Col: 98}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 58, Col: 98}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 				if templ_7745c5c3_Err != nil {
@@ -151,7 +151,7 @@ func ImportGrades(
 						var templ_7745c5c3_Var5 string
 						templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(student.Id)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 87, Col: 91}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 88, Col: 91}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 						if templ_7745c5c3_Err != nil {
@@ -164,7 +164,7 @@ func ImportGrades(
 						var templ_7745c5c3_Var6 string
 						templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.ResolveAttributeValue(student.Id)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 89, Col: 71}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 90, Col: 71}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6)
 						if templ_7745c5c3_Err != nil {
@@ -177,7 +177,7 @@ func ImportGrades(
 						var templ_7745c5c3_Var7 string
 						templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(student.Id)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 90, Col: 26}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 91, Col: 26}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 						if templ_7745c5c3_Err != nil {
@@ -190,7 +190,7 @@ func ImportGrades(
 						var templ_7745c5c3_Var8 string
 						templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(student.FirstName)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 92, Col: 77}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 93, Col: 77}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 						if templ_7745c5c3_Err != nil {
@@ -203,20 +203,20 @@ func ImportGrades(
 						var templ_7745c5c3_Var9 string
 						templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.ResolveAttributeValue(gradeValue)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 94, Col: 84}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 95, Col: 84}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var9)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" _=\"on input call updateSummary()\" class=\"rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]\"></td><td class=\"px-4 py-3 text-xs text-stone-500\"><textarea id=\"comments\" name=\"comments\" placeholder=\"Assignment comments\" rows=\"10\" class=\"w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-[invalid=true]:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100\">")
+						templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" _=\"on input call updateSummary()\" class=\"rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)]\"></td><td class=\"px-4 py-3 text-xs text-stone-500\"><textarea id=\"comments\" name=\"comments\" placeholder=\"Assignment comments\" rows=\"10\" class=\"w-full field-sizing-content rounded-md border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition placeholder:text-stone-400 focus:border-purple-300 focus:shadow-[0_0_0_3px_rgba(216,180,254,0.35)] aria-invalid:border-red-700 aria-[invalid=false]:border-lime-700 read-only:bg-stone-100\">")
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
 						var templ_7745c5c3_Var10 string
 						templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(commentsValue)
 						if templ_7745c5c3_Err != nil {
-							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 104, Col: 45}
+							return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 105, Col: 30}
 						}
 						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 						if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func ImportGrades(
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><div class=\"flex flex-col gap-4 min-w-[350px]\"><div class=\"rounded-xl border border-stone-200 bg-white\"><div class=\"flex items-center border-b border-stone-200 p-4\"><p class=\"text-xs text-stone-700 uppercase\">csv upload</p></div><div class=\"space-y-4 p-4\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div><!-- CSV Import --><div class=\"order-3 col-span-4 rounded-xl border border-stone-200 bg-white\"><div class=\"flex items-center border-b border-stone-200 p-4\"><p class=\"text-xs text-stone-700 uppercase\">csv upload</p></div><div class=\"space-y-4 p-4\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -266,20 +266,20 @@ func ImportGrades(
 			var templ_7745c5c3_Var11 templ.SafeURL
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs("/teacher/courses/" + courseId + "/assignments/" + assignmentId + "/import/template")
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 150, Col: 101}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 151, Col: 100}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" hx-boost=\"false\" class=\"text-purple-700 hover:underline\">Download template</a></div><div><p>student_number,grade,comments</p><p><span class=\"text-lime-700\">8675309,</span>4,Nice</p><p><span class=\"text-lime-700\">1234456,</span>3,Needs work</p></div></div></div></div><div class=\"rounded-xl border border-stone-200 bg-white\"><div class=\"flex items-center border-b border-stone-200 p-4\"><p class=\"text-xs text-stone-700 uppercase\">summary</p></div><div class=\"grid grid-cols-2 gap-2 p-4\"><div class=\"flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md\"><span class=\"text-sm text-stone-500\">Graded</span><div class=\"flex gap-2\"><span class=\"text-4xl font-semibold text-purple-700\" data-graded-num>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "\" hx-boost=\"false\" class=\"text-purple-700 hover:underline\">Download template</a></div><div><p>student_number,grade,comments</p><p><span class=\"text-lime-700\">8675309,</span>4,Nice</p><p><span class=\"text-lime-700\">1234456,</span>3,Needs work</p></div></div></div></div><!-- Summary --><div class=\"col-span-1 col-start-4 order-1 rounded-xl border border-stone-200 bg-white\"><div class=\"flex items-center border-b border-stone-200 p-4\"><p class=\"text-xs text-stone-700 uppercase\">summary</p></div><div class=\"grid grid-cols-2 gap-2 p-4\"><div class=\"flex flex-col justify-center text-xl py-4 px-4 bg-stone-200 rounded-md\"><span class=\"text-sm text-stone-500\">Graded</span><div class=\"flex gap-2\"><span class=\"text-4xl font-semibold text-purple-700\" data-graded-num>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(numGraded)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 171, Col: 89}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 173, Col: 88}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -292,7 +292,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(len(students))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 172, Col: 86}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 174, Col: 85}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -305,7 +305,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var14 string
 			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(len(students))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 172, Col: 106}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 174, Col: 105}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
@@ -318,7 +318,7 @@ func ImportGrades(
 			var templ_7745c5c3_Var15 string
 			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(outOf)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 177, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 179, Col: 69}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 			if templ_7745c5c3_Err != nil {
@@ -337,14 +337,14 @@ func ImportGrades(
 				var templ_7745c5c3_Var16 string
 				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%.2f%%", (float64(averageSum)/float64(numGraded))*100/float64(outOf)))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 181, Col: 94}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `view/teacher/grades_import.templ`, Line: 183, Col: 93}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span></div></div></div></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "</span></div></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -360,7 +360,7 @@ func ImportGrades(
 					}()
 				}
 				ctx = templ.InitializeContext(ctx)
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<script>\n\t\t\t\tconst $dz = document.getElementById(\"file-dropzone\");\n\t\t\t\tconst $dzConstraint = $dz.querySelector(\"p[data-file-constraint]\");\n\t\t\t\tconst $dzHint = $dz.querySelector(\"p[data-file-hint]\");\n\t\t\t\tconst $summaryGradedNum = document.querySelector(\"span[data-graded-num]\");\n\t\t\t\tconst $summaryGradedDen = document.querySelector(\"span[data-graded-den]\");\n\t\t\t\tconst $summaryAverage = document.querySelector(\"span[data-average]\");\n\n\t\t\t\tfunction parseCSV(csv) {\n\t\t\t\t\tconst reader = new FileReader();\n\t\t\t\t\treader.onload = e => {\n\t\t\t\t\t\tconst lines = e.target.result.trim().split('\\n');\n\t\t\t\t\t\tconst header = lines[0].toLowerCase().replace(/\\s/g,'');\n\t\t\t\t\t\tif (!header.includes('student_number') || !header.includes('grade')) {\n\t\t\t\t\t\t\t$dz.removeAttribute('aria-has-file');\n\t\t\t\t\t\t\t$dz.setAttribute('aria-error', 'true');\n\t\t\t\t\t\t\t$dzConstraint.textContent = 'Invalid format';\n\t\t\t\t\t\t\t$dzHint.textContent = 'CSV must have student_number and grade columns.';\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tlet matched = 0;\n\t\t\t\t\t\tlines.slice(1).forEach(line => {\n\t\t\t\t\t\t\tconst cols = line.split(',');\n\t\t\t\t\t\t\tconst snum = cols[0]?.trim();\n\t\t\t\t\t\t\tconst grade = cols[1]?.trim();\n\t\t\t\t\t\t\tconst comments = cols[2]?.trim() || '';\n\n\t\t\t\t\t\t\tconst $row = document.querySelector(\n\t\t\t\t\t\t\t\t`tr[data-student-id=\"${snum}\"]`\n\t\t\t\t\t\t\t);\n\n\t\t\t\t\t\t\tif ($row) {\n\t\t\t\t\t\t\t\tmatched++;\n\t\t\t\t\t\t\t\t$row.querySelector(\n\t\t\t\t\t\t\t\t\t`input[name=\"grade\"]`\n\t\t\t\t\t\t\t\t).value = grade;\n\n\t\t\t\t\t\t\t\t$row.querySelector(\n\t\t\t\t\t\t\t\t\t`input[name=\"comments\"]`\n\t\t\t\t\t\t\t\t).value = comments;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\t// update dropzone with file stats\n\t\t\t\t\t\t$dz.setAttribute('aria-has-file', 'true');\n\t\t\t\t\t\t$dz.removeAttribute('aria-error');\n\t\t\t\t\t\t$dzConstraint.textContent = 'File loaded';\n\t\t\t\t\t\t$dzHint.textContent = 'Matched ' + matched + ' students from CSV';\n\n\t\t\t\t\t\tupdateSummary();\n\n\t\t\t\t\t}\n\t\t\t\t\treader.readAsText(csv);\n\n\t\t\t\t}\n\n\t\t\t\tfunction updateSummary() {\n\t\t\t\t\t// calculate average and number of graded students\n\t\t\t\t\tconst $rows = document.querySelectorAll('tr[data-student-id]');\n\t\t\t\t\tlet numGraded = 0;\n\t\t\t\t\tlet averageSum = 0;\n\t\t\t\t\t$rows.forEach($row => {\n\t\t\t\t\t\tconst grade = parseFloat($row.querySelector('input[name=\"grade\"]').value);\n\t\t\t\t\t\tif (!isNaN(grade)) {\n\t\t\t\t\t\t\tnumGraded++;\n\t\t\t\t\t\t\taverageSum += grade;\t\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t\t// update summary\n\t\t\t\t\tconst numStudents = $summaryGradedDen.getAttribute('data-graded-den');\n\t\t\t\t\tconst outOf = $summaryAverage.getAttribute('data-out-of');\n\t\t\t\t\tconst average = numStudents > 0 ? ((averageSum *100/ numStudents)/outOf).toFixed(2) : 0;\n\t\t\t\t\t$summaryAverage.textContent = average;\n\t\t\t\t\t$summaryGradedNum.textContent = numGraded;\n\t\t\t\t}\n\n\t\t\t</script>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "<script>\n\t\t\t\tconst $dz = document.getElementById(\"file-dropzone\");\n\t\t\t\tconst $dzConstraint = $dz.querySelector(\"p[data-file-constraint]\");\n\t\t\t\tconst $dzHint = $dz.querySelector(\"p[data-file-hint]\");\n\t\t\t\tconst $summaryGradedNum = document.querySelector(\n\t\t\t\t\t\"span[data-graded-num]\",\n\t\t\t\t);\n\t\t\t\tconst $summaryGradedDen = document.querySelector(\n\t\t\t\t\t\"span[data-graded-den]\",\n\t\t\t\t);\n\t\t\t\tconst $summaryAverage = document.querySelector(\"span[data-average]\");\n\n\t\t\t\tfunction parseCSV(csv) {\n\t\t\t\t\tconst reader = new FileReader();\n\t\t\t\t\treader.onload = (e) => {\n\t\t\t\t\t\tconst lines = e.target.result.trim().split(\"\\n\");\n\t\t\t\t\t\tconst header = lines[0].toLowerCase().replace(/\\s/g, \"\");\n\t\t\t\t\t\tif (\n\t\t\t\t\t\t\t!header.includes(\"student_number\") ||\n\t\t\t\t\t\t\t!header.includes(\"grade\")\n\t\t\t\t\t\t) {\n\t\t\t\t\t\t\t$dz.removeAttribute(\"aria-has-file\");\n\t\t\t\t\t\t\t$dz.setAttribute(\"aria-error\", \"true\");\n\t\t\t\t\t\t\t$dzConstraint.textContent = \"Invalid format\";\n\t\t\t\t\t\t\t$dzHint.textContent =\n\t\t\t\t\t\t\t\t\"CSV must have student_number and grade columns.\";\n\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t}\n\t\t\t\t\t\tlet matched = 0;\n\t\t\t\t\t\tlines.slice(1).forEach((line) => {\n\t\t\t\t\t\t\tconst cols = line.split(\",\");\n\t\t\t\t\t\t\tconst snum = cols[0]?.trim();\n\t\t\t\t\t\t\tconst grade = cols[1]?.trim();\n\t\t\t\t\t\t\tconst comments = cols[2]?.trim() || \"\";\n\n\t\t\t\t\t\t\tconst $row = document.querySelector(\n\t\t\t\t\t\t\t\t`tr[data-student-id=\"${snum}\"]`,\n\t\t\t\t\t\t\t);\n\n\t\t\t\t\t\t\tif ($row) {\n\t\t\t\t\t\t\t\tmatched++;\n\t\t\t\t\t\t\t\t$row.querySelector(`input[name=\"grade\"]`).value = grade;\n\n\t\t\t\t\t\t\t\t$row.querySelector(`input[name=\"comments\"]`).value = comments;\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t});\n\n\t\t\t\t\t\t// update dropzone with file stats\n\t\t\t\t\t\t$dz.setAttribute(\"aria-has-file\", \"true\");\n\t\t\t\t\t\t$dz.removeAttribute(\"aria-error\");\n\t\t\t\t\t\t$dzConstraint.textContent = \"File loaded\";\n\t\t\t\t\t\t$dzHint.textContent = \"Matched \" + matched + \" students from CSV\";\n\n\t\t\t\t\t\tupdateSummary();\n\t\t\t\t\t};\n\t\t\t\t\treader.readAsText(csv);\n\t\t\t\t}\n\n\t\t\t\tfunction updateSummary() {\n\t\t\t\t\t// calculate average and number of graded students\n\t\t\t\t\tconst $rows = document.querySelectorAll(\"tr[data-student-id]\");\n\t\t\t\t\tlet numGraded = 0;\n\t\t\t\t\tlet averageSum = 0;\n\t\t\t\t\t$rows.forEach(($row) => {\n\t\t\t\t\t\tconst grade = parseFloat(\n\t\t\t\t\t\t\t$row.querySelector('input[name=\"grade\"]').value,\n\t\t\t\t\t\t);\n\t\t\t\t\t\tif (!isNaN(grade)) {\n\t\t\t\t\t\t\tnumGraded++;\n\t\t\t\t\t\t\taverageSum += grade;\n\t\t\t\t\t\t}\n\t\t\t\t\t});\n\t\t\t\t\t// update summary\n\t\t\t\t\tconst numStudents = $summaryGradedDen.getAttribute(\"data-graded-den\");\n\t\t\t\t\tconst outOf = $summaryAverage.getAttribute(\"data-out-of\");\n\t\t\t\t\tconst average =\n\t\t\t\t\t\tnumStudents > 0\n\t\t\t\t\t\t\t? ((averageSum * 100) / numStudents / outOf).toFixed(2)\n\t\t\t\t\t\t\t: 0;\n\t\t\t\t\t$summaryAverage.textContent = average;\n\t\t\t\t\t$summaryGradedNum.textContent = numGraded;\n\t\t\t\t}\n\t\t\t</script>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
