@@ -574,20 +574,27 @@ func handleTeacherCourseGradesExport(store *storage.Storage) http.Handler {
 			return httpe.ServerError(fmt.Errorf("[teacher.course.grades.export] Could not convert course ID to int: %w", err), http.StatusBadRequest)
 		}
 
-		studentGrades, err := store.Submissions.ListByCourseId(r.Context(), courseId)
+		students, err := store.People.GetByCourseId(r.Context(), courseId)
 		if err != nil {
-			return fmt.Errorf("[teacher.course.grades.export] Could not get student grades: %w", err)
+			return httpe.ServerError(fmt.Errorf("[teacher.course.grades.export] Could not get people by course id: %w", err), http.StatusBadRequest)
 		}
 
-		// build csv
-		rawCSV := make([][]string, len(studentGrades)+1)
-		rawCSV[0] = []string{"Student Number", "First Name", "Assignment Name", "Grade"}
-		for i, student := range studentGrades {
-			grade := "NULL"
-			if student.Grade.Valid {
-				grade = strconv.Itoa(int(student.Grade.Int16))
+		categories, err := store.Categories.ListByCourseId(r.Context(), courseId)
+		if err != nil {
+			return httpe.ServerError(fmt.Errorf("[teacher.course.grades.export] Could not get categories by course id: %w", err), http.StatusBadRequest)
+		}
+
+		// SLOW(?)
+		rawCSV := make([][]string, len(students)+1)
+		rawCSV[0] = []string{"Student Number", "First Name", "Grade"}
+		for i, student := range students {
+			studentAssignments, err := store.Assignments.GetWithGrade(r.Context(), student.Id, courseId)
+			if err != nil {
+				return httpe.ServerError(fmt.Errorf("[teacher.course.grades.export] Could not get assignments (with grade) of student %s: %w", student.Id, err), http.StatusBadRequest)
 			}
-			rawCSV[i+1] = []string{student.StudentNumber, student.FirstName, student.AssignmentName, grade}
+
+			studentGrade, _ := grading.WeightedAverage(studentAssignments, categories, time.Now())
+			rawCSV[i+1] = []string{strconv.Itoa(student.Id), student.FirstName, strconv.FormatFloat(studentGrade, 'f', 0, 64)}
 		}
 
 		// Set headers to force download
